@@ -33,7 +33,7 @@ module Visibility
       @summary ||= begin
         present = valid.count { |observation| mentions(observation).any? }
         recommended = valid.count { |observation| mentions(observation).any? { |item| item["recommended"] } }
-        resolved = valid.select { |observation| observation.citations.all? { |source| source["resolved"] } }
+        resolved = valid.select { |observation| observation.citations.select { |source| source["cited"] }.all? { |source| source["resolved"] } }
         cited = resolved.count { |observation| observation.citations.any? { |source| source["cited"] && Urls.same_domain?(source["canonical_url"], study.brand_brief.context["website"]) } }
         repeated = valid.group_by(&:question_key).values.select { |group| group.size >= 2 }
         stable = repeated.count { |group| group.map { |observation| mentions(observation).any? }.uniq.size == 1 }

@@ -34,6 +34,16 @@ class VisibilityEvidenceTest < ActiveSupport::TestCase
     assert_equal 100.0, summary["citation"]
   end
 
+  test "an unresolved retrieved source without a supporting citation does not hide a verified own-domain citation" do
+    study = complete_visibility(visibility_study)
+    observation = study.visibility_observations.find_by!(question_key: study.panel.first["key"], repetition: 1)
+    observation.update!(citations: observation.citations + [ { "url" => "https://vertexaisearch.cloud.google.com/grounding-api-redirect/unused", "resolved" => false, "cited" => false } ])
+    summary = Visibility::Metrics.new(study).summary
+    assert_equal 10, summary["citation_denominator"]
+    assert_equal 10, summary["cited"]
+    assert_equal 100.0, summary["citation"]
+  end
+
   test "URL resolver never contacts an arbitrary destination or a private host" do
     %w[http://localhost/a http://127.0.0.1/a http://10.0.0.1 https://server.local javascript:alert(1) file:///etc/passwd https://u:p@public.com].each { |url| assert_nil Visibility::Urls.public_url(url) }
     assert_equal "https://nebula.com/a", Visibility::Urls.resolve("https://nebula.com/a", transport: ->(*) { flunk "No arbitrary fetch allowed" })

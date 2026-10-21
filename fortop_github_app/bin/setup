@@ -1,0 +1,8 @@
+#!/bin/sh
+set -eu
+
+integration_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+platform_dir="$integration_dir/../fortop_platform"
+cd "$platform_dir"
+printf '%s\n' 'Abre http://localhost:3000/setup/github cuando Rails arranque.'
+exec bin/rails server -b 127.0.0.1 "$@"

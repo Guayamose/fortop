@@ -1,0 +1,46 @@
+FORTOP / BRAND KIT VECTORIAL 1.0
+20 de octubre de 2026
+
+EMPEZAR AQUÍ
+1. Abrir 07_MANUAL/FORTOP_Manual_de_Marca.pdf para consultar las reglas de uso.
+2. Abrir 07_MANUAL/FORTOP_brand_sheet.svg o su PNG en 09_PREVISUALIZACIONES
+   para ver el sistema completo de un vistazo.
+3. Para uso habitual, elegir 03_IMAGOTIPO/FORTOP_imagotipo_color-transparente.svg
+   sobre fondos claros, o las versiones inversas sobre fondos oscuros.
+
+QUÉ CONTIENE
+00_MAESTROS: isotipo, logotipo, imagotipo e isologo en sus cajas exactas, más geometría JSON.
+01_ISOTIPO: ASCENSO independiente, con área de protección.
+02_LOGOTIPO: FORTOP SÓLIDO, seis letras dibujadas como curvas vectoriales originales.
+03_IMAGOTIPO: ASCENSO + SÓLIDO en disposición horizontal.
+04_ISOLOGO: firma secundaria con ASCENSO integrado en la primera O.
+05_DIGITAL: app icons, avatares, marcas de agua, favicons SVG/PNG/ICO y manifest web.
+06_APLICACIONES: tarjetas 85 × 55 mm, hoja A4, portada 16:9, social y patrón.
+07_MANUAL: manual PDF de 12 páginas, sus páginas SVG y brand sheet SVG.
+08_PALETA: valores exactos en CSS, JSON y lámina vectorial.
+09_PREVISUALIZACIONES: cada SVG de producción tiene una vista PNG con la misma ruta relativa.
+10_FUENTES: código editable para regenerar gráficos y exportaciones.
+11_VALIDACION: informe de comprobaciones e inventario con hashes.
+99_REFERENCIAS: contenido original de transferencia, conservado sin modificaciones.
+
+SELECCIÓN RESPETADA
+Símbolo ASCENSO + lettering SÓLIDO + composición horizontal ASCENSO.
+Las referencias eran raster; los maestros son reconstrucciones manuales en SVG nativo.
+La firma tallada es una extensión secundaria, no sustituye a la principal.
+
+COLORES EXACTOS
+Shadow Grey #2E282A / Pine Teal #2B4F42 / Ivory #FFFFF3 / Honeydew #E0EFDA.
+Los archivos de producción solo usan estos cuatro valores. Los antialias de PNG
+pueden generar píxeles intermedios; los colores base del SVG permanecen exactos.
+Las referencias originales se conservan tal como llegaron y no son artes finales.
+
+USO
+El lettering está convertido en trazados: no instalar fuentes ni sustituir letras.
+Los SVG se pueden editar en Illustrator, Figma, Inkscape y editores de código.
+No deformar. Conservar las separaciones y las áreas de protección del manual.
+El tamaño mínimo se refiere al dibujo, no al archivo con margen.
+Las tarjetas son artes a tamaño terminado, sin sangrado, y la hoja A4 es una plantilla.
+Para impresión, añadir sangrado y convertir color con el perfil del proveedor.
+No se asigna un CMYK o un Pantone aproximado a los HEX aprobados.
+
+Los PNG son renderizados desde los SVG, sin alteraciones posteriores de diseño.

@@ -1,0 +1,113 @@
+{
+  "brand": "FORTOP",
+  "status": "references-only (not final branding)",
+  "approved_choices": [
+    {
+      "component": "isotipo",
+      "direction": "ASCENSO",
+      "file": "01_SELECCION_APROBADA/01_ISOTIPO_Ascenso_REFERENCIA.png"
+    },
+    {
+      "component": "logotipo",
+      "direction": "SÓLIDO",
+      "file": "01_SELECCION_APROBADA/02_LOGOTIPO_Solido_REFERENCIA.png"
+    },
+    {
+      "component": "imagotipo",
+      "direction": "ASCENSO",
+      "file": "01_SELECCION_APROBADA/03_IMAGOTIPO_Ascenso_REFERENCIA.png"
+    }
+  ],
+  "colors": [
+    {
+      "id": "shadow-grey",
+      "name": "Shadow Grey",
+      "hex": "#2E282A",
+      "rgb": [
+        46,
+        40,
+        42
+      ]
+    },
+    {
+      "id": "pine-teal",
+      "name": "Pine Teal",
+      "hex": "#2B4F42",
+      "rgb": [
+        43,
+        79,
+        66
+      ]
+    },
+    {
+      "id": "ivory",
+      "name": "Ivory",
+      "hex": "#FFFFF3",
+      "rgb": [
+        255,
+        255,
+        243
+      ]
+    },
+    {
+      "id": "honeydew",
+      "name": "Honeydew",
+      "hex": "#E0EFDA",
+      "rgb": [
+        224,
+        239,
+        218
+      ]
+    }
+  ],
+  "files": {
+    "01_SELECCION_APROBADA/01_ISOTIPO_Ascenso_REFERENCIA.png": {
+      "sha256": "8d0073f2ddd2971b8d765f66e51e810ac961da3467212b64dd379cf0a87135b9",
+      "bytes": 52891
+    },
+    "01_SELECCION_APROBADA/02_LOGOTIPO_Solido_REFERENCIA.png": {
+      "sha256": "e9aebdaf5c0dbe31dac4537721eb3e6a4600ab0e419e96c0c81aeef33d4ca6f0",
+      "bytes": 59665
+    },
+    "01_SELECCION_APROBADA/03_IMAGOTIPO_Ascenso_REFERENCIA.png": {
+      "sha256": "f5989bedc9f59c3917e3b4b190881747986287f06f9402d815d703978f4b4179",
+      "bytes": 86095
+    },
+    "02_PALETA/FORTOP_COLORES.css": {
+      "sha256": "32767638ecab5d84087e88c050bb79a2300885976fa162b04be51e8d8da35060",
+      "bytes": 198
+    },
+    "02_PALETA/FORTOP_PALETA.json": {
+      "sha256": "7e07c09baf9cb41b72f32967426b3c4568f5c6437de3bd4b8d51b53c5f30e911",
+      "bytes": 654
+    },
+    "02_PALETA/FORTOP_PALETA.png": {
+      "sha256": "62ccec2cf87d34d95618d99ed8c9ce160741159820f200417121e093e7728bbb",
+      "bytes": 23409
+    },
+    "02_PALETA/FORTOP_PALETA.svg": {
+      "sha256": "3bc4653c4dd52131818fdcccb954c9e2aedfec58bf1b7b9847f8973ec301e6b7",
+      "bytes": 1817
+    },
+    "02_PALETA/PALETA_ORIGINAL_APROBADA.png": {
+      "sha256": "2dc25d5866e8868b95d2ddc3d2b26810f3e5237e0f4faef2f9e368fc05148889",
+      "bytes": 56368
+    },
+    "03_CONTEXTO/LAMINA_ORIGINAL_DE_DONDE_PROVIENEN_LOS_ELEGIDOS.png": {
+      "sha256": "55555687cdc67126d230517292e26606c8d21b433e8b374c30b99fc0998eb91f",
+      "bytes": 1956647
+    },
+    "FORTOP_REFERENCIAS_SELECCIONADAS.png": {
+      "sha256": "96a3747e1c832700aee0abe6c54e44c3931e741934eda32b9014dd79e7adbc44",
+      "bytes": 242298
+    },
+    "LEEME_PRIMERO.md": {
+      "sha256": "e7fa31fcb9f8e5d5aaa6174c8dfbeec094db6e3f81e2f2c058606dc287b3a8b6",
+      "bytes": 6455
+    },
+    "PROMPT_PARA_CHATGPT_WORK.txt": {
+      "sha256": "af739dfb41d0dc37198bf3a7f502f960ecb40b902296364bbb763004c6ea3d3f",
+      "bytes": 773
+    }
+  }
+}

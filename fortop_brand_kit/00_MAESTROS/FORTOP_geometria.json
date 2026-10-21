@@ -1,0 +1,143 @@
+{
+  "brand": "FORTOP",
+  "version": "1.0",
+  "date": "2026-10-20",
+  "palette": {
+    "shadow": "#2E282A",
+    "pine": "#2B4F42",
+    "ivory": "#FFFFF3",
+    "honeydew": "#E0EFDA"
+  },
+  "symbol": {
+    "width": 224,
+    "height": 192,
+    "protection": 24,
+    "planes": [
+      {
+        "id": "ala-izquierda",
+        "points": [
+          [
+            0,
+            142
+          ],
+          [
+            48,
+            88
+          ],
+          [
+            48,
+            172
+          ],
+          [
+            0,
+            192
+          ]
+        ],
+        "fill": "#2B4F42"
+      },
+      {
+        "id": "plano-central-izquierdo",
+        "points": [
+          [
+            64,
+            66
+          ],
+          [
+            110,
+            0
+          ],
+          [
+            110,
+            146
+          ],
+          [
+            64,
+            165
+          ]
+        ],
+        "fill": "#2E282A"
+      },
+      {
+        "id": "plano-central-derecho",
+        "points": [
+          [
+            122,
+            16
+          ],
+          [
+            164,
+            68
+          ],
+          [
+            164,
+            165
+          ],
+          [
+            122,
+            147
+          ]
+        ],
+        "fill": "#2B4F42"
+      },
+      {
+        "id": "ala-derecha",
+        "points": [
+          [
+            178,
+            88
+          ],
+          [
+            224,
+            142
+          ],
+          [
+            224,
+            192
+          ],
+          [
+            178,
+            172
+          ]
+        ],
+        "fill": "#2B4F42"
+      }
+    ]
+  },
+  "wordmark": {
+    "width": 741,
+    "height": 100,
+    "protection": 20,
+    "glyphs": {
+      "F": "M0 0H98V22H24V42H82V64H24V100H0Z",
+      "O": "M25 0H87Q112 0 112 25V75Q112 100 87 100H25Q0 100 0 75V25Q0 0 25 0Z M31 23Q24 23 24 30V70Q24 77 31 77H81Q88 77 88 70V30Q88 23 81 23Z",
+      "R": "M0 0H88Q112 0 112 24V42Q112 62 92 65L116 100H86L61 66H24V100H0Z M24 22V44H82Q88 44 88 38V28Q88 22 82 22Z",
+      "T": "M0 0H110V23H67V100H43V23H0Z",
+      "P": "M0 0H86Q110 0 110 24V42Q110 66 86 66H24V100H0Z M24 22V44H80Q86 44 86 38V28Q86 22 80 22Z"
+    },
+    "word": "FORTOP",
+    "origins": [
+      0,
+      115,
+      246,
+      375,
+      500,
+      631
+    ]
+  },
+  "horizontal": {
+    "width": 864.8,
+    "height": 192,
+    "wordmark_x": 272,
+    "wordmark_y": 56,
+    "wordmark_scale": 0.8,
+    "protection": 24
+  },
+  "isologo": {
+    "usage": "secondary large format",
+    "first_o_symbol_scale": 0.295,
+    "first_o_symbol_origin": [
+      23,
+      21.68
+    ]
+  }
+}

@@ -721,7 +721,7 @@ main:focus { outline: none; }
   .repository-card { gap: 9px; }
   .repository-card .repository-glyph { width: 29px; height: 29px; border-radius: 8px; }
   .repository-card .repository-glyph .icon { width: 15px; height: 15px; }
-  .repository-card .repository-language-logo { width: 24px; height: 24px; flex-basis: 24px; }
+  .repository-card .repository-language-logo, .picker-row > .repository-language-logo { width: 24px; height: 24px; flex-basis: 24px; }
   .section-bar { font-size: 10px; }
   .section-bar > span:last-child { display: none; }
   .empty-state { min-height: 480px; padding: 35px 0; }
@@ -735,9 +735,8 @@ main:focus { outline: none; }
   .search-field { flex-basis: calc(100% - 93px); }
   .picker-filters > .button { width: 80px; padding: 0 10px; }
   .picker-row { flex-wrap: wrap; gap: 11px; }
-  .picker-row > .repository-glyph { width: 29px; height: 29px; }
   .picker-repo-copy { flex: 1; min-width: 0; }
-  .picker-row > form, .picker-row > .badge { margin-left: 40px; }
+  .picker-row > form, .picker-row > .badge { margin-left: 35px; }
   .picker-repo-copy strong { font-size: 12px; }
   .picker-repo-copy p, .picker-repo-copy > div { font-size: 10px; }
   .picker-footer, .picker-help, .picker-help .text-link { font-size: 11px; }

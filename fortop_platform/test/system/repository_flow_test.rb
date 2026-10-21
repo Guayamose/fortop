@@ -209,7 +209,7 @@ class RepositoryFlowTest < ApplicationSystemTestCase
     end
   end
 
-  test "agent workspace filters searches expands and copies real activity across live updates" do
+  test "agent activity shows readable actions and stays live without extra controls" do
     with_browser_github do
       visit new_session_path
       click_button "Continuar con GitHub"
@@ -227,81 +227,45 @@ class RepositoryFlowTest < ApplicationSystemTestCase
       scan.record_event!("Remediación: preparando una corrección (app/layout.tsx).", kind: "tool", metadata: { agent: "remediation", tool: "replace_text", path: "app/layout.tsx", turn: 1 })
       visit repository_path(repository)
       within ".repository-console" do
-        assert_text "Agente de análisis"
-        assert_text "Agente de remediación"
-        assert_selector ".console-file-tsx"
-        assert_selector ".console-current-copy strong", text: "Dando forma a las mejoras"
-        assert_selector "[data-console-event]", count: 7
+        assert_text "Actividad del agente"
+        assert_text "En directo"
+        assert_text "Explorando archivos."
+        assert_text "Preparando una corrección"
+        assert_selector ".activity-file", text: "app/layout.tsx", count: 2
+        assert_selector ".agent-action", count: 7
+        assert_no_selector ".console-toolbar, .console-current, .console-footer"
+        assert_no_selector "input"
+        assert_no_button "Copiar actividad"
+        assert_no_button "Ampliar consola"
         assert_no_horizontal_overflow
       end
       save_console_screenshot("agent-workspace-desktop")
 
-      within ".repository-console" do
-        click_button "Hallazgos", exact: true
-        assert_selector "[data-console-event]", count: 1
-        assert_text "descripción de la página ausente"
-        assert_no_selector "[data-category=code]"
-        click_button "GitHub", exact: true
-        assert_text "No hay acciones que coincidan."
-        click_button "Limpiar filtros"
-        click_button "Código", exact: true
-        find("input[aria-label='Buscar actividad']").set("layout.tsx")
-        assert_selector "[data-console-event]", count: 2
-        find("button[aria-label='Ampliar consola']").click
-        assert_selector "button[aria-label='Reducir consola']"
-      end
-
       scan.record_event!("Remediación: verificando app/layout.tsx.", kind: "tool", metadata: { agent: "remediation", tool: "validate_changes", path: "app/layout.tsx", turn: 2 })
       within ".repository-console" do
-        assert_selector "[data-console-event]", count: 3, wait: 10
-        assert_equal "layout.tsx", find("input[aria-label='Buscar actividad']").value
-        assert_selector "button[data-filter=code][aria-pressed=true]"
-        assert_selector "button[aria-label='Reducir consola']"
-        assert_selector ".console-event.is-arriving", text: "Verificando app/layout.tsx."
-
-        # Exercise the clipboard action without changing the system clipboard.
-        page.execute_script("window.consoleCopiedActivity = null; Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async (text) => { window.consoleCopiedActivity = text } } })")
-        find("button[aria-label='Copiar actividad']").click
-        assert_text "Actividad copiada"
-        copied = page.evaluate_script("window.consoleCopiedActivity")
-        assert_includes copied, "app/layout.tsx"
-        refute_includes copied, "public/robots.txt"
-        refute_includes copied, "descripción de la página ausente"
-
-        find("input[aria-label='Buscar actividad']").set("")
-        click_button "Todo", exact: false
-        find("button[aria-label='Reducir consola']").click
+        assert_selector ".agent-action", count: 8, wait: 10
+        assert_selector ".agent-action", text: "Verificando app/layout.tsx."
       end
       checks = [ { "name" => "scope", "passed" => true }, { "name" => "syntax:app/layout.tsx", "passed" => true } ]
       scan.update!(status: "publishing", progress: 88, changed_files: [ { "path" => "app/layout.tsx", "additions" => 3, "deletions" => 1 } ], validation_results: checks)
       scan.record_event!("Verificación final: 2 de 2 comprobaciones correctas.", kind: "validation", metadata: { checks: checks })
       scan.record_event!("Issue registrado: descripción de la página ausente.", kind: "publication", metadata: { issue_url: "https://github.com/browser-builder/website/issues/21" })
       within ".repository-console" do
-        assert_selector ".console-current-copy strong", text: "Llevando el trabajo a GitHub", wait: 10
-        assert_selector ".console-file-diff", text: "+3"
-        assert_selector ".console-check-result.is-success", text: "2/2 comprobaciones"
-        click_button "GitHub", exact: true
-        assert_selector "[data-console-event]", count: 1
+        assert_selector ".agent-action", count: 10, wait: 10
+        assert_text "Verificación final: 2 de 2 comprobaciones correctas."
         assert_link "Ver en GitHub", href: "https://github.com/browser-builder/website/issues/21"
-        click_button "Todo", exact: false
       end
       save_console_screenshot("agent-workspace-publishing-desktop")
       page.current_window.resize_to(390, 844)
       assert_no_horizontal_overflow
       save_console_screenshot("agent-workspace-mobile")
-      refute_equal "none", page.evaluate_script("getComputedStyle(document.querySelector('.console-art-spark')).animationName")
-      page.driver.browser.execute_cdp("Emulation.setEmulatedMedia", features: [ { name: "prefers-reduced-motion", value: "reduce" } ])
-      assert_equal "none", page.evaluate_script("getComputedStyle(document.querySelector('.console-art-spark')).animationName")
-      page.driver.browser.execute_cdp("Emulation.setEmulatedMedia", features: [])
       scan.update!(status: "paused")
       assert_selector ".repository-console[data-console-state=paused]", wait: 10
-      assert_selector ".console-current-copy strong", text: "Lo dejamos justo aquí"
-      assert_no_selector ".console-thinking-dots"
+      within ".repository-console" do
+        assert_text "En pausa"
+        assert_selector ".agent-action", count: 10
+      end
       assert_no_horizontal_overflow
-
-      assert_equal "none", page.evaluate_script("getComputedStyle(document.querySelector('.console-art-spark')).animationName")
-    ensure
-      page.driver.browser.execute_cdp("Emulation.setEmulatedMedia", features: [])
     end
   end
 

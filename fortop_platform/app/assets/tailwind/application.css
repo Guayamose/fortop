@@ -296,6 +296,22 @@ main:focus { outline: none; }
 .repository-findings .finding-card > summary { padding: 14px 0; }
 .repository-findings .finding-body { padding: 16px 0; }
 .repository-console { --console-accent: #4b78c8; --console-tint: #eff5ff; margin-top: 32px; padding-top: 21px; border-top: 1px solid var(--line); }
+.activity-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-bottom: 15px; }
+.activity-heading h4 { font-size: 13px; font-weight: 500; }
+.activity-heading .repository-console-status { margin: 0; }
+.activity-stream { position: relative; }
+.activity-output { max-height: 320px; overflow-y: auto; overscroll-behavior: contain; overflow-anchor: none; scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; padding-right: 8px; }
+.activity-output ol { list-style: none; margin: 0; padding: 0; }
+.agent-action { display: flex; align-items: flex-start; gap: 10px; padding: 9px 0; }
+.agent-action > div { min-width: 0; }
+.agent-action-icon { display: flex; flex: 0 0 auto; padding-top: 3px; color: #929baa; }
+.agent-action-icon .icon { width: 14px; height: 14px; stroke-width: 1.5; }
+.agent-action p { color: var(--text-secondary); font-size: 12px; line-height: 1.65; overflow-wrap: anywhere; }
+.agent-action.is-warning p, .agent-action.is-warning .agent-action-icon { color: #98631b; }
+.activity-file { display: block; margin-top: 3px; color: var(--muted); font: 10px/1.6 var(--font-mono); overflow-wrap: anywhere; }
+.activity-link.text-link { margin-top: 4px; font-size: 11px; }
+.activity-empty { padding: 14px 0; color: var(--muted); font-size: 12px; }
+.activity-output:focus-visible { outline: 2px solid #82afe8; outline-offset: 3px; }
 .console-tone-neutral { --console-accent: #6c7587; --console-tint: #f3f5f8; }
 .console-tone-blue { --console-accent: #437acb; --console-tint: #eef5ff; }
 .console-tone-violet { --console-accent: #8666c5; --console-tint: #f4f0fc; }

@@ -286,7 +286,7 @@ class ScansControllerTest < ActionDispatch::IntegrationTest
     refute_includes html, "<script>alert"
   end
 
-  test "rich console only renders safe action metadata and validated GitHub links" do
+  test "agent activity only renders safe action metadata and validated GitHub links" do
     scan = @repository.scans.create!(status: "analyzing")
     path = '"><img src=x onerror=alert(1)>.tsx'
     scan.record_event!("Intento de lectura.", kind: "tool", metadata: {
@@ -298,9 +298,8 @@ class ScansControllerTest < ActionDispatch::IntegrationTest
     get repository_path(@repository)
     assert_response :success
     assert_select ".repository-console script, .repository-console img", count: 0
-    assert_select ".console-file code", text: path
-    assert_select ".console-file-tsx", count: 1
-    assert_select ".console-check-result", text: /1\/1 comprobaciones/
+    assert_select ".activity-file", text: path
+    assert_select ".agent-action", text: /Comprobación registrada/
     assert_select ".repository-console a[href^='javascript:']", count: 0
     refute_includes response.body, "private-tool-argument"
     refute_includes response.body, "private-agent-reasoning"

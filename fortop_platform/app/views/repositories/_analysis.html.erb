@@ -63,7 +63,7 @@
   </details>
 <% end %>
 
-<%= render "repositories/scan_console", scan: scan %>
+<%= render "repositories/agent_activity", scan: scan %>
 
 <% if scan.validation_results.any? || scan.changed_files.any? %>
   <details class="repository-scan-details">

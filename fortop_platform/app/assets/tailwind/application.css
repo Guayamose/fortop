@@ -137,6 +137,8 @@ main:focus { outline: none; }
 .repository-glyph .icon { width: 18px; height: 18px; }
 .repository-glyph.large { width: 49px; height: 49px; border-radius: 14px; }
 .repository-glyph.large .icon { width: 23px; height: 23px; }
+.repository-language-logo { display: block; width: 28px; height: 28px; flex: 0 0 28px; object-fit: contain; }
+.repository-language-unknown { color: var(--muted); }
 .repository-name { min-width: 0; }
 .repository-name strong { display: block; font-size: 13px; font-weight: 500; overflow-wrap: anywhere; }
 .repository-card:hover strong { color: #0f63b3; }
@@ -719,6 +721,7 @@ main:focus { outline: none; }
   .repository-card { gap: 9px; }
   .repository-card .repository-glyph { width: 29px; height: 29px; border-radius: 8px; }
   .repository-card .repository-glyph .icon { width: 15px; height: 15px; }
+  .repository-card .repository-language-logo { width: 24px; height: 24px; flex-basis: 24px; }
   .section-bar { font-size: 10px; }
   .section-bar > span:last-child { display: none; }
   .empty-state { min-height: 480px; padding: 35px 0; }

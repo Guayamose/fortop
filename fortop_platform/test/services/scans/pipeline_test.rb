@@ -441,6 +441,48 @@ class Scans::PipelineTest < ActiveSupport::TestCase
     assert_empty @github.pulls
   end
 
+  test "large audits remediate multiple batches and recover publication without repeating AI" do
+    paths = Array.new(21) { |index| format("pages/%02d.html", index) }
+    originals = @github.instance_variable_get(:@files_by_sha).fetch("a" * 40)
+    paths.each { |path| originals[path] = Github::SOURCE }
+    analysis = paths.flat_map do |path|
+      [ tool("read_file", path: path), tool("report_finding", finding_arguments.merge("file_path" => path)) ]
+    end
+    remediation = paths.each_slice(20).flat_map do |batch|
+      edits = batch.flat_map do |path|
+        [ tool("read_file", path: path), -> {
+          tool("replace_text", path: path, old_text: "<title>Fortop</title>",
+            new_text: '<title>Fortop</title><meta name="description" content="Fortop analiza y mejora la visibilidad del código web.">',
+            finding_ids: [ @scan.findings.find_by!(file_path: path).id ])
+        } ]
+      end
+      edits + [ tool("validate_changes", {}), final("Lote de #{batch.size} correcciones verificado.") ]
+    end
+    provider = Provider.new(analysis + [ final("21 hallazgos contrastados.") ] + remediation)
+    @github.fail_issue_count = 3
+    run_pipeline(provider: provider)
+
+    assert @scan.reload.failed?, @scan.error_message
+    assert @scan.publication_retryable?
+    assert_equal 21, @scan.findings.count
+    assert_equal 21, @scan.changed_files.size
+    assert @scan.validation_results.all? { |check| check["passed"] }
+    assert_includes @scan.metadata["remediation_summary"], "20 correcciones"
+    assert_includes @scan.metadata["remediation_summary"], "1 correcciones"
+    assert_operator provider.usage["requests"], :>, 80
+
+    @scan.update!(status: "queued", finished_at: nil)
+    unused_provider = Provider.new([])
+    run_pipeline(provider: unused_provider)
+
+    assert @scan.reload.completed?, @scan.error_message
+    assert_equal 0, unused_provider.usage["requests"]
+    assert_equal 21, @scan.findings.where(status: "fixed").count
+    assert_equal 21, @github.issues.size
+    assert_equal 21, @github.commits.first[:files].size
+    assert_equal 1, @github.pulls.size
+  end
+
   private
 
   def run_pipeline(provider: Provider.new([]))

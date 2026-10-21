@@ -40,9 +40,69 @@ class Github::ClientTest < ActiveSupport::TestCase
     assert_empty http.requests
   end
 
-  test "rejects truncated repository snapshots" do
-    http = GithubTestHttp.new({ "tree" => [], "truncated" => true })
+  test "rejects incomplete non-recursive subtrees instead of using partial inventory" do
+    http = GithubTestHttp.new({ "tree" => [], "truncated" => true }, { "tree" => [], "truncated" => true })
     assert_raises(Github::Error) { Github::Client.new("token", http: http).tree("owner/repo", SHA) }
+  end
+
+  test "recovers truncated recursive inventories through complete nested subtrees" do
+    http = GithubTestHttp.new(
+      { "tree" => [ { "path" => "incomplete.html" } ], "truncated" => true },
+      { "tree" => [ { "path" => "README.md", "type" => "blob" }, { "path" => "app", "type" => "tree", "sha" => "b" * 40 } ] },
+      { "tree" => [ { "path" => "page.html", "type" => "blob" }, { "path" => "views", "type" => "tree", "sha" => "c" * 40 } ] },
+      { "tree" => [ { "path" => "layout.erb", "type" => "blob" } ] }
+    )
+    entries = Github::Client.new("token", http: http).tree("owner/repo", SHA)
+    assert_equal %w[README.md app app/page.html app/views app/views/layout.erb], entries.map { |entry| entry["path"] }
+    assert_equal 4, http.requests.size
+    assert http.requests.drop(1).all? { |request| request[:uri].query.nil? }
+  end
+
+  test "shared subtrees are fetched once but included under each complete path" do
+    http = GithubTestHttp.new(
+      { "tree" => [], "truncated" => true },
+      { "tree" => [ { "path" => "one", "type" => "tree", "sha" => "b" * 40 }, { "path" => "two", "type" => "tree", "sha" => "b" * 40 } ] },
+      { "tree" => [ { "path" => "page.html", "type" => "blob" } ] }
+    )
+    entries = Github::Client.new("token", http: http).tree("owner/repo", SHA)
+    assert_includes entries.map { |entry| entry["path"] }, "one/page.html"
+    assert_includes entries.map { |entry| entry["path"] }, "two/page.html"
+    assert_equal 3, http.requests.size
+  end
+
+  test "issue recovery can continue beyond ten pages" do
+    marker = "<!-- fortop:large-repository -->"
+    pages = Array.new(10) { Array.new(100) { { "number" => 1, "body" => "Other issue" } } }
+    http = GithubTestHttp.new(*pages, [ { "number" => 1001, "body" => marker } ])
+    assert_equal 1001, Github::Client.new("token", http: http).find_issue("owner/repo", marker: marker)["number"]
+    assert_equal "11", URI.decode_www_form(http.requests.last[:uri].query).to_h["page"]
+  end
+
+  test "renews expired installation access once during a long scan" do
+    http = GithubTestHttp.new(Github::Error.new("Expired", status: 401), { "id" => 19 })
+    renewals = 0
+    client = Github::Client.new(token: "expired-installation", http: http, authorized_repository_id: 19,
+      token_refresher: -> { renewals += 1; "renewed-installation" })
+    assert_equal 19, client.repository("owner/repo")["id"]
+    assert_equal 1, renewals
+    assert_equal %w[expired-installation renewed-installation], http.requests.map { |request| request[:token] }
+    assert client.write_authorized_for?(19)
+  end
+
+  test "does not loop credential renewals or replay uncertain writes" do
+    renewals = 0
+    refresh = -> { renewals += 1; "new-installation" }
+    http = GithubTestHttp.new(Github::Error.new("Expired", status: 401), Github::Error.new("Still expired", status: 401))
+    client = Github::Client.new(token: "expired", http: http, token_refresher: refresh)
+    assert_raises(Github::Error) { client.repository("owner/repo") }
+    assert_equal 1, renewals
+
+    [ Github::Error.new("Forbidden", status: 403), Github::Error.new("Response lost", retryable: true) ].each do |error|
+      http = GithubTestHttp.new(error)
+      client = Github::Client.new(token: "current", http: http, token_refresher: -> { flunk "Must not refresh or replay this write" })
+      assert_raises(Github::Error) { client.create_issue("owner/repo", title: "Finding", body: "Evidence") }
+      assert_equal 1, http.requests.size
+    end
   end
 
   test "commits against base tree preserving executable modes and fast forwards only the managed branch" do

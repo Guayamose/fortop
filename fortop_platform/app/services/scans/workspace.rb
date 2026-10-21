@@ -4,11 +4,7 @@ require "set"
 
 module Scans
   class Workspace
-    MAX_FILE_BYTES = 100_000
-    MAX_TOTAL_BYTES = 2_000_000
-    MAX_READ_FILES = 100
-    MAX_CHANGED_FILES = 5
-    MAX_TREE_FILES = 20_000
+    MAX_FILE_BYTES = Github::Client::MAX_FILE_BYTES
     TEXT_EXTENSIONS = %w[.html .htm .erb .rb .js .mjs .cjs .jsx .ts .tsx .json .xml .txt .md .mdx .yaml .yml .css .scss .vue .svelte .php .astro .haml .slim .ejs .liquid .webmanifest].freeze
     IGNORED_DIRECTORIES = %w[.git .github .bundle node_modules vendor tmp log storage coverage dist build .next .nuxt .cache].freeze
     SECRET_NAME = /(?:\A\.env(?:\.|\z)|credentials|secrets?|private[_-]?key|master\.key|id_rsa|id_ed25519|\.pem\z|\.p12\z|\.pfx\z|\.key\z|service[_-]?account)/i
@@ -33,87 +29,115 @@ module Scans
     def initialize(github:, full_name:, sha:, tree:)
       @github, @full_name, @sha = github, full_name, sha
       @total_files = tree.count { |entry| entry["type"] == "blob" }
-      raise Agents::ToolError, "El repositorio supera el límite de 20.000 archivos para este MVP." if @total_files > MAX_TREE_FILES
-
       @entries = tree.select { |entry| entry["type"] == "blob" && %w[100644 100755].include?(entry["mode"].to_s) && readable_path?(entry["path"]) }.index_by { |entry| entry["path"] }
       @unsafe_paths = tree.filter_map { |entry| entry["path"] if entry["mode"].to_s == "120000" || entry["type"] == "commit" }
       @directory = Dir.mktmpdir("fortop-scan-")
-      @originals, @changes, @read_paths, @finding_ids = {}, {}, Set.new, {}
+      @originals, @changes, @read_paths, @finding_ids = Set.new, {}, Set.new, {}
       @blocked_paths = Set.new
       @total_bytes = 0
     end
 
     def list_files(prefix: "", offset: 0)
       paths = (@entries.keys + @changes.keys).uniq.sort.select { |path| path.start_with?(prefix.to_s) && !@blocked_paths.include?(path) }
-      { "files" => paths.drop(offset.to_i.clamp(0, MAX_TREE_FILES)).first(200), "total" => paths.length, "next_offset" => offset.to_i + 200 < paths.length ? offset.to_i + 200 : nil }
+      position = [ Integer(offset), 0 ].max
+      { "files" => paths.drop(position).first(200), "total" => paths.length, "next_offset" => position + 200 < paths.length ? position + 200 : nil }
+    rescue ArgumentError, TypeError
+      raise Agents::ToolError, "El desplazamiento del inventario no es válido."
     end
 
     def read(path)
       check_path!(path)
       return @changes[path] if @changes.key?(path)
-      return @originals[path] if @originals.key?(path)
+      return original(path) if @originals.include?(path)
 
       entry = @entries[path]
       raise Agents::ToolError, "Archivo inexistente o excluido de la lectura." unless entry
-      raise Agents::ToolError, "Se ha alcanzado el límite de archivos leídos." if @originals.size >= MAX_READ_FILES
-      raise Agents::ToolError, "El archivo supera los 100 KB." if entry["size"].to_i > MAX_FILE_BYTES
+      raise Agents::ToolError, "El archivo supera el tamaño de texto admitido por GitHub (1 MB)." if entry["size"].to_i > MAX_FILE_BYTES
 
       content = @github.file(@full_name, path, ref: @sha).dup.force_encoding(Encoding::UTF_8)
       raise Agents::ToolError, "El archivo no es texto UTF-8 válido." unless content.valid_encoding? && !content.include?("\0")
-      raise Agents::ToolError, "El archivo supera los 100 KB." if content.bytesize > MAX_FILE_BYTES
-      raise Agents::ToolError, "Se ha alcanzado el límite de datos leídos." if @total_bytes + content.bytesize > MAX_TOTAL_BYTES
+      raise Agents::ToolError, "El archivo supera el tamaño de texto admitido por GitHub (1 MB)." if content.bytesize > MAX_FILE_BYTES
       if secret_content?(content)
         @blocked_paths << path
         raise Agents::ToolError, "El archivo se ha excluido porque contiene un posible secreto. No se enviará al proveedor ni se modificará."
       end
 
       @total_bytes += content.bytesize
-      @originals[path] = content
+      FileUtils.mkdir_p(File.dirname(original_path(path)))
+      File.write(original_path(path), content)
+      @originals << path
       @read_paths << path
       materialize(path, content)
       content
     end
 
-    def read_lines(path, start_line: 1, end_line: 200)
+    def read_lines(path, start_line: 1, end_line: nil)
       content = read(path)
-      first = Integer(start_line).clamp(1, 100_000)
-      last = Integer(end_line).clamp(first, first + 299)
+      first = [ Integer(start_line), 1 ].max
+      last = end_line.nil? ? first + 199 : Integer(end_line).clamp(first, first + 299)
       lines = content.lines
-      { "path" => path, "total_lines" => lines.length, "content" => lines[(first - 1)..(last - 1)].to_a.each_with_index.map { |line, i| "#{first + i}: #{line}" }.join.truncate(24_000), "trust" => "untrusted_repository_data" }
+      selected, truncated = [], false
+      lines[(first - 1)..(last - 1)].to_a.each_with_index do |line, index|
+        numbered = "#{first + index}: #{line}"
+        if selected.sum(&:length) + numbered.length > 24_000
+          selected << numbered.truncate(24_000) if selected.empty?
+          truncated = true
+          break
+        end
+        selected << numbered
+      end
+      next_line = first + selected.size
+      { "path" => path, "total_lines" => lines.length, "content" => selected.join, "next_line" => next_line <= lines.length ? next_line : nil, "truncated" => truncated, "trust" => "untrusted_repository_data" }
     rescue ArgumentError, TypeError
       raise Agents::ToolError, "El rango de líneas no es válido."
     end
 
-    def search(query, prefix: "")
+    def search(query, prefix: "", offset: 0, start_line: 1)
       raise Agents::ToolError, "La búsqueda debe contener entre 2 y 120 caracteres." unless query.is_a?(String) && query.length.between?(2, 120)
 
       matches = []
       paths = @entries.keys.select { |path| path.start_with?(prefix.to_s) }.sort_by { |path| [ seo_priority(path), path ] }
-      inspected = 0
-      paths.first(45).each do |path|
+      position = [ Integer(offset), 0 ].max
+      line_start = [ Integer(start_line), 1 ].max
+      inspected = skipped = visited = 0
+      while position < paths.length && visited < 45 && matches.length < 40
+        path = paths[position]
+        visited += 1
         begin
           content = read(path)
         rescue Agents::ToolError
+          skipped += 1
+          position += 1
+          line_start = 1
           next
         end
         inspected += 1
-        content.lines.each_with_index do |line, index|
+        lines = content.lines
+        lines.each_with_index do |line, index|
+          next if index + 1 < line_start
           matches << { "path" => path, "line" => index + 1, "text" => line.strip.truncate(400) } if line.downcase.include?(query.downcase)
+          line_start = index + 2
           break if matches.length >= 40
         end
-        break if matches.length >= 40
+        if line_start > lines.length || lines.empty?
+          position += 1
+          line_start = 1
+        end
       end
-      { "matches" => matches, "searched_files" => inspected, "limited" => paths.length > inspected, "trust" => "untrusted_repository_data" }
+      more = position < paths.length
+      { "matches" => matches, "searched_files" => inspected, "skipped_files" => skipped, "total_files" => paths.length,
+        "next_offset" => more ? position : nil, "next_line" => more ? line_start : nil, "limited" => more, "trust" => "untrusted_repository_data" }
+    rescue ArgumentError, TypeError
+      raise Agents::ToolError, "El cursor de búsqueda no es válido."
     end
 
     def write(path, content, finding_ids: [])
       check_writable_path!(path)
       raise Agents::ToolError, "Lee el archivo existente antes de modificarlo." if @entries.key?(path) && !@read_paths.include?(path)
-      raise Agents::ToolError, "La corrección supera el límite de cinco archivos." if !@changes.key?(path) && @changes.size >= MAX_CHANGED_FILES
-      raise Agents::ToolError, "El contenido debe ser texto UTF-8 de menos de 100 KB." unless content.is_a?(String) && content.valid_encoding? && content.bytesize <= MAX_FILE_BYTES && !content.include?("\0")
+      raise Agents::ToolError, "El contenido debe ser texto UTF-8 de hasta 1 MB." unless content.is_a?(String) && content.valid_encoding? && content.bytesize <= MAX_FILE_BYTES && !content.include?("\0")
       raise Agents::ToolError, "El contenido propuesto contiene un posible secreto y no se guardará." if secret_content?(content)
 
-      if content == @originals[path]
+      if content == original(path)
         discard(path)
       else
         @changes[path] = content
@@ -133,8 +157,8 @@ module Scans
       check_path!(path)
       @changes.delete(path)
       @finding_ids.delete(path)
-      if @originals.key?(path)
-        materialize(path, @originals[path])
+      if @originals.include?(path)
+        materialize(path, original(path))
       else
         FileUtils.rm_f(File.join(@directory, path))
       end
@@ -142,7 +166,7 @@ module Scans
     end
 
     def original(path)
-      @originals[path]
+      File.read(original_path(path), encoding: Encoding::UTF_8) if @originals.include?(path)
     end
 
     def finding_ids(path)
@@ -151,7 +175,7 @@ module Scans
 
     def changed_files
       @changes.map do |path, content|
-        before = @originals.fetch(path, "").lines
+        before = original(path).to_s.lines
         after = content.lines
         # Counts are deterministic and bounded without invoking git or repository code.
         before_counts, after_counts = before.tally, after.tally
@@ -161,7 +185,8 @@ module Scans
     end
 
     def coverage
-      { "total_files" => @total_files, "eligible_files" => @entries.size, "read_files" => @read_paths.size, "limits" => "Análisis estático acotado: hasta #{MAX_READ_FILES} archivos de texto, #{MAX_TOTAL_BYTES / 1_000_000} MB y cinco archivos modificados. Se excluyen secretos, dependencias, binarios y enlaces simbólicos." }
+      { "total_files" => @total_files, "eligible_files" => @entries.size, "read_files" => @read_paths.size, "read_bytes" => @total_bytes,
+        "limits" => "Análisis estático sin cupos de archivos, datos totales, hallazgos ni correcciones. Lecturas y búsquedas paginadas; texto UTF-8 de hasta 1 MB por archivo. Se excluyen secretos, dependencias, binarios y enlaces simbólicos. El presupuesto de tokens configurado se comparte entre los agentes." }
     end
 
     def close
@@ -178,6 +203,10 @@ module Scans
     end
 
     private
+
+    def original_path(path)
+      File.join(@directory, ".fortop-originals", path)
+    end
 
     def check_path!(path)
       raise Agents::ToolError, "Ruta no permitida." unless readable_path?(path)

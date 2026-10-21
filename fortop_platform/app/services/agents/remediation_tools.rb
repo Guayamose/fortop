@@ -45,7 +45,7 @@ module Agents
     private
 
     def valid_finding_ids(ids)
-      raise ToolError, "Indica los identificadores de los hallazgos que corrige el archivo." unless ids.is_a?(Array) && ids.present? && ids.size <= AnalysisTools::MAX_FINDINGS
+      raise ToolError, "Indica los identificadores de los hallazgos que corrige el archivo." unless ids.is_a?(Array) && ids.present?
       ids = ids.map { |id| Integer(id) }.uniq
       allowed = @scan.findings.where(id: ids, automatable: true).pluck(:id)
       raise ToolError, "Solo se corrigen hallazgos automatizables de este análisis." unless allowed.sort == ids.sort

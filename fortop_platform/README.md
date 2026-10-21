@@ -30,22 +30,38 @@ Los agentes utilizan exclusivamente la API de Gemini de Google AI Studio.
 Las claves de OpenAI y Anthropic no se utilizan. La integración actual no
 necesita configurar Vertex AI ni credenciales de servicio de Google Cloud.
 
-Configuración recomendada para el MVP:
+Configuración para repositorios grandes:
 
 ```dotenv
 GEMINI_MODEL=gemini-3.1-flash-lite
-AGENT_MAX_TURNS=10
-AGENT_MAX_TOOL_CALLS=30
-AGENT_MAX_OUTPUT_TOKENS=2048
-AGENT_MAX_TOTAL_TOKENS=60000
+AGENT_MAX_TURNS=0
+AGENT_MAX_TOOL_CALLS=0
+AGENT_TIMEOUT_SECONDS=0
+AGENT_MAX_OUTPUT_TOKENS=16384
+AGENT_MAX_TOTAL_TOKENS=1000000
+AGENT_CONTEXT_MAX_BYTES=120000
 ```
 
-Los turnos y herramientas se limitan por agente; el presupuesto total de tokens
-se comparte entre análisis y remediación de un escaneo e incluye pensamiento
+Un valor `0` desactiva el límite de turnos, herramientas o duración. Si se define
+un valor positivo se respeta tal cual, sin techos ocultos. El presupuesto total de tokens
+se comparte entre análisis, resúmenes de contexto y remediación de un escaneo e incluye pensamiento
 cuando Google lo informa. El cliente comprueba el presupuesto antes de cada
 solicitud y registra el consumo real devuelto por Google. Los reintentos de
 errores transitorios están limitados. Los workers procesan una ejecución a la
 vez por proceso. Solo se llama al modelo al iniciar un análisis.
+`AGENT_MAX_TOTAL_TOKENS=0` desactiva también el presupuesto de tokens; el valor
+por defecto conserva un control de gasto. No es una garantía monetaria: las cuotas,
+precios y límites del modelo siguen dependiendo de Google.
+
+Para evitar reenviar indefinidamente todo el historial, el agente resume los turnos
+antiguos al superar `AGENT_CONTEXT_MAX_BYTES`. Conserva intactos los dos pares recientes
+de llamadas y respuestas a herramientas, incluidas las firmas de Gemini. Estos resúmenes
+también cuentan en el presupuesto. La remediación procesa los hallazgos en lotes de 20,
+sin limitar el número total de lotes, y conserva los cambios de los anteriores.
+Si GitHub rechaza un token de instalación caducado con HTTP 401, se vuelve a
+comprobar el acceso del usuario y la identidad del repositorio antes de renovarlo
+y repetir esa petición una sola vez. Los errores de permisos y las escrituras
+con respuesta incierta siguen su recuperación habitual, sin repetirse de forma ciega.
 
 Estos límites controlan el trabajo del agente; el coste monetario depende del
 modelo y de la facturación de Google. El modelo se puede cambiar por otro
@@ -123,8 +139,15 @@ correcciones ofrecen **Reintentar análisis**, que inicia otro análisis con IA.
 
 ## Alcance y validación
 
-El MVP inspecciona hasta 100 archivos de texto y 2 MB por ejecución, acepta hasta
-8 hallazgos y modifica como máximo 5 archivos. Excluye rutas de credenciales,
+La ejecución no impone cupos de archivos leídos, bytes totales, hallazgos ni
+archivos modificados. Los inventarios, lecturas y búsquedas se recorren por páginas;
+las búsquedas permiten continuar dentro del mismo archivo cuando hay muchas coincidencias.
+Si GitHub trunca el árbol recursivo se recuperan los subárboles completos, siguiendo
+[su API de árboles](https://docs.github.com/en/rest/git/trees#get-a-tree).
+Los originales se guardan en el espacio temporal de disco para no acumularlos en memoria.
+Se admite texto UTF-8 de hasta 1 MB por archivo, compatible con el cliente de GitHub.
+El presupuesto configurado puede detener una ejecución antes de cubrir todo el repositorio;
+la cobertura refleja los archivos efectivamente inspeccionados. Excluye rutas de credenciales,
 dependencias, archivos ocultos, binarios, symlinks y submódulos. También rechaza
 archivos completos con claves reconocibles por sus prefijos, antes de enviarlos
 al modelo o permitir su modificación. Este detector es heurístico y no sustituye

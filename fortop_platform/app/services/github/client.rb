@@ -4,11 +4,10 @@ require "uri"
 module Github
   class Client
     MAX_FILE_BYTES = 1.megabyte
-    MAX_LOOKUP_PAGES = 10
 
-    def initialize(token = nil, http: Github::Http.new, authorized_repository_id: nil, **options)
+    def initialize(token = nil, http: Github::Http.new, authorized_repository_id: nil, token_refresher: nil, **options)
       @token = token || options[:token]
-      @http = http
+      @http, @token_refresher = http, token_refresher
       @authorized_repository_id = bounded_integer(authorized_repository_id, 1..9_223_372_036_854_775_807) if authorized_repository_id.present?
       raise Error, "Inicia sesión con GitHub para continuar." if @token.blank?
     end
@@ -54,10 +53,23 @@ module Github
 
     def tree(full_name, sha)
       result = request("#{repo_path(full_name)}/git/trees/#{encode_sha(sha)}", query: { recursive: "1" })
-      if result["truncated"]
-        raise Error, "El árbol del repositorio supera el tamaño permitido para una ejecución completa."
+      return result.fetch("tree") unless result["truncated"]
+
+      # GitHub truncates recursive trees in large repositories. Walk complete
+      # non-recursive subtrees instead; never analyze a partial inventory.
+      entries, pending, cache = [], [ [ "", sha ] ], {}
+      until pending.empty?
+        prefix, tree_sha = pending.pop
+        subtree = cache[tree_sha] ||= request("#{repo_path(full_name)}/git/trees/#{encode_sha(tree_sha)}")
+        raise Error, "GitHub no ha devuelto un subárbol completo del repositorio." if subtree["truncated"]
+
+        subtree.fetch("tree").each do |entry|
+          path = [ prefix, entry.fetch("path") ].reject(&:empty?).join("/")
+          entries << entry.merge("path" => path)
+          pending << [ path, entry.fetch("sha") ] if entry["type"] == "tree"
+        end
       end
-      result.fetch("tree")
+      entries
     end
 
     def file(full_name, path, ref:)
@@ -154,15 +166,24 @@ module Github
       uri = URI("https://api.github.com#{path}")
       uri.query = URI.encode_www_form(query) if query.present?
       @http.request(uri, method: method, token: @token, body: body)
+    rescue Error => error
+      # A definitive 401 means GitHub rejected authentication before performing
+      # the action. Refresh once; never replay ambiguous writes or permission errors.
+      raise unless error.status == 401 && @token_refresher
+
+      @token = @token_refresher.call
+      raise Error, "GitHub no ha renovado el acceso al repositorio." if @token.blank?
+      @http.request(uri, method: method, token: @token, body: body)
     end
 
     def each_page(path, **query)
-      1.upto(MAX_LOOKUP_PAGES) do |page|
+      page = 1
+      loop do
         entries = request(path, query: query.merge(page: page, per_page: 100))
         yield entries
         return if entries.size < 100
+        page += 1
       end
-      raise Error, "Hay demasiados resultados en GitHub para verificar las publicaciones anteriores."
     end
 
     def repo_path(full_name)

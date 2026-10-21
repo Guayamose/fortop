@@ -1,4 +1,5 @@
 require "test_helper"
+require_relative "fake_http"
 
 class Github::AccessTest < ActiveSupport::TestCase
   setup do
@@ -77,5 +78,30 @@ class Github::AccessTest < ActiveSupport::TestCase
         assert_equal 403, error.status
       end
     end
+  end
+
+  test "rechecks visitor permission before renewing an expired installation token" do
+    repository = Struct.new(:user, :installation_id, :full_name, :github_id).new(@user, 2, "owner/site", 5)
+    app = Minitest::Mock.new
+    app.expect :installation_token, "ghs_scoped", [ 2 ], repository_id: 5
+    http = GithubTestHttp.new(Github::Error.new("Expired", status: 401))
+    checks = 0
+    authorize = lambda do |*_, **_options|
+      checks += 1
+      raise Github::Error.new("Access revoked", status: 403) if checks > 1
+      @canonical
+    end
+    Github::Access.stub(:repository_for, authorize) do
+      Github::App.stub(:new, app) do
+        Github::Http.stub(:new, http) do
+          client = Github::Access.client_for(repository)
+          error = assert_raises(Github::Error) { client.repository("owner/site") }
+          assert_equal 403, error.status
+        end
+      end
+    end
+    assert_equal 2, checks
+    assert_equal 1, http.requests.size
+    app.verify
   end
 end

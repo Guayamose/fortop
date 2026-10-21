@@ -35,13 +35,19 @@ module Github
     end
 
     def self.client_for(repository)
+      token = scoped_token(repository)
+      Github::Client.new(token: token, authorized_repository_id: repository.github_id,
+        token_refresher: -> { scoped_token(repository) })
+    end
+
+    def self.scoped_token(repository)
       canonical = repository_for(repository.user, installation_id: repository.installation_id, full_name: repository.full_name)
       unless canonical.fetch("id").to_s == repository.github_id.to_s
         raise Error.new("El repositorio conectado ya no corresponde al recurso autorizado.", status: 403)
       end
-      token = Github::App.new.installation_token(repository.installation_id, repository_id: repository.github_id)
-      Github::Client.new(token: token, authorized_repository_id: repository.github_id)
+      Github::App.new.installation_token(repository.installation_id, repository_id: repository.github_id)
     end
+    private_class_method :scoped_token
 
     def self.find_in_pages
       result = []

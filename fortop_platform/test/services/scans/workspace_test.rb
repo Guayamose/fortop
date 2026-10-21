@@ -108,6 +108,96 @@ class Scans::WorkspaceTest < ActiveSupport::TestCase
     assert_equal @files["danger.rb"], @workspace.read("danger.rb")
   end
 
+  test "reads beyond one hundred files and two megabytes and validates more than five corrections" do
+    125.times { |index| @files["pages/page-#{index}.html"] = @files.fetch("index.html") + "<!-- #{'a' * 20_000} -->\n" }
+    workspace = fresh_workspace
+    paths = @files.keys.grep(/pages\//)
+    paths.each { |path| workspace.read(path) }
+    paths.first(12).each do |path|
+      workspace.replace(path, "<title>Fortop</title>", "<title>Fortop · GEO</title>", finding_ids: [ 1 ])
+    end
+
+    assert_equal 125, workspace.coverage["read_files"]
+    assert_operator workspace.coverage["read_bytes"], :>, 2_000_000
+    assert_equal 12, workspace.changed_files.size
+    assert_includes workspace.original(paths.first), "<title>Fortop</title>"
+    assert_includes workspace.read(paths.first), "<title>Fortop · GEO</title>"
+    assert Scans::Validator.new(workspace).call.all? { |check| check["passed"] }
+  ensure
+    workspace&.close
+  end
+
+  test "inventories beyond twenty thousand files retain correct pagination" do
+    tree = Array.new(20_250) { |index| { "path" => format("pages/%05d.html", index), "type" => "blob", "mode" => "100644" } }
+    workspace = Scans::Workspace.new(github: Object.new, full_name: "test/repo", sha: "a" * 40, tree: tree)
+    page = workspace.list_files(offset: 20_200)
+    assert_equal 20_250, page["total"]
+    assert_equal 50, page["files"].length
+    assert_equal "pages/20200.html", page["files"].first
+    assert_nil page["next_offset"]
+  ensure
+    workspace&.close
+  end
+
+  test "line reading continues beyond the old byte and line ceilings" do
+    @files["long.txt"] = "source\n" * 100_100
+    workspace = fresh_workspace
+    page = workspace.read_lines("long.txt", start_line: 100_001)
+    assert_equal 100_100, page["total_lines"]
+    assert page["content"].start_with?("100001: source\n")
+    assert_includes page["content"], "100100: source\n"
+    assert_nil page["next_line"]
+  ensure
+    workspace&.close
+  end
+
+  test "line pages expose a continuation when the response size cuts the requested range" do
+    @files["wide.txt"] = ("a" * 300 + "\n") * 250
+    workspace = fresh_workspace
+    first = workspace.read_lines("wide.txt")
+    assert first["truncated"]
+    assert_operator first["next_line"], :>, 1
+    second = workspace.read_lines("wide.txt", start_line: first["next_line"])
+    assert second["content"].start_with?("#{first['next_line']}: ")
+    assert_operator second["content"].lines.size, :>, 1
+  ensure
+    workspace&.close
+  end
+
+  test "search finds evidence beyond the first forty five files" do
+    120.times { |index| @files[format("pages/%03d.html", index)] = index == 119 ? "needle\n" : "other\n" }
+    workspace = fresh_workspace
+    page = workspace.search("needle", prefix: "pages/")
+    assert_equal 45, page["searched_files"]
+    assert page["limited"]
+    assert_empty page["matches"]
+    page = workspace.search("needle", prefix: "pages/", offset: page["next_offset"], start_line: page["next_line"])
+    page = workspace.search("needle", prefix: "pages/", offset: page["next_offset"], start_line: page["next_line"])
+    assert_equal "pages/119.html", page["matches"].first["path"]
+    assert_nil page["next_offset"]
+    refute page["limited"]
+    assert_equal 120, workspace.read_paths.size
+  ensure
+    workspace&.close
+  end
+
+  test "search resumes within a file without losing or duplicating matches" do
+    @files["matches.txt"] = "needle\n" * 95
+    workspace = fresh_workspace
+    page = workspace.search("needle", prefix: "matches.txt")
+    assert_equal 0, page["next_offset"]
+    assert_equal 41, page["next_line"]
+    matches = page["matches"]
+    while page["next_offset"]
+      page = workspace.search("needle", prefix: "matches.txt", offset: page["next_offset"], start_line: page["next_line"])
+      matches += page["matches"]
+    end
+    assert_equal (1..95).to_a, matches.map { |match| match["line"] }
+    refute page["limited"]
+  ensure
+    workspace&.close
+  end
+
   private
 
   def fresh_workspace

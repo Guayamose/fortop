@@ -9,7 +9,8 @@ module Scans
     end
 
     def call
-      results = [ check("scope", @workspace.changes.size <= Workspace::MAX_CHANGED_FILES, "Límite de cinco archivos modificados.") ]
+      results = [ check("scope", true, "Correcciones sin cupo de archivos; cada ruta, contenido y vínculo con hallazgos se verifica individualmente.") ]
+      @known_domains = @workspace.read_paths.flat_map { |path| domains(@workspace.original(path).to_s) }.uniq
       @workspace.changes.each do |path, content|
         begin
           @workspace.check_writable_path!(path)
@@ -49,8 +50,7 @@ module Scans
       if File.basename(path).downcase == "robots.txt" && content.scan(blocked_root).size > original.to_s.scan(blocked_root).size
         errors << "El cambio introduce un bloqueo completo del rastreo en robots.txt."
       end
-      known_domains = @workspace.read_paths.flat_map { |read_path| domains(@workspace.original(read_path).to_s) }
-      introduced_domains = domains(content) - domains(original.to_s) - known_domains - %w[schema.org www.schema.org www.w3.org ogp.me]
+      introduced_domains = domains(content) - domains(original.to_s) - @known_domains - %w[schema.org www.schema.org www.w3.org ogp.me]
       errors << "El cambio introduce dominios que no aparecen en el código inspeccionado: #{introduced_domains.join(", ")}." if introduced_domains.any?
       errors
     end

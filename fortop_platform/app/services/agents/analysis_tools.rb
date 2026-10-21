@@ -1,7 +1,5 @@
 module Agents
   class AnalysisTools < RepositoryTools
-    MAX_FINDINGS = 8
-
     def declarations
       super + [ function("report_finding", "Persist one actionable SEO/GEO finding backed by an exact quote from a file you have read. Report gaps as missing behavior observed in existing relevant source, not invented files. Avoid duplicates and unsupported claims about actual AI rankings.", {
         title: string, description: string, category: { type: "STRING", enum: %w[indexability metadata structured_data content accessibility performance internationalization] },
@@ -30,8 +28,6 @@ module Agents
       attrs["title"] = attrs["title"].truncate(180)
       fingerprint = Digest::SHA256.hexdigest([ attrs["category"], path, attrs["title"].downcase.strip ].join(":"))
       finding = @scan.findings.find_or_initialize_by(fingerprint: fingerprint)
-      raise ToolError, "Se ha alcanzado el límite de #{MAX_FINDINGS} hallazgos por ejecución." if finding.new_record? && @scan.findings.count >= MAX_FINDINGS
-
       automatable = arguments["automatable"] == true
       finding.assign_attributes(attrs.merge(file_path: path, line_number: line, evidence: evidence, automatable: automatable, status: automatable ? "open" : "manual"))
       finding.save!

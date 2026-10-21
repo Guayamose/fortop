@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <title><%= content_for(:title) || "Fortop · Análisis y remediación GEO" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="theme-color" content="#2B4F42">
+    <meta name="application-name" content="Fortop">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= yield :head %>
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+  <body class="<%= current_user ? 'workspace-body' : 'access-body' %>">
+    <a href="#main-content" class="skip-link">Saltar al contenido</a>
+    <% if current_user %>
+      <aside class="sidebar" aria-label="Navegación principal">
+        <%= link_to root_path, class: "brand-link", aria: { label: "Fortop, inicio" } do %>
+          <%= image_tag "brand/fortop-ivory.svg", alt: "FORTOP", class: "sidebar-logo", width: 164, height: 44 %>
+        <% end %>
+        <div class="workspace-label">Tu espacio de trabajo</div>
+        <nav class="main-nav">
+          <%= link_to repositories_path, class: "nav-item is-active", aria: { current: "page" } do %><%= app_icon(:repository) %><span>Repositorios</span><% end %>
+          <div class="nav-item is-disabled" aria-disabled="true"><%= app_icon(:globe) %><span>Visibilidad de marca <small>Próximamente</small></span></div>
+        </nav>
+        <div class="sidebar-bottom">
+          <div class="sidebar-note"><span class="tiny-dot"></span>De tu código a tu presencia en IA.</div>
+          <div class="account-row">
+            <span class="account-avatar" aria-hidden="true"><%= current_user.login.first.upcase %></span>
+            <div class="account-copy"><strong><%= current_user.display_name %></strong><span>@<%= current_user.login %></span></div>
+            <%= button_to logout_path, method: :delete, class: "icon-button logout-button", aria: { label: "Cerrar sesión" }, title: "Cerrar sesión" do %><%= app_icon(:logout) %><% end %>
+          </div>
+        </div>
+      </aside>
+      <div class="workspace-main">
+        <header class="topbar"><div class="topbar-label">Análisis y remediación <span>/</span> <strong><%= content_for(:breadcrumb) || "Repositorios" %></strong></div><span class="topbar-github"><%= app_icon(:github) %> GitHub conectado</span></header>
+        <main id="main-content" class="page-content" tabindex="-1">
+          <%= render "shared/flash" %><%= yield %>
+          <footer class="workspace-footer"><span>FORTOP</span><span>Geometría precisa. Presencia sólida.</span></footer>
+        </main>
+      </div>
+    <% else %>
+      <main id="main-content" class="access-main" tabindex="-1"><%= render "shared/flash" %><%= yield %></main>
+    <% end %>
+  </body>
+</html>

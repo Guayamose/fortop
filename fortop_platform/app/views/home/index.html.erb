@@ -1,0 +1,25 @@
+<% content_for :title, "Tu espacio · Fortop" %>
+<% content_for :body_class, "welcome-page" %>
+<div class="workspace-welcome">
+  <section class="welcome-intro" aria-labelledby="welcome-title">
+    <div class="welcome-copy">
+      <h1 id="welcome-title"><%= image_tag "brand/ascenso.svg", alt: "", width: 48, height: 43 %><span>Te damos la bienvenida</span></h1>
+      <p class="welcome-context">Estás en el espacio de <strong><%= current_user.display_name %></strong></p>
+      <div class="welcome-account"><%= external_link(safe_join([app_icon(:github), "@#{current_user.login}", app_icon(:external)]), "https://github.com/#{current_user.login}") %><span class="welcome-account-divider" aria-hidden="true"></span><span><%= pluralize(@repository_count, 'repositorio', 'repositorios') %></span><span><%= pluralize(@brand_count, 'marca', 'marcas') %></span></div>
+      <p class="welcome-description">Tu código y tu marca. Un espacio para entender qué mejorar y dar el siguiente paso.</p>
+      <nav class="welcome-actions" aria-label="Acciones rápidas">
+        <%= link_to new_repository_path, class: "welcome-action" do %><span><%= app_icon(:plus) %></span>Conectar un repositorio<% end %>
+        <% if @repository_count.positive? %><%= link_to repositories_path, class: "welcome-action" do %><span><%= app_icon(:play) %></span>Analizar un repositorio<% end %><% end %>
+        <%= link_to new_brand_path, class: "welcome-action" do %><span><%= app_icon(:plus) %></span>Añadir una marca<% end %>
+        <%= link_to brands_path, class: "welcome-action" do %><span><%= app_icon(:globe) %></span>Ver visibilidad de marca<% end %>
+      </nav>
+    </div>
+    <aside class="welcome-promo" aria-labelledby="welcome-promo-title">
+      <span class="welcome-promo-label">FORTOP / TU SIGUIENTE PASO</span>
+      <h2 id="welcome-promo-title">Encuentra oportunidades.<br>Haz que se conviertan en mejoras.</h2>
+      <%= render "welcome_art" %>
+      <%= link_to brands_path, class: "welcome-promo-link" do %>Explorar la visibilidad de tu marca<%= app_icon(:arrow) %><% end %>
+    </aside>
+  </section>
+
+</div>

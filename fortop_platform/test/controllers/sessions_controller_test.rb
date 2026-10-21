@@ -18,7 +18,7 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
         assert_response :see_other
         assert_match %r{\Ahttps://github.com/login/oauth/authorize}, response.location
         get callback_session_path, params: { code: "valid-code", state: @state }
-        assert_redirected_to repositories_path
+        assert_redirected_to root_path
         assert_nil flash[:notice]
         user = User.find_by!(github_id: 555)
         assert_equal user.id, session[:user_id]

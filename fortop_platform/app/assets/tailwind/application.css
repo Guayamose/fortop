@@ -76,6 +76,7 @@ main:focus { outline: none; }
 .topbar-inner { display: flex; align-items: center; gap: 20px; height: 100%; max-width: 1680px; margin: auto; padding: 0 40px; }
 .brand-link { display: inline-flex; align-items: center; flex: 0 0 auto; }
 .topbar-logo { width: 136px; height: auto; }
+.topbar-mark { display: none; }
 .topbar-divider { width: 1px; height: 22px; background: var(--line-strong); }
 .workspace-account { display: inline-flex; align-items: center; gap: 9px; min-width: 0; font-size: 12px; white-space: nowrap; }
 .workspace-account > span:last-child { overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
@@ -427,6 +428,17 @@ main:focus { outline: none; }
 @keyframes console-flow { to { stroke-dashoffset: -24; } }
 @keyframes console-spark { 0%, 100% { transform: scale(.92); } 50% { transform: scale(1.08); } }
 @keyframes console-node { 0%, 100% { opacity: .25; } 50% { opacity: .9; } }
+@media (max-width: 680px) {
+  .topbar .topbar-inner { padding-inline: 16px; gap: 12px; }
+  .topbar .topbar-logo { width: 90px; }
+  .topbar .main-nav { gap: 12px; }
+}
+@media (max-width: 360px) {
+  .topbar .topbar-inner { padding-inline: 15px; gap: 10px; }
+  .topbar .topbar-logo { display: none; }
+  .topbar .topbar-mark { display: block; width: 29px; height: auto; }
+  .topbar .main-nav { gap: 10px; }
+}
 /* The login occupies one viewport; secondary content adapts to available height. */
 .login-page { height: 100dvh; }
 .login-page .access-main { height: 100%; min-height: 0; }

@@ -19,7 +19,7 @@ Rails.application.routes.draw do
   post "/github/installations", to: "github/installations#create", as: :github_installation
   get "/github/installations/callback", to: "github/installations#callback", as: :github_installation_callback
 
-  root "repositories#index"
+  root "home#index"
   resources :brands do
     resources :visibility_studies, only: :create do
       member do

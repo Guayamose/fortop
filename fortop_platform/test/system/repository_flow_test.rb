@@ -44,10 +44,23 @@ class RepositoryFlowTest < ApplicationSystemTestCase
       save_review_screenshot("access-desktop")
       click_button "Continuar con GitHub"
       assert_selector "h1", text: "Te damos la bienvenida"
-      assert_text "Tu primer repositorio"
+      assert_current_path root_path
       assert_no_text "Has iniciado sesión con GitHub."
-      assert_no_selector ".repository-card"
+      assert_no_selector ".repository-browser"
+      assert_no_selector ".empty-state"
       assert_no_horizontal_overflow
+      save_review_screenshot("home-desktop")
+      page.current_window.resize_to(390, 844)
+      assert_no_horizontal_overflow
+      save_review_screenshot("home-mobile")
+      page.current_window.resize_to(1440, 1000)
+      within ".main-nav" do
+        click_link "Repositorios", exact: true
+      end
+      assert_current_path repositories_path
+      assert_selector "h1", text: "Repositorios"
+      assert_text "Tu primer repositorio"
+      assert_no_selector ".workspace-welcome"
       save_review_screenshot("repositories-empty-desktop")
 
       click_link "Conectar un repositorio"
@@ -332,6 +345,8 @@ class RepositoryFlowTest < ApplicationSystemTestCase
       failed.scans.create!(status: "failed", progress: 88, error_message: "GitHub no responde.", finished_at: Time.current)
 
       visit repositories_path
+      assert_selector "h1", text: "Repositorios"
+      assert_no_selector ".workspace-welcome"
       assert_selector ".repository-card", count: 2
       assert_no_horizontal_overflow
       save_review_screenshot("repository-list-desktop")
@@ -362,6 +377,7 @@ class RepositoryFlowTest < ApplicationSystemTestCase
       visit new_session_path
       # Signed-in users are redirected to their workspace rather than shown login.
       assert_selector "h1", text: "Te damos la bienvenida"
+      assert_current_path root_path
     end
   end
 

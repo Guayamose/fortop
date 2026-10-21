@@ -1,36 +1,16 @@
-<% content_for :title, "Tu espacio · Fortop" %>
-<% content_for :body_class, "welcome-page" %>
-<div class="workspace-welcome">
-  <section class="welcome-intro" aria-labelledby="welcome-title">
-    <div class="welcome-copy">
-      <h1 id="welcome-title"><%= image_tag "brand/ascenso.svg", alt: "", width: 48, height: 43 %><span>Te damos la bienvenida</span></h1>
-      <p class="welcome-context">Estás en el espacio de <strong><%= current_user.display_name %></strong></p>
-      <div class="welcome-account"><%= external_link(safe_join([app_icon(:github), "@#{current_user.login}", app_icon(:external)]), "https://github.com/#{current_user.login}") %><span class="welcome-account-divider" aria-hidden="true"></span><span><%= pluralize(@repositories.size, 'repositorio', 'repositorios') %></span><span><%= pluralize(@brand_count, 'marca', 'marcas') %></span></div>
-      <p class="welcome-description">Tu código y tu marca. Un espacio para entender qué mejorar y dar el siguiente paso.</p>
-      <nav class="welcome-actions" aria-label="Acciones rápidas">
-        <%= link_to new_repository_path, class: "welcome-action" do %><span><%= app_icon(:plus) %></span>Conectar un repositorio<% end %>
-        <% if @repositories.any? %><%= link_to "#repositories", class: "welcome-action" do %><span><%= app_icon(:play) %></span>Analizar un repositorio<% end %><% end %>
-        <%= link_to new_brand_path, class: "welcome-action" do %><span><%= app_icon(:plus) %></span>Añadir una marca<% end %>
-        <%= link_to brands_path, class: "welcome-action" do %><span><%= app_icon(:globe) %></span>Ver visibilidad de marca<% end %>
-      </nav>
-    </div>
-    <aside class="welcome-promo" aria-labelledby="welcome-promo-title">
-      <span class="welcome-promo-label">FORTOP / TU SIGUIENTE PASO</span>
-      <h2 id="welcome-promo-title">Encuentra oportunidades.<br>Haz que se conviertan en mejoras.</h2>
-      <%= render "welcome_art" %>
-      <%= link_to brands_path, class: "welcome-promo-link" do %>Explorar la visibilidad de tu marca<%= app_icon(:arrow) %><% end %>
-    </aside>
-  </section>
-
-  <section class="welcome-repositories" id="repositories" aria-labelledby="repositories-title">
-    <header class="welcome-section-heading"><h2 id="repositories-title">Tus repositorios</h2><span><%= pluralize(@repositories.size, 'conectado', 'conectados') %></span></header>
-    <% if @repositories.empty? %>
-      <div class="welcome-empty empty-state">
-        <span class="welcome-empty-icon" aria-hidden="true"><%= app_icon(:repository) %></span>
-        <div><h3>Tu primer repositorio empieza aquí.</h3><p>Conecta tu código para que los agentes encuentren mejoras y preparen sus propuestas en GitHub.</p><%= link_to new_repository_path, class: "text-link" do %>Conectar mi primer repositorio<%= app_icon(:arrow) %><% end %></div>
-      </div>
-    <% else %>
-      <%= render "browser" %>
-    <% end %>
-  </section>
+<% content_for :title, "Repositorios · Fortop" %>
+<div class="page-heading">
+  <div><h1>Repositorios</h1><p>Tu código, sus análisis y las mejoras que están por llegar.</p></div>
+  <% if @repositories.any? %><%= link_to new_repository_path, class: "button button-secondary" do %><%= app_icon(:plus) %> Conectar un repositorio<% end %><% end %>
 </div>
+<% if @repositories.empty? %>
+  <section class="empty-state">
+    <div class="empty-connection" aria-hidden="true"><span><%= app_icon(:github) %></span><i></i><span><%= image_tag "brand/ascenso.svg", alt: "", width: 39, height: 36 %></span></div>
+    <h2>Tu primer repositorio.<br>El principio de algo mejor.</h2>
+    <p>Conecta tu código con Fortop. Tus agentes encontrarán oportunidades<br class="desktop-break"> y prepararán las mejoras para que puedas revisarlas.</p>
+    <%= link_to new_repository_path, class: "button button-primary" do %><%= app_icon(:plus) %> Conectar un repositorio <%= app_icon(:arrow) %><% end %>
+    <span class="empty-caption"><%= app_icon(:lock) %> Tú eliges el acceso y apruebas cada cambio.</span>
+  </section>
+<% else %>
+  <%= render "browser" %>
+<% end %>

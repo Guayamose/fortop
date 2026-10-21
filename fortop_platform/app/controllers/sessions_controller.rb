@@ -6,11 +6,11 @@ class SessionsController < ApplicationController
   rescue_from ActionController::InvalidAuthenticityToken, with: :recover_expired_login
 
   def new
-    redirect_to repositories_path if current_user
+    redirect_to root_path if current_user
   end
 
   def create
-    return redirect_to repositories_path if current_user
+    return redirect_to root_path if current_user
 
     state = SecureRandom.hex(32)
     verifier = SecureRandom.urlsafe_base64(48, false)
@@ -35,7 +35,7 @@ class SessionsController < ApplicationController
     user = User.from_github(profile, **credentials)
     reset_session
     session[:user_id] = user.id
-    redirect_to repositories_path
+    redirect_to root_path
   rescue Github::Error => error
     redirect_to new_session_path, alert: error.message
   rescue ActiveRecord::RecordInvalid

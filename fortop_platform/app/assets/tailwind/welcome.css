@@ -22,7 +22,11 @@
 .welcome-promo { position:relative; isolation:isolate; overflow:hidden; display:flex; flex-direction:column; min-height:306px; padding:28px 25px 25px; border-radius:16px; background:#080b10; color:#fff; }
 .welcome-promo-label { position:relative; z-index:1; color:#8e9caf; font:8px/1.5 var(--font-mono); letter-spacing:.1em; }
 .welcome-promo h2 { position:relative; z-index:1; margin-top:18px; max-width:260px; font-size:25px; line-height:1.2; letter-spacing:-.02em; font-weight:430; }
-.welcome-promo-art { position:absolute; left:0; bottom:18px; width:100%; height:180px; z-index:0; pointer-events:none; opacity:.9; }
+.welcome-promo-art { position:absolute; left:0; bottom:18px; width:100%; height:180px; z-index:0; pointer-events:none; opacity:.9; transform-origin:50% 60%; animation:welcome-wave-swell 9s ease-in-out infinite; }
+.welcome-wave-line { animation:welcome-wave-flow 6.6s linear infinite, welcome-wave-light 4.8s ease-in-out infinite; animation-delay:var(--wave-delay),var(--wave-delay); }
+@keyframes welcome-wave-flow { to { stroke-dashoffset:-79.2; } }
+@keyframes welcome-wave-light { 0%,100% { opacity:.4; } 50% { opacity:1; } }
+@keyframes welcome-wave-swell { 0%,100% { transform:translateY(4px) rotate(-1deg) scale(1); } 50% { transform:translateY(-7px) rotate(1deg) scale(1.035); } }
 .welcome-promo-link { position:relative; z-index:1; display:flex; align-items:center; gap:9px; width:fit-content; margin-top:auto; padding-top:72px; color:#dce8f6; font-size:10px; }
 .welcome-promo-link .icon { width:14px; height:14px; color:#75baff; transition:transform .2s; }.welcome-promo-link:hover .icon { transform:translateX(4px); }
 @media (max-width:1100px) {

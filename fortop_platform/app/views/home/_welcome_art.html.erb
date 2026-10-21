@@ -3,6 +3,6 @@
     <linearGradient id="welcome-wave-color" x1="0" y1="100" x2="360" y2="150" gradientUnits="userSpaceOnUse"><stop stop-color="#1478d5" stop-opacity="0.05"/><stop offset="0.45" stop-color="#62b6ff"/><stop offset="1" stop-color="#1478d5" stop-opacity="0.1"/></linearGradient>
   </defs>
   <% 19.times do |index| %>
-    <path d="M -24 <%= 47 + index * 7 %> C 72 <%= 142 + index * 2 %>, 112 <%= 173 - index * 7 %>, 202 <%= 85 + index * 3 %> S 298 <%= 28 + index * 7 %>, 392 <%= 82 + index * 6 %>" stroke="url(#welcome-wave-color)" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="0.1 6.5"/>
+    <path class="welcome-wave-line" style="--wave-delay: -<%= index * 220 %>ms" d="M -24 <%= 47 + index * 7 %> C 72 <%= 142 + index * 2 %>, 112 <%= 173 - index * 7 %>, 202 <%= 85 + index * 3 %> S 298 <%= 28 + index * 7 %>, 392 <%= 82 + index * 6 %>" stroke="url(#welcome-wave-color)" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="0.1 6.5"/>
   <% end %>
 </svg>

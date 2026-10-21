@@ -2,13 +2,13 @@ version: 2
 updates:
   - package-ecosystem: bundler
     directory: /fortop_platform
-    target-branch: develop
+    target-branch: master
     schedule:
       interval: weekly
     open-pull-requests-limit: 10
   - package-ecosystem: github-actions
     directory: /
-    target-branch: develop
+    target-branch: master
     schedule:
       interval: weekly
     open-pull-requests-limit: 10

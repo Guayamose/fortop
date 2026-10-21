@@ -21,6 +21,4 @@ visibilidad de marca en respuestas de IA está previsto y todavía no está
 implementado. Las plantillas de despliegue no representan un entorno de
 producción activo.
 
-El repositorio sigue [Gitflow](docs/GIT_WORKFLOW.md), con `main`, `develop`,
-ramas de funcionalidad, releases y etiquetas de versión. El
-[historial de versiones](CHANGELOG.md) recoge el alcance de cada entrega.
+Todo el trabajo se mantiene en la rama `master`.

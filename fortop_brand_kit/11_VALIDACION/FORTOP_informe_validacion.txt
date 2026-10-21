@@ -1,0 +1,20 @@
+FORTOP / VALIDACIÓN DE ENTREGA
+Resultado: PASS
+
+71 SVG de producción: XML válido, identificadores únicos y renderizado PNG completado.
+Los SVG de producción solo utilizan los cuatro colores HEX autorizados.
+Sin imágenes raster incrustadas, scripts, fuentes dependientes ni enlaces externos.
+Lettering FORTOP construido con trazados originales editables.
+Todos los PNG del paquete se han abierto y verificado.
+Favicon ICO con capas de 16, 32, 48 y 64 px.
+Iconos y rutas del manifest comprobados.
+Manual: 12 páginas vectoriales, sin imágenes incrustadas; renderizadas para revisión visual.
+Referencias originales: hashes idénticos al manifiesto recibido.
+Fuentes Python: sintaxis verificada.
+Colores interiores de las cuatro muestras: píxeles RGB exactos en el PNG de marca.
+Revisión visual: símbolo, lettering, firma principal, firma tallada y páginas del manual.
+
+Los ficheros de 99_REFERENCIAS son documentación de origen y no son artes finales.
+El inventario SHA-256 excluye al propio inventario para evitar autorreferencia.
+
+Regeneración desde las fuentes incluidas: los 71 SVG coinciden byte a byte con los entregados.

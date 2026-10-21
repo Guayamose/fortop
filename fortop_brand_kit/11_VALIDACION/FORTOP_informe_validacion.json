@@ -1,0 +1,26 @@
+{
+  "status": "PASS",
+  "production_svg_count": 71,
+  "png_count_including_references": 100,
+  "manual_pages": 12,
+  "errors": [],
+  "checks": {
+    "all_production_svgs_xml_valid": true,
+    "unique_ids": true,
+    "native_vector_no_raster_or_font_dependency": true,
+    "production_palette_exact": true,
+    "every_production_svg_rendered_to_png": true,
+    "digital_dimensions_and_manifest": true,
+    "ico_resolutions": [
+      16,
+      32,
+      48,
+      64
+    ],
+    "manual_vector_pages": true,
+    "original_reference_hashes_preserved": true,
+    "python_source_syntax": true,
+    "brand_sheet_swatch_pixels_exact": true,
+    "source_reproduces_all_71_svgs_byte_for_byte": true
+  }
+}

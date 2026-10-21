@@ -1,0 +1,8 @@
+Copiar la carpeta 05_DIGITAL manteniendo las rutas. En el <head>:
+<link rel="icon" href="/05_DIGITAL/favicon/FORTOP_favicon_32.svg" type="image/svg+xml">
+<link rel="icon" href="/05_DIGITAL/favicon/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="/05_DIGITAL/app-icons/apple-touch-icon.png">
+<link rel="manifest" href="/05_DIGITAL/site.webmanifest">
+<meta name="theme-color" content="#2B4F42">
+
+Los SVG del logo no requieren fuentes. Usar alt="FORTOP" cuando identifique la marca.

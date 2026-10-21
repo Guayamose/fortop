@@ -1,0 +1,7 @@
+{
+  "private": true,
+  "description": "FORTOP SVG rendering utility",
+  "dependencies": {
+    "sharp": "^0.34.0"
+  }
+}

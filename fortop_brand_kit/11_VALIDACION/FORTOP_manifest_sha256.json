@@ -1,0 +1,774 @@
+{
+  "00_MAESTROS/FORTOP_geometria.json": {
+    "bytes": 2604,
+    "sha256": "9954ae08dcac5fb3de929aaa928679f7de2c6e0e2e92560c4a8361e67b927cf1"
+  },
+  "00_MAESTROS/FORTOP_imagotipo_master.svg": {
+    "bytes": 1876,
+    "sha256": "2fb82430a49ec811bfa4ce5129162fa09ff074c3f37965ffc40f3cc4579a9a49"
+  },
+  "00_MAESTROS/FORTOP_isologo_master.svg": {
+    "bytes": 1608,
+    "sha256": "a91b469f5a3d85d086bf51d37d61a122387c920cb56d4fb70b3d2b3a6060639d"
+  },
+  "00_MAESTROS/FORTOP_isotipo_master.svg": {
+    "bytes": 709,
+    "sha256": "f7d01d477391037994753c26d7586e4ef1d3869ec7ce3aba7d1d09b3df8f4da5"
+  },
+  "00_MAESTROS/FORTOP_logotipo_master.svg": {
+    "bytes": 1478,
+    "sha256": "360fd5cbd11248a281d0223375686cb551455ca905e8501d85916834ac911917"
+  },
+  "01_ISOTIPO/FORTOP_isotipo_color-honeydew.svg": {
+    "bytes": 856,
+    "sha256": "3e9a9122200582207185d9b189e4a830a7de4365b51696ac443d7aa2e192aa73"
+  },
+  "01_ISOTIPO/FORTOP_isotipo_color-ivory.svg": {
+    "bytes": 853,
+    "sha256": "7b0af1308574f128130eb60fd35c55acce34514c2b566a39452937905f4c4f5c"
+  },
+  "01_ISOTIPO/FORTOP_isotipo_color-transparente.svg": {
+    "bytes": 794,
+    "sha256": "fd8fc3bed64b2b74c822d6a6cd8dc37bd1162873e52be6bf81094709aa0178d6"
+  },
+  "01_ISOTIPO/FORTOP_isotipo_inverso-pine.svg": {
+    "bytes": 854,
+    "sha256": "08eea608c1dcece8a5b0e7059013f5bb9273e0c5fa74e680d38047f6461c4702"
+  },
+  "01_ISOTIPO/FORTOP_isotipo_inverso-shadow.svg": {
+    "bytes": 856,
+    "sha256": "0a59307e1ace41b4979aae492ed64510d6aaa7c8121dba75b6d9cfaa8d2698ac"
+  },
+  "01_ISOTIPO/FORTOP_isotipo_mono-honeydew.svg": {
+    "bytes": 789,
+    "sha256": "8e787dbe66a6d6138a5feeebf22a0d99de247684f886dd8ed6d5e1abcf3fa2d9"
+  },
+  "01_ISOTIPO/FORTOP_isotipo_mono-ivory.svg": {
+    "bytes": 786,
+    "sha256": "a2d605ccc1a72bff40fc6aad92c30fb9651873cca3ec71c7e4b523b03b0bfa94"
+  },
+  "01_ISOTIPO/FORTOP_isotipo_mono-pine.svg": {
+    "bytes": 785,
+    "sha256": "032c1fb9ca02a2dccb643ffc8938a088e55fda08006ac4b229165be796dd67e1"
+  },
+  "01_ISOTIPO/FORTOP_isotipo_mono-shadow.svg": {
+    "bytes": 787,
+    "sha256": "6980441855acfec8095b3305201d7a408b786aafdb74478fbc3c84ffa1ab09d1"
+  },
+  "02_LOGOTIPO/FORTOP_logotipo_color-honeydew.svg": {
+    "bytes": 1625,
+    "sha256": "3dc3f7766112ab29627d3d82ea474c0461b56d10b0824808988fbb9d2d58954b"
+  },
+  "02_LOGOTIPO/FORTOP_logotipo_color-ivory.svg": {
+    "bytes": 1622,
+    "sha256": "7a5f9360ae06934d4aff6eb3d3c12df66196f87e69f9ad6b249e16e7cea68059"
+  },
+  "02_LOGOTIPO/FORTOP_logotipo_color-transparente.svg": {
+    "bytes": 1563,
+    "sha256": "5daef641ccc00f3b2e2c920ebe2c95a9315c13c6c813cfb236613c6d12f8c829"
+  },
+  "02_LOGOTIPO/FORTOP_logotipo_inverso-pine.svg": {
+    "bytes": 1623,
+    "sha256": "aea8bff8fe7ed975353ebae06731fdc1ae1e8cae1bcf2532df8c03c1d4ef02c5"
+  },
+  "02_LOGOTIPO/FORTOP_logotipo_inverso-shadow.svg": {
+    "bytes": 1625,
+    "sha256": "a2de7a4e9dc0b4538e211fd74f542da660fb9379f509e6eee053b54257f84e7c"
+  },
+  "02_LOGOTIPO/FORTOP_logotipo_mono-honeydew.svg": {
+    "bytes": 1558,
+    "sha256": "90938205e7e2bf0f12863959eff96b840119a5fccb074b24785f6b6b3e5e274a"
+  },
+  "02_LOGOTIPO/FORTOP_logotipo_mono-ivory.svg": {
+    "bytes": 1555,
+    "sha256": "bd10b3ba516018294ff952d23da49437dba8922a4d765a7549c399635876c4b5"
+  },
+  "02_LOGOTIPO/FORTOP_logotipo_mono-pine.svg": {
+    "bytes": 1554,
+    "sha256": "b5cee4d99b32673c3e1b3810f54af204a9060a07b9d4aeb8cdb3b37b7e42941a"
+  },
+  "02_LOGOTIPO/FORTOP_logotipo_mono-shadow.svg": {
+    "bytes": 1556,
+    "sha256": "50ce0d026a675a291b8d3e6021d598a24a8705eebcd370b73b41fb658f4c5e88"
+  },
+  "03_IMAGOTIPO/FORTOP_imagotipo_color-honeydew.svg": {
+    "bytes": 2025,
+    "sha256": "7754a0a7d22cc2493dcb69f281474d95e1a597fa1b94eb54bd8f676beb581957"
+  },
+  "03_IMAGOTIPO/FORTOP_imagotipo_color-ivory.svg": {
+    "bytes": 2022,
+    "sha256": "a21e4d389c0a17e1b9caa323f1bc20e32ac773b0bf821faa18e906dd7826b849"
+  },
+  "03_IMAGOTIPO/FORTOP_imagotipo_color-transparente.svg": {
+    "bytes": 1961,
+    "sha256": "91899cc02290bf25d0f824da5bca2581884123a76f6b1163ba4a759051c5d038"
+  },
+  "03_IMAGOTIPO/FORTOP_imagotipo_inverso-pine.svg": {
+    "bytes": 2023,
+    "sha256": "2689dbef0d64dc62ec434169e046caa8fcc3619253e5828768227d264c708cc2"
+  },
+  "03_IMAGOTIPO/FORTOP_imagotipo_inverso-shadow.svg": {
+    "bytes": 2025,
+    "sha256": "f0d18d30c0241180241fc96c1469af3ac2f505bcbe3bb24cb1c43fea72388194"
+  },
+  "03_IMAGOTIPO/FORTOP_imagotipo_mono-honeydew.svg": {
+    "bytes": 1956,
+    "sha256": "46e51ea2d4650b8ffd13e07bd748d8efcc9ea3d49f24705f1b6a45e5dee3654d"
+  },
+  "03_IMAGOTIPO/FORTOP_imagotipo_mono-ivory.svg": {
+    "bytes": 1953,
+    "sha256": "7346cbbda2ea55484950e9fcfc43f76ef2ba6b75389adf9d14326d449a356eaf"
+  },
+  "03_IMAGOTIPO/FORTOP_imagotipo_mono-pine.svg": {
+    "bytes": 1952,
+    "sha256": "ae5af6a16da562c47c85b39633d1d5496198d1d3391e9258430ccd3f9aa0907a"
+  },
+  "03_IMAGOTIPO/FORTOP_imagotipo_mono-shadow.svg": {
+    "bytes": 1954,
+    "sha256": "62df014c27d8284de779fee78b48f3edba4228d664c824af768684510e01d889"
+  },
+  "04_ISOLOGO/FORTOP_isologo_tallado_inverso-pine.svg": {
+    "bytes": 1747,
+    "sha256": "5bbcd643b16a8551487255b57eef3cae86f2c306e282bd6d53e2c74b9b0daf47"
+  },
+  "04_ISOLOGO/FORTOP_isologo_tallado_inverso-shadow.svg": {
+    "bytes": 1747,
+    "sha256": "540fcb00dda2db16691238d349be72a54886c5624e6287ba1fe23cc6246d9c55"
+  },
+  "04_ISOLOGO/FORTOP_isologo_tallado_ivory.svg": {
+    "bytes": 1681,
+    "sha256": "98e042eaece69d507409951c7bac5923442ba1e77038d78076c34bdf479cc469"
+  },
+  "04_ISOLOGO/FORTOP_isologo_tallado_pine.svg": {
+    "bytes": 1681,
+    "sha256": "5fdfc798d69b16a0e6137d7b59791018fddd82f6cd2a78599572d31092c22eab"
+  },
+  "04_ISOLOGO/FORTOP_isologo_tallado_shadow.svg": {
+    "bytes": 1681,
+    "sha256": "1507c3af7a1b2ea66c93f19e2bfe2803a37a32e75c906f78ab3a74d7d2fa4165"
+  },
+  "05_DIGITAL/app-icons/FORTOP_app_honeydew_1024.png": {
+    "bytes": 35821,
+    "sha256": "36d6c3a7fb7b70388614981b92f7678fcd456fd5282d49c5ae895302f298a1e6"
+  },
+  "05_DIGITAL/app-icons/FORTOP_app_honeydew_192.png": {
+    "bytes": 2784,
+    "sha256": "866582c787e0d04ecdd75f20bff1ec777b31a2068cc8534f40ffb5e0018989b4"
+  },
+  "05_DIGITAL/app-icons/FORTOP_app_honeydew_512.png": {
+    "bytes": 11308,
+    "sha256": "c93b5e5ec89368d4d94d58932e4228024129072b8f3c548c78df60c64c3bbb17"
+  },
+  "05_DIGITAL/app-icons/FORTOP_app_honeydew_512.svg": {
+    "bytes": 879,
+    "sha256": "10d90934c55e2f6dbd09733e140789a5a1a0fab511adf404c66aa447cccb1e70"
+  },
+  "05_DIGITAL/app-icons/FORTOP_app_ivory_1024.png": {
+    "bytes": 35723,
+    "sha256": "1f5063601b6f87e61cf43531ef9b4c3e354b6cc48d581713cb5c9009a9d9a3ad"
+  },
+  "05_DIGITAL/app-icons/FORTOP_app_ivory_192.png": {
+    "bytes": 2762,
+    "sha256": "3dc0b78c8e2625f7ea7ef71efe99f76e01fcf4341409f1e29c156f54bbc5858e"
+  },
+  "05_DIGITAL/app-icons/FORTOP_app_ivory_512.png": {
+    "bytes": 11253,
+    "sha256": "2bc3136aece98e3f0d5ba2bce01e6c064f131690fce10234bed8476f57855373"
+  },
+  "05_DIGITAL/app-icons/FORTOP_app_ivory_512.svg": {
+    "bytes": 876,
+    "sha256": "ee7458a480a4af37b15585e5c032900fd16c49c70d83d5b28f7a3b6ee9c3ccfa"
+  },
+  "05_DIGITAL/app-icons/FORTOP_app_pine_1024.png": {
+    "bytes": 35910,
+    "sha256": "a08de8facf945e0ac92b28eaa906b28948c63c73dbc8e50db9dfddab6352eacf"
+  },
+  "05_DIGITAL/app-icons/FORTOP_app_pine_192.png": {
+    "bytes": 2780,
+    "sha256": "2172fe72136d2181710e990dba671fd31a4cfcfaafc3021dd3db191858613df8"
+  },
+  "05_DIGITAL/app-icons/FORTOP_app_pine_512.png": {
+    "bytes": 11334,
+    "sha256": "e5791ac3bf824e5e03db83618758eee10d22d4eadce5d3fc2a57e89c5a6cfcc4"
+  },
+  "05_DIGITAL/app-icons/FORTOP_app_pine_512.svg": {
+    "bytes": 875,
+    "sha256": "8f17f75009f41d8ddb49c35c8d95a9936b9c2a40e02c068efeadc2c81b6a6de5"
+  },
+  "05_DIGITAL/app-icons/FORTOP_app_pine_maskable_512.png": {
+    "bytes": 11124,
+    "sha256": "e27c93e1f3df876a826a5eeec9b38a4bc44ac4e50a60215587b53b1ada8f9662"
+  },
+  "05_DIGITAL/app-icons/FORTOP_app_pine_maskable_512.svg": {
+    "bytes": 800,
+    "sha256": "110ec5cd187e4e5337342437be9bda713adced8b717779d97ce2d993cd64e12d"
+  },
+  "05_DIGITAL/app-icons/FORTOP_app_shadow_1024.png": {
+    "bytes": 35917,
+    "sha256": "c674cf7132d572d605f8b7d00e28d822443a9cb7da1a6be8741cf1a11fb08ede"
+  },
+  "05_DIGITAL/app-icons/FORTOP_app_shadow_192.png": {
+    "bytes": 2782,
+    "sha256": "924892666acd12aad21999676ed2b84bfa7dfa6fe9a05300728da058b2c3680c"
+  },
+  "05_DIGITAL/app-icons/FORTOP_app_shadow_512.png": {
+    "bytes": 11335,
+    "sha256": "3b9b0319b7f5e0cec0ba2c92ad4dc944735c3d477dcbac2d0cf4a57ce0f885cb"
+  },
+  "05_DIGITAL/app-icons/FORTOP_app_shadow_512.svg": {
+    "bytes": 877,
+    "sha256": "2eca000f7eb5937b39db9bf5154747e7c9fb1c4351918a96bef87b8e2e6ad153"
+  },
+  "05_DIGITAL/app-icons/apple-touch-icon.png": {
+    "bytes": 2578,
+    "sha256": "2405654ea12ee7af704be9359a7b8d408a233cdfcfb76f44bfbc12bf2e3b3348"
+  },
+  "05_DIGITAL/avatares/FORTOP_avatar_honeydew_1024.png": {
+    "bytes": 32989,
+    "sha256": "aa7c74d59e86c969fd21e9132f3fe441cddf8802961970ae0c7f22117881fe7f"
+  },
+  "05_DIGITAL/avatares/FORTOP_avatar_honeydew_1024.svg": {
+    "bytes": 808,
+    "sha256": "1a34fbfe5da7a1b201ce7a54762798261324556287ccc528240a24f10612c7c6"
+  },
+  "05_DIGITAL/avatares/FORTOP_avatar_ivory_1024.png": {
+    "bytes": 32866,
+    "sha256": "15abe3710bb2af9e487ed8c843791553e45ee43ff9e5cf8f46978b19b7c41ba6"
+  },
+  "05_DIGITAL/avatares/FORTOP_avatar_ivory_1024.svg": {
+    "bytes": 805,
+    "sha256": "0b4f139c757bef868f07dc588532caa8d5a3771ba44eb7927ca95520b5ab67a0"
+  },
+  "05_DIGITAL/avatares/FORTOP_avatar_pine_1024.png": {
+    "bytes": 33018,
+    "sha256": "ad8abb38dcd1180b62abe8378e3cea8f6b128b199dce17f0879819d85b02b58b"
+  },
+  "05_DIGITAL/avatares/FORTOP_avatar_pine_1024.svg": {
+    "bytes": 804,
+    "sha256": "8956adbbd1ff43210e3c2dd8b5ff3c0d5464de4663876a4673ae53a7fbafd146"
+  },
+  "05_DIGITAL/avatares/FORTOP_avatar_shadow_1024.png": {
+    "bytes": 33003,
+    "sha256": "28805a445389372793d1819b9dfd6d9125fa9824e4f573feae584c8bff7b6dd2"
+  },
+  "05_DIGITAL/avatares/FORTOP_avatar_shadow_1024.svg": {
+    "bytes": 806,
+    "sha256": "5b485c46e8874a92499d55b53b42688b266951a5e8ee699fcdf8ff17dc546b9b"
+  },
+  "05_DIGITAL/favicon/FORTOP_favicon_16.png": {
+    "bytes": 391,
+    "sha256": "d367911a53914ebf297c21e7c3ec3a0a91ff914e44ce1277f85aa2e077b59e22"
+  },
+  "05_DIGITAL/favicon/FORTOP_favicon_16.svg": {
+    "bytes": 819,
+    "sha256": "ad39f460d77bf68de837e7d0bc614f3fff622850c3d0a53dd3bce2d6ad05b4a5"
+  },
+  "05_DIGITAL/favicon/FORTOP_favicon_32.png": {
+    "bytes": 652,
+    "sha256": "3b4a1fc7ba732f3ff74f64f0ca3b6a9e56e497a1f2a6934b962138b6f6d914e0"
+  },
+  "05_DIGITAL/favicon/FORTOP_favicon_32.svg": {
+    "bytes": 818,
+    "sha256": "179e337f4b70ba239890b5ca08282ae7d87d4881c87a5375e5755af2a2b409c0"
+  },
+  "05_DIGITAL/favicon/FORTOP_favicon_48.png": {
+    "bytes": 930,
+    "sha256": "8dff1a5940a0d2ef9c9843476e8983ab3cb9d1f42745902ab334f8abb84de226"
+  },
+  "05_DIGITAL/favicon/FORTOP_favicon_48.svg": {
+    "bytes": 819,
+    "sha256": "640d1055a2610cf41fb289fadc818dde2befe19bd8385288a205822f0ea104fd"
+  },
+  "05_DIGITAL/favicon/FORTOP_favicon_64.png": {
+    "bytes": 1142,
+    "sha256": "90312f7d884a9ca1743e7f962bedd12e1340969f9ef258aaa510d78c0b60b19d"
+  },
+  "05_DIGITAL/favicon/FORTOP_favicon_64.svg": {
+    "bytes": 820,
+    "sha256": "2f7d3bc2189ecccb07d892349fc91938ca0bddd661fcf80056e1d0bf92cb4c95"
+  },
+  "05_DIGITAL/favicon/favicon.ico": {
+    "bytes": 4074,
+    "sha256": "67806b76a4d00484c6029f8ee6f37d3e2145be343f6e582f6a84ed0d7310d346"
+  },
+  "05_DIGITAL/integracion-web.txt": {
+    "bytes": 492,
+    "sha256": "5a9c60e7aef6d99577b8b087c7475a6781e93512a43f5fbe1f0383da99a372a8"
+  },
+  "05_DIGITAL/marca-de-agua/FORTOP_watermark_ivory.svg": {
+    "bytes": 1921,
+    "sha256": "7c4f0359c6e12257443cae0a3d1e5fb016e73aa9e6a2e550549fa5a3b562eb1a"
+  },
+  "05_DIGITAL/marca-de-agua/FORTOP_watermark_shadow.svg": {
+    "bytes": 1922,
+    "sha256": "91b570bbcbfc558242d99418c690e8972f5d40486ca22251f5021f56904bd8b8"
+  },
+  "05_DIGITAL/site.webmanifest": {
+    "bytes": 585,
+    "sha256": "14a444c0c28524fa75ccaf259f8b04ebe314a4775aa1b790f8820d33bb5ad61a"
+  },
+  "06_APLICACIONES/papeleria/FORTOP_hoja_A4.svg": {
+    "bytes": 3680,
+    "sha256": "98c75ebf9f5cc43c59c2b06503ea12464ec216299f9d9b48c49922a813572b85"
+  },
+  "06_APLICACIONES/portadas/FORTOP_portada_1920x1080.svg": {
+    "bytes": 6038,
+    "sha256": "f80a8f40035b38b1603c235f7dbc8ca5184291bd04d6ae97a8c4ca34cbc26927"
+  },
+  "06_APLICACIONES/recursos/FORTOP_patron_ascenso.svg": {
+    "bytes": 8435,
+    "sha256": "396151d9c7936eb08ea7d59bdd20665b86b2d662e7bb8f9aa77037a9e0d9067e"
+  },
+  "06_APLICACIONES/social/FORTOP_social_1200x630.svg": {
+    "bytes": 2022,
+    "sha256": "fc9b3501f88aba5692f11767a3549075b3b5de2de882c522df84bd8db4ce35bc"
+  },
+  "06_APLICACIONES/tarjetas/FORTOP_tarjeta_anverso_85x55mm.svg": {
+    "bytes": 1999,
+    "sha256": "2496e210d89fa6805107c5b18e4d9edde4550d9fe328ef5269b742acd1d48065"
+  },
+  "06_APLICACIONES/tarjetas/FORTOP_tarjeta_reverso_85x55mm.svg": {
+    "bytes": 2068,
+    "sha256": "2a2cc8aed0f1350626b6e587f9f541975755c53e0624c14da2dd6714951833f4"
+  },
+  "07_MANUAL/FORTOP_Manual_de_Marca.pdf": {
+    "bytes": 874550,
+    "sha256": "389a213c3e8e64105d5b6ee274111b11f9eb4a55098e6bcea6e685d3a19bd720"
+  },
+  "07_MANUAL/FORTOP_brand_sheet.svg": {
+    "bytes": 159422,
+    "sha256": "17472559e1aeb86604943cdac2f573435be2e339c1c92506b64c6480e4b10a42"
+  },
+  "07_MANUAL/paginas-svg/01_portada.svg": {
+    "bytes": 56555,
+    "sha256": "6f46039c6e98fc220478bd36817afb8d2dba6916ad51514a77ab95d0bbd4062d"
+  },
+  "07_MANUAL/paginas-svg/02_sistema.svg": {
+    "bytes": 191864,
+    "sha256": "63e269ee11329ca6a94fd4d85c0caa910c83a1caa70eefe3c0f541044e5391a9"
+  },
+  "07_MANUAL/paginas-svg/03_construccion-isotipo.svg": {
+    "bytes": 410965,
+    "sha256": "7398f9b1f6080f30bc3c874f790c01a96b0c57d656c618abbaf81b5d314c0503"
+  },
+  "07_MANUAL/paginas-svg/04_lettering.svg": {
+    "bytes": 250916,
+    "sha256": "b4fffb447aee0a12179d2703a8688d406f44cc91632c861598aaf17d27559944"
+  },
+  "07_MANUAL/paginas-svg/05_composicion-y-seguridad.svg": {
+    "bytes": 235027,
+    "sha256": "949cc9a2b1ea441041525b3574cb8f136557bbc9efdc6f2095b2cac80b017d0d"
+  },
+  "07_MANUAL/paginas-svg/06_paleta.svg": {
+    "bytes": 189481,
+    "sha256": "76ee1a7b0a43957d89c93b2143d2e3108424cee41674ef500323982528febea9"
+  },
+  "07_MANUAL/paginas-svg/07_versiones.svg": {
+    "bytes": 188888,
+    "sha256": "393c717e0782e8e4b057da0385e44a6a5f6266cb854b03538a2c84a47ce71e33"
+  },
+  "07_MANUAL/paginas-svg/08_escalas.svg": {
+    "bytes": 282966,
+    "sha256": "5e96877a0e948da2ee00639762e0b91b31faa28a1dee23d93a97c54bae900ce2"
+  },
+  "07_MANUAL/paginas-svg/09_usos.svg": {
+    "bytes": 253079,
+    "sha256": "717dbaa06785c865a4ae7359b55aafe5d23ac681e172222824483f0356b33579"
+  },
+  "07_MANUAL/paginas-svg/10_isologo.svg": {
+    "bytes": 263989,
+    "sha256": "5ab4d1f6839a0c7c92343140673fcb2411cb7eea396bc6ed7d2b756dcc3a24b4"
+  },
+  "07_MANUAL/paginas-svg/11_aplicaciones.svg": {
+    "bytes": 218510,
+    "sha256": "685dfbed20aceb747d7d65f4c68dd871e17d86476a9f225426e8e649ad34d216"
+  },
+  "07_MANUAL/paginas-svg/12_entrega.svg": {
+    "bytes": 451245,
+    "sha256": "4efdc6b619d60c6ede162d1bf0b959aa107665254118546ebd906f8b9e7d126b"
+  },
+  "08_PALETA/FORTOP_COLORES.css": {
+    "bytes": 198,
+    "sha256": "32767638ecab5d84087e88c050bb79a2300885976fa162b04be51e8d8da35060"
+  },
+  "08_PALETA/FORTOP_PALETA.json": {
+    "bytes": 654,
+    "sha256": "7e07c09baf9cb41b72f32967426b3c4568f5c6437de3bd4b8d51b53c5f30e911"
+  },
+  "08_PALETA/FORTOP_paleta.svg": {
+    "bytes": 89408,
+    "sha256": "c2e75359b4d165ad6c39f4b12cac8a8d9c0fce71c3f166aa65c44e492c15bfad"
+  },
+  "09_PREVISUALIZACIONES/00_MAESTROS/FORTOP_imagotipo_master.png": {
+    "bytes": 23890,
+    "sha256": "6d32b18f1cf22299fb2615613470d436d5fe87b97ec214463d2d1d388fd01b27"
+  },
+  "09_PREVISUALIZACIONES/00_MAESTROS/FORTOP_isologo_master.png": {
+    "bytes": 15659,
+    "sha256": "39d51b2d25ed889891705c2e4096401aa374f5305ddd35a24bad58a27a96efcb"
+  },
+  "09_PREVISUALIZACIONES/00_MAESTROS/FORTOP_isotipo_master.png": {
+    "bytes": 38782,
+    "sha256": "c9b76c69dba23f926a9a33686aa6ce513c3cd4953275108e0eedd5a3f99ce352"
+  },
+  "09_PREVISUALIZACIONES/00_MAESTROS/FORTOP_logotipo_master.png": {
+    "bytes": 13861,
+    "sha256": "1f969a486b8d3bc2b05070e1f0288a489811febfb7ddc4278bd004f6e7465714"
+  },
+  "09_PREVISUALIZACIONES/01_ISOTIPO/FORTOP_isotipo_color-honeydew.png": {
+    "bytes": 48917,
+    "sha256": "59dcc82e04c4f519549c7c8a02e20c085a187dec1dfb5abf13f5abae174337d3"
+  },
+  "09_PREVISUALIZACIONES/01_ISOTIPO/FORTOP_isotipo_color-ivory.png": {
+    "bytes": 48835,
+    "sha256": "901634a27d80bd95e6fd171054457e7328d68332c5eb76698396fa4b0ab7226f"
+  },
+  "09_PREVISUALIZACIONES/01_ISOTIPO/FORTOP_isotipo_color-transparente.png": {
+    "bytes": 31566,
+    "sha256": "8a17e834a37bb16e234e3fb7cf853c9bf3c0cfc69172740397f3a1fef21652db"
+  },
+  "09_PREVISUALIZACIONES/01_ISOTIPO/FORTOP_isotipo_inverso-pine.png": {
+    "bytes": 49113,
+    "sha256": "4eeb1580c7a3d70590262016fd95051ef9f89b8c4694a346f3406840223f8225"
+  },
+  "09_PREVISUALIZACIONES/01_ISOTIPO/FORTOP_isotipo_inverso-shadow.png": {
+    "bytes": 49065,
+    "sha256": "4165743edfd85ea6d0449752dcaafe36ba0d67b679ba140dad635ec71cab6a6a"
+  },
+  "09_PREVISUALIZACIONES/01_ISOTIPO/FORTOP_isotipo_mono-honeydew.png": {
+    "bytes": 31248,
+    "sha256": "54276ac7a47880b7f4548b269c2cd6b42c07316278d86cb1f56fc6a61d6a51b0"
+  },
+  "09_PREVISUALIZACIONES/01_ISOTIPO/FORTOP_isotipo_mono-ivory.png": {
+    "bytes": 29957,
+    "sha256": "bdd49400c60103a70bb7973f4f2984d23a6b68476b65821a7be97b8b12bd236b"
+  },
+  "09_PREVISUALIZACIONES/01_ISOTIPO/FORTOP_isotipo_mono-pine.png": {
+    "bytes": 31400,
+    "sha256": "1d766b4e8a7797169851d059f25621ae115aee2005dd0feb5f693f44dd2e00c8"
+  },
+  "09_PREVISUALIZACIONES/01_ISOTIPO/FORTOP_isotipo_mono-shadow.png": {
+    "bytes": 31062,
+    "sha256": "35b0cf9d57e30f796a2c326b8bec2931bfd5d40d548d1e858094321e488e2e09"
+  },
+  "09_PREVISUALIZACIONES/02_LOGOTIPO/FORTOP_logotipo_color-honeydew.png": {
+    "bytes": 19265,
+    "sha256": "c2b1f66e7f4488750abed5511b544980a9a498684ea504646e1584a0803372a5"
+  },
+  "09_PREVISUALIZACIONES/02_LOGOTIPO/FORTOP_logotipo_color-ivory.png": {
+    "bytes": 19258,
+    "sha256": "e7bfba985a72e363a12e0fdb8ef28ce6603dc5a936b549e3838c8a787c20c8b0"
+  },
+  "09_PREVISUALIZACIONES/02_LOGOTIPO/FORTOP_logotipo_color-transparente.png": {
+    "bytes": 14662,
+    "sha256": "82dcf6745c91cee3b93fa58226ee49b1b004ee4900654c5d032857700e9069bd"
+  },
+  "09_PREVISUALIZACIONES/02_LOGOTIPO/FORTOP_logotipo_inverso-pine.png": {
+    "bytes": 19275,
+    "sha256": "dfab7c64b39b40bf5b626a2091804dc9941a4cc562f7a9ef8c727852073f0d91"
+  },
+  "09_PREVISUALIZACIONES/02_LOGOTIPO/FORTOP_logotipo_inverso-shadow.png": {
+    "bytes": 19281,
+    "sha256": "97391aeb4abd7877dec874f5475a5c800191347cbeaebcd63d108744f9953308"
+  },
+  "09_PREVISUALIZACIONES/02_LOGOTIPO/FORTOP_logotipo_mono-honeydew.png": {
+    "bytes": 14830,
+    "sha256": "e83c1e16acac5f389e0fc559e7fdc05377428987a1e2be5a15f8dd3c8f4d9c71"
+  },
+  "09_PREVISUALIZACIONES/02_LOGOTIPO/FORTOP_logotipo_mono-ivory.png": {
+    "bytes": 14044,
+    "sha256": "49dcbbc468c4d0ba1b5e47730331b44b5f124026b41b5631b7fc3356af11a77a"
+  },
+  "09_PREVISUALIZACIONES/02_LOGOTIPO/FORTOP_logotipo_mono-pine.png": {
+    "bytes": 14870,
+    "sha256": "18496611fb7110d082783aeb9cd5b828a8e9407bf62f8408b7004e980cc30b7d"
+  },
+  "09_PREVISUALIZACIONES/02_LOGOTIPO/FORTOP_logotipo_mono-shadow.png": {
+    "bytes": 14662,
+    "sha256": "82dcf6745c91cee3b93fa58226ee49b1b004ee4900654c5d032857700e9069bd"
+  },
+  "09_PREVISUALIZACIONES/03_IMAGOTIPO/FORTOP_imagotipo_color-honeydew.png": {
+    "bytes": 36741,
+    "sha256": "33f8c3bb49b9e2cff8d4e3980726d96e2c06fca5c6c5c644dd32e9e846b5ea11"
+  },
+  "09_PREVISUALIZACIONES/03_IMAGOTIPO/FORTOP_imagotipo_color-ivory.png": {
+    "bytes": 36737,
+    "sha256": "feedd9b3fafdeaa102c01f0c3e5233155f0ef17dafe76eb19c73cbbfd50cca0c"
+  },
+  "09_PREVISUALIZACIONES/03_IMAGOTIPO/FORTOP_imagotipo_color-transparente.png": {
+    "bytes": 24699,
+    "sha256": "08e61f4c60c8504e0f3df59bac3b2446a0f5f628cc1f92d589390c997098252b"
+  },
+  "09_PREVISUALIZACIONES/03_IMAGOTIPO/FORTOP_imagotipo_inverso-pine.png": {
+    "bytes": 36341,
+    "sha256": "387270a99aceea9bf0c3a2d36a8a34d7ae3e40ebb43247bd8a540e745d49aba0"
+  },
+  "09_PREVISUALIZACIONES/03_IMAGOTIPO/FORTOP_imagotipo_inverso-shadow.png": {
+    "bytes": 36351,
+    "sha256": "a35b7cd9812e6a6c9e82745d99af6aef23751887fa1107f1ecd7fefc951de79a"
+  },
+  "09_PREVISUALIZACIONES/03_IMAGOTIPO/FORTOP_imagotipo_mono-honeydew.png": {
+    "bytes": 24289,
+    "sha256": "985c33dc2a90ed0566f544a060e863737b5b0e609110364846a8db34a5f58823"
+  },
+  "09_PREVISUALIZACIONES/03_IMAGOTIPO/FORTOP_imagotipo_mono-ivory.png": {
+    "bytes": 22840,
+    "sha256": "9eb0c6b4cbbf4d8bf157b3d24ff57bb144f1447859377a9b2a0b615996f3c819"
+  },
+  "09_PREVISUALIZACIONES/03_IMAGOTIPO/FORTOP_imagotipo_mono-pine.png": {
+    "bytes": 24257,
+    "sha256": "28c7ec4c65ec001b623232a9c418b8e14d267f825be4b28af2188d684557fe91"
+  },
+  "09_PREVISUALIZACIONES/03_IMAGOTIPO/FORTOP_imagotipo_mono-shadow.png": {
+    "bytes": 24093,
+    "sha256": "6f6bcb78f2794f0dd74997b178201da55666ad3ccb52f1c61c6c11584158b6fc"
+  },
+  "09_PREVISUALIZACIONES/04_ISOLOGO/FORTOP_isologo_tallado_inverso-pine.png": {
+    "bytes": 21138,
+    "sha256": "8105151086dfb32f9c042f29d08174b879b98ed096998a3ef15f64a5258d08a9"
+  },
+  "09_PREVISUALIZACIONES/04_ISOLOGO/FORTOP_isologo_tallado_inverso-shadow.png": {
+    "bytes": 21137,
+    "sha256": "4171cfb57af76cb9a894fb00387dd656d14785fe2f07ab368f779eec05a5ceb4"
+  },
+  "09_PREVISUALIZACIONES/04_ISOLOGO/FORTOP_isologo_tallado_ivory.png": {
+    "bytes": 15816,
+    "sha256": "54ad890c4db9bca558ac259bd9908229306c291ba1d84ab944e914b7fae738a5"
+  },
+  "09_PREVISUALIZACIONES/04_ISOLOGO/FORTOP_isologo_tallado_pine.png": {
+    "bytes": 16882,
+    "sha256": "0b33cf343dc505edd9bac123a8502453103977a83d65e5a6a51fc35d21507a83"
+  },
+  "09_PREVISUALIZACIONES/04_ISOLOGO/FORTOP_isologo_tallado_shadow.png": {
+    "bytes": 16676,
+    "sha256": "a4e599dc67bc7a64314899b87e13540c92fc6ea25584c764efe40e0e40fd3a77"
+  },
+  "09_PREVISUALIZACIONES/05_DIGITAL/app-icons/FORTOP_app_honeydew_512.png": {
+    "bytes": 11308,
+    "sha256": "c93b5e5ec89368d4d94d58932e4228024129072b8f3c548c78df60c64c3bbb17"
+  },
+  "09_PREVISUALIZACIONES/05_DIGITAL/app-icons/FORTOP_app_ivory_512.png": {
+    "bytes": 11253,
+    "sha256": "2bc3136aece98e3f0d5ba2bce01e6c064f131690fce10234bed8476f57855373"
+  },
+  "09_PREVISUALIZACIONES/05_DIGITAL/app-icons/FORTOP_app_pine_512.png": {
+    "bytes": 11334,
+    "sha256": "e5791ac3bf824e5e03db83618758eee10d22d4eadce5d3fc2a57e89c5a6cfcc4"
+  },
+  "09_PREVISUALIZACIONES/05_DIGITAL/app-icons/FORTOP_app_pine_maskable_512.png": {
+    "bytes": 11124,
+    "sha256": "e27c93e1f3df876a826a5eeec9b38a4bc44ac4e50a60215587b53b1ada8f9662"
+  },
+  "09_PREVISUALIZACIONES/05_DIGITAL/app-icons/FORTOP_app_shadow_512.png": {
+    "bytes": 11335,
+    "sha256": "3b9b0319b7f5e0cec0ba2c92ad4dc944735c3d477dcbac2d0cf4a57ce0f885cb"
+  },
+  "09_PREVISUALIZACIONES/05_DIGITAL/avatares/FORTOP_avatar_honeydew_1024.png": {
+    "bytes": 32989,
+    "sha256": "aa7c74d59e86c969fd21e9132f3fe441cddf8802961970ae0c7f22117881fe7f"
+  },
+  "09_PREVISUALIZACIONES/05_DIGITAL/avatares/FORTOP_avatar_ivory_1024.png": {
+    "bytes": 32866,
+    "sha256": "15abe3710bb2af9e487ed8c843791553e45ee43ff9e5cf8f46978b19b7c41ba6"
+  },
+  "09_PREVISUALIZACIONES/05_DIGITAL/avatares/FORTOP_avatar_pine_1024.png": {
+    "bytes": 33018,
+    "sha256": "ad8abb38dcd1180b62abe8378e3cea8f6b128b199dce17f0879819d85b02b58b"
+  },
+  "09_PREVISUALIZACIONES/05_DIGITAL/avatares/FORTOP_avatar_shadow_1024.png": {
+    "bytes": 33003,
+    "sha256": "28805a445389372793d1819b9dfd6d9125fa9824e4f573feae584c8bff7b6dd2"
+  },
+  "09_PREVISUALIZACIONES/05_DIGITAL/favicon/FORTOP_favicon_16.png": {
+    "bytes": 391,
+    "sha256": "d367911a53914ebf297c21e7c3ec3a0a91ff914e44ce1277f85aa2e077b59e22"
+  },
+  "09_PREVISUALIZACIONES/05_DIGITAL/favicon/FORTOP_favicon_32.png": {
+    "bytes": 652,
+    "sha256": "3b4a1fc7ba732f3ff74f64f0ca3b6a9e56e497a1f2a6934b962138b6f6d914e0"
+  },
+  "09_PREVISUALIZACIONES/05_DIGITAL/favicon/FORTOP_favicon_48.png": {
+    "bytes": 930,
+    "sha256": "8dff1a5940a0d2ef9c9843476e8983ab3cb9d1f42745902ab334f8abb84de226"
+  },
+  "09_PREVISUALIZACIONES/05_DIGITAL/favicon/FORTOP_favicon_64.png": {
+    "bytes": 1142,
+    "sha256": "90312f7d884a9ca1743e7f962bedd12e1340969f9ef258aaa510d78c0b60b19d"
+  },
+  "09_PREVISUALIZACIONES/05_DIGITAL/marca-de-agua/FORTOP_watermark_ivory.png": {
+    "bytes": 7122,
+    "sha256": "1c0b03d6642bf7e0a2d299cf257feb663f208e96c610cd08fbc8b32e81199611"
+  },
+  "09_PREVISUALIZACIONES/05_DIGITAL/marca-de-agua/FORTOP_watermark_shadow.png": {
+    "bytes": 7037,
+    "sha256": "abf3b3d9e76263eb39394b205a624fbc1f3bb8a55ad8fa2ada5f4311ecee7bac"
+  },
+  "09_PREVISUALIZACIONES/06_APLICACIONES/papeleria/FORTOP_hoja_A4.png": {
+    "bytes": 84342,
+    "sha256": "e1bbb9ebb4d584f308048995079354a0c7e9f9f3666372a554857b00871776b4"
+  },
+  "09_PREVISUALIZACIONES/06_APLICACIONES/portadas/FORTOP_portada_1920x1080.png": {
+    "bytes": 60337,
+    "sha256": "1e35d073560e65b2a29fb26b005d5731c2ac083a7c7c3a57e7e4e799ce96fee3"
+  },
+  "09_PREVISUALIZACIONES/06_APLICACIONES/recursos/FORTOP_patron_ascenso.png": {
+    "bytes": 32250,
+    "sha256": "2e7c807a512e14fd49405329d932a5401b09099013b5afa154134fc91bd5915c"
+  },
+  "09_PREVISUALIZACIONES/06_APLICACIONES/social/FORTOP_social_1200x630.png": {
+    "bytes": 26703,
+    "sha256": "11cf3a1e21af25931bb059ec4f0e59731ca6ace8507bb974fcfd46638d1e95be"
+  },
+  "09_PREVISUALIZACIONES/06_APLICACIONES/tarjetas/FORTOP_tarjeta_anverso_85x55mm.png": {
+    "bytes": 26743,
+    "sha256": "3f0ad3d4ab2dd1f20a4b7aeb37a49510e4c89514b7ad05864e9937d61f16a522"
+  },
+  "09_PREVISUALIZACIONES/06_APLICACIONES/tarjetas/FORTOP_tarjeta_reverso_85x55mm.png": {
+    "bytes": 23996,
+    "sha256": "b9fe5ed10a2708d311a23fa6ce017cd24360d9e8308050c665b6156ccf9cddfa"
+  },
+  "09_PREVISUALIZACIONES/07_MANUAL/FORTOP_brand_sheet.png": {
+    "bytes": 150313,
+    "sha256": "4cd0ea3ffbd1c8129f30c07dfea381442e20d77458c040a1ed355fc7cfbc003e"
+  },
+  "09_PREVISUALIZACIONES/07_MANUAL/paginas-svg/01_portada.png": {
+    "bytes": 61793,
+    "sha256": "ad007c18924cfae156a9cb8a52288a683e7a0d46022d13ac5489eafb5828c9ae"
+  },
+  "09_PREVISUALIZACIONES/07_MANUAL/paginas-svg/02_sistema.png": {
+    "bytes": 92030,
+    "sha256": "65c14118a96a6160877ce519129a1ed92be5ba88335136a9452e9fa8c9c14cf9"
+  },
+  "09_PREVISUALIZACIONES/07_MANUAL/paginas-svg/03_construccion-isotipo.png": {
+    "bytes": 120211,
+    "sha256": "f55b8abe4639df131f300c2a008f758583f66f32ac65bc4900f00e2f775418a9"
+  },
+  "09_PREVISUALIZACIONES/07_MANUAL/paginas-svg/04_lettering.png": {
+    "bytes": 91967,
+    "sha256": "bbe1dc64d02369ecfb979a9e5233e2ae561c90083b508449db921cab1bf30132"
+  },
+  "09_PREVISUALIZACIONES/07_MANUAL/paginas-svg/05_composicion-y-seguridad.png": {
+    "bytes": 92261,
+    "sha256": "a69e94e6d12fd796aad858d81b55df2080911ae009ba18b389cbba0441d3c93f"
+  },
+  "09_PREVISUALIZACIONES/07_MANUAL/paginas-svg/06_paleta.png": {
+    "bytes": 82510,
+    "sha256": "f2831bf556abe4e9939edb584e9bda687ab4ab8bc672852b53d9667caacf0853"
+  },
+  "09_PREVISUALIZACIONES/07_MANUAL/paginas-svg/07_versiones.png": {
+    "bytes": 92731,
+    "sha256": "6c300d6a50cc992886755b13a3df99575cc85dbc0de3c4c3b35047bf7958fcfc"
+  },
+  "09_PREVISUALIZACIONES/07_MANUAL/paginas-svg/08_escalas.png": {
+    "bytes": 100401,
+    "sha256": "cbb43f60b2e946d4ab1a0de4c871c83213be66729ce0734a3a398827157674d8"
+  },
+  "09_PREVISUALIZACIONES/07_MANUAL/paginas-svg/09_usos.png": {
+    "bytes": 97419,
+    "sha256": "d3a2134985650e74ea24f65bc4752dab8017295a99110645bd18b5d76b703dd6"
+  },
+  "09_PREVISUALIZACIONES/07_MANUAL/paginas-svg/10_isologo.png": {
+    "bytes": 100809,
+    "sha256": "07fe79bf65b1efd43079c293cc2cef4ea9e2689fa8d200cd14f121e10bc2af30"
+  },
+  "09_PREVISUALIZACIONES/07_MANUAL/paginas-svg/11_aplicaciones.png": {
+    "bytes": 98182,
+    "sha256": "6b83f9bcd47ee5b2403aae04a11ead8a1446480bec4cd3eee9ef0696116fbb87"
+  },
+  "09_PREVISUALIZACIONES/07_MANUAL/paginas-svg/12_entrega.png": {
+    "bytes": 120305,
+    "sha256": "fde5aa8836e08596d76c2664fab947025b238f7a0a75b51cc8471d3c4a067091"
+  },
+  "09_PREVISUALIZACIONES/08_PALETA/FORTOP_paleta.png": {
+    "bytes": 47800,
+    "sha256": "febbf81e6fa4fcf27395361562064ff1e2a848c5615ec111c3b8a232dd4a8c95"
+  },
+  "10_FUENTES/INSTRUCCIONES.txt": {
+    "bytes": 1408,
+    "sha256": "b5919f802438574a73bddefb155586ccf2d57ec186f99f984e9d70f0f90b2a57"
+  },
+  "10_FUENTES/exportar_pdf.py": {
+    "bytes": 1447,
+    "sha256": "4dd4704497ef2993a9e564ce437ddde6b70fc3c277d4a50092fdc33635a6c09b"
+  },
+  "10_FUENTES/generar_marca.py": {
+    "bytes": 23167,
+    "sha256": "780a3406f543db3202754b221368c9047b119dc9d7f0cc5a5a66a20658627b77"
+  },
+  "10_FUENTES/package.json": {
+    "bytes": 119,
+    "sha256": "e7e26a4aa996e07df831c4e7444f5f2dba575bb3462a07c62a66d64d102c2252"
+  },
+  "10_FUENTES/renderizar.cjs": {
+    "bytes": 2371,
+    "sha256": "041593e13a068c1d059fae7f20ac401f91d697136bf6277370de1f704c5c063d"
+  },
+  "10_FUENTES/requirements.txt": {
+    "bytes": 23,
+    "sha256": "950f87fbd6326228474f2a9312918988fac3354170090ae6f36f986190debd0c"
+  },
+  "11_VALIDACION/FORTOP_informe_validacion.json": {
+    "bytes": 695,
+    "sha256": "c300cc7bcad2e473b0f8c87e8845221be913c2748d8fb838d240f5f03f474841"
+  },
+  "11_VALIDACION/FORTOP_informe_validacion.txt": {
+    "bytes": 1139,
+    "sha256": "795210695228e9fbf32c5721a3b9ab7fde271d02c2758826f8abe416db0f5435"
+  },
+  "99_REFERENCIAS/01_SELECCION_APROBADA/01_ISOTIPO_Ascenso_REFERENCIA.png": {
+    "bytes": 52891,
+    "sha256": "8d0073f2ddd2971b8d765f66e51e810ac961da3467212b64dd379cf0a87135b9"
+  },
+  "99_REFERENCIAS/01_SELECCION_APROBADA/02_LOGOTIPO_Solido_REFERENCIA.png": {
+    "bytes": 59665,
+    "sha256": "e9aebdaf5c0dbe31dac4537721eb3e6a4600ab0e419e96c0c81aeef33d4ca6f0"
+  },
+  "99_REFERENCIAS/01_SELECCION_APROBADA/03_IMAGOTIPO_Ascenso_REFERENCIA.png": {
+    "bytes": 86095,
+    "sha256": "f5989bedc9f59c3917e3b4b190881747986287f06f9402d815d703978f4b4179"
+  },
+  "99_REFERENCIAS/02_PALETA/FORTOP_COLORES.css": {
+    "bytes": 198,
+    "sha256": "32767638ecab5d84087e88c050bb79a2300885976fa162b04be51e8d8da35060"
+  },
+  "99_REFERENCIAS/02_PALETA/FORTOP_PALETA.json": {
+    "bytes": 654,
+    "sha256": "7e07c09baf9cb41b72f32967426b3c4568f5c6437de3bd4b8d51b53c5f30e911"
+  },
+  "99_REFERENCIAS/02_PALETA/FORTOP_PALETA.png": {
+    "bytes": 23409,
+    "sha256": "62ccec2cf87d34d95618d99ed8c9ce160741159820f200417121e093e7728bbb"
+  },
+  "99_REFERENCIAS/02_PALETA/FORTOP_PALETA.svg": {
+    "bytes": 1817,
+    "sha256": "3bc4653c4dd52131818fdcccb954c9e2aedfec58bf1b7b9847f8973ec301e6b7"
+  },
+  "99_REFERENCIAS/02_PALETA/PALETA_ORIGINAL_APROBADA.png": {
+    "bytes": 56368,
+    "sha256": "2dc25d5866e8868b95d2ddc3d2b26810f3e5237e0f4faef2f9e368fc05148889"
+  },
+  "99_REFERENCIAS/03_CONTEXTO/LAMINA_ORIGINAL_DE_DONDE_PROVIENEN_LOS_ELEGIDOS.png": {
+    "bytes": 1956647,
+    "sha256": "55555687cdc67126d230517292e26606c8d21b433e8b374c30b99fc0998eb91f"
+  },
+  "99_REFERENCIAS/FORTOP_REFERENCIAS_SELECCIONADAS.png": {
+    "bytes": 242298,
+    "sha256": "96a3747e1c832700aee0abe6c54e44c3931e741934eda32b9014dd79e7adbc44"
+  },
+  "99_REFERENCIAS/LEEME_PRIMERO.md": {
+    "bytes": 6455,
+    "sha256": "e7fa31fcb9f8e5d5aaa6174c8dfbeec094db6e3f81e2f2c058606dc287b3a8b6"
+  },
+  "99_REFERENCIAS/MANIFEST.json": {
+    "bytes": 3084,
+    "sha256": "11dae4b26f2c9ab415541036fc18a7d780fd37d0a0362b0ad39c220a47afcabe"
+  },
+  "99_REFERENCIAS/PROMPT_PARA_CHATGPT_WORK.txt": {
+    "bytes": 773,
+    "sha256": "af739dfb41d0dc37198bf3a7f502f960ecb40b902296364bbb763004c6ea3d3f"
+  },
+  "LEEME_PRIMERO.txt": {
+    "bytes": 2659,
+    "sha256": "3f9697112cc896cfd99a5551bffbac9e1d1809150f99953733b8bab5f6cf4b64"
+  }
+}

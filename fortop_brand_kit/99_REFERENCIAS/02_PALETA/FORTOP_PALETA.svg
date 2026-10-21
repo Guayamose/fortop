@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 580" width="1600" height="580">
+<rect width="1600" height="580" fill="#FFFFF3"/>
+<text x="80" y="82" font-family="DejaVu Sans,Arial,sans-serif" font-size="42" font-weight="bold" fill="#2E282A" letter-spacing="5">FORTOP</text>
+<text x="80" y="126" font-family="DejaVu Sans,Arial,sans-serif" font-size="22" fill="#2B4F42">PALETA CORPORATIVA · 4 COLORES EXACTOS</text>
+<rect x="80" y="174" width="336" height="250" rx="12" fill="#2E282A" stroke="#D6D9D0" stroke-width="2"/>
+<text x="80" y="462" font-family="DejaVu Sans,Arial,sans-serif" font-size="26" font-weight="bold" fill="#2E282A">#2E282A</text>
+<text x="80" y="500" font-family="DejaVu Sans,Arial,sans-serif" font-size="19" fill="#2B4F42">Shadow Grey</text>
+<rect x="450" y="174" width="336" height="250" rx="12" fill="#2B4F42" stroke="#D6D9D0" stroke-width="2"/>
+<text x="450" y="462" font-family="DejaVu Sans,Arial,sans-serif" font-size="26" font-weight="bold" fill="#2E282A">#2B4F42</text>
+<text x="450" y="500" font-family="DejaVu Sans,Arial,sans-serif" font-size="19" fill="#2B4F42">Pine Teal</text>
+<rect x="820" y="174" width="336" height="250" rx="12" fill="#FFFFF3" stroke="#D6D9D0" stroke-width="2"/>
+<text x="820" y="462" font-family="DejaVu Sans,Arial,sans-serif" font-size="26" font-weight="bold" fill="#2E282A">#FFFFF3</text>
+<text x="820" y="500" font-family="DejaVu Sans,Arial,sans-serif" font-size="19" fill="#2B4F42">Ivory</text>
+<rect x="1190" y="174" width="336" height="250" rx="12" fill="#E0EFDA" stroke="#D6D9D0" stroke-width="2"/>
+<text x="1190" y="462" font-family="DejaVu Sans,Arial,sans-serif" font-size="26" font-weight="bold" fill="#2E282A">#E0EFDA</text>
+<text x="1190" y="500" font-family="DejaVu Sans,Arial,sans-serif" font-size="19" fill="#2B4F42">Honeydew</text>
+</svg>

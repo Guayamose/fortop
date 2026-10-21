@@ -108,9 +108,21 @@ class Scans::PipelineTest < ActiveSupport::TestCase
     assert_includes @scan.changed_files.first["diff"], '+<meta name="description"'
     assert_equal finding_arguments["impact"], @scan.findings.first.impact
     assert_equal finding_arguments["verification"], @scan.findings.first.verification
+    assert_equal finding_arguments["remediation_rationale"], @scan.findings.first.remediation_rationale
+    assert_includes @github.issues.first["body"], finding_arguments["remediation_rationale"]
     assert_nil @scan.publication_changes
     assert_equal 8, @scan.metadata.dig("usage", "requests")
     assert @scan.scan_events.where(kind: "tool").exists?
+  end
+
+  test "remediation agent persists the explanation of the actual final correction" do
+    rationale = "El cambio añade una única descripción en el head, basada en el propósito real de Fortop. La página aporta así un resumen explícito para interpretar su contenido; no confirma cambios en resultados de búsqueda."
+    script = successful_script
+    script.insert(-2, -> { tool("explain_remediation", finding_id: @scan.findings.first.id, rationale: rationale) })
+    Scans::Pipeline.new(@scan, github: @github, provider: Provider.new(script)).call
+
+    assert @scan.reload.completed?, @scan.error_message
+    assert_equal rationale, @scan.findings.sole.remediation_rationale
   end
 
   test "publishes two validated findings corrected by separate edits to the same file" do
@@ -435,6 +447,7 @@ class Scans::PipelineTest < ActiveSupport::TestCase
     assert_raises(Agents::ToolError) { tools.call("report_finding", arguments.merge("line_number" => 99)) }
     assert_raises(Agents::ToolError) { tools.call("report_finding", arguments.except("impact")) }
     assert_raises(Agents::ToolError) { tools.call("report_finding", arguments.merge("verification" => "")) }
+    assert_raises(Agents::ToolError) { tools.call("report_finding", arguments.except("remediation_rationale")) }
     assert_empty @scan.findings
   ensure
     workspace&.close
@@ -624,7 +637,7 @@ class Scans::PipelineTest < ActiveSupport::TestCase
   end
 
   def finding_arguments
-    { "title" => "Falta descripción de la página", "description" => "El head observado contiene title pero no una descripción.", "impact" => "Los buscadores pueden generar un fragmento menos representativo del contenido.", "verification" => "Comprueba que el HTML renderizado contiene una única meta description con texto real.", "category" => "metadata", "severity" => "medium", "file_path" => "index.html", "line_number" => 3, "evidence" => "<title>Fortop</title>", "recommendation" => "Añadir una descripción fiel al contenido existente.", "automatable" => true }
+    { "remediation_rationale" => "La descripción explícita ofrece un resumen fiel para interpretar esta página, sin depender solo de fragmentos del cuerpo ni garantizar qué mostrará el buscador.", "title" => "Falta descripción de la página", "description" => "El head observado contiene title pero no una descripción.", "impact" => "Los buscadores pueden generar un fragmento menos representativo del contenido.", "verification" => "Comprueba que el HTML renderizado contiene una única meta description con texto real.", "category" => "metadata", "severity" => "medium", "file_path" => "index.html", "line_number" => 3, "evidence" => "<title>Fortop</title>", "recommendation" => "Añadir una descripción fiel al contenido existente.", "automatable" => true }
   end
 
   def tool(name, args)

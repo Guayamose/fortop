@@ -19,6 +19,7 @@ module ScanConsoleHelper
     "replace_text" => { label: "Editar código", icon: :edit, category: "code" },
     "write_file" => { label: "Preparar archivo", icon: :file, category: "code" },
     "validate_changes" => { label: "Verificar cambios", icon: :shield_check, category: "code" },
+    "explain_remediation" => { label: "Explicar corrección", icon: :lightbulb, category: "finding" },
     "mark_manual" => { label: "Solicitar revisión", icon: :alert, category: "finding" },
     "discard_changes" => { label: "Descartar cambio", icon: :restart, category: "code" }
   }.freeze

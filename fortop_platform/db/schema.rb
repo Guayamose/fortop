@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_22_000100) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_22_000200) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -58,6 +58,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_000100) do
     t.datetime "updated_at", null: false
     t.text "impact"
     t.text "verification"
+    t.text "remediation_rationale"
     t.index ["scan_id", "fingerprint"], name: "index_findings_on_scan_id_and_fingerprint", unique: true
     t.index ["scan_id"], name: "index_findings_on_scan_id"
   end

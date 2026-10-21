@@ -9,6 +9,7 @@ module Agents
       super + [
         function("replace_text", "Replace exactly one occurrence in a file. Prefer small, targeted edits. finding_ids must reference accepted automatable findings.", { path: string, old_text: string, new_text: string, finding_ids: { type: "ARRAY", items: integer } }, required: %w[path old_text new_text finding_ids]),
         function("write_file", "Write the complete content of an eligible file. Read existing files first. No credentials, dependencies, workflows, tests, shell scripts or invented business facts.", { path: string, content: string, finding_ids: { type: "ARRAY", items: integer } }, required: %w[path content finding_ids]),
+        function("explain_remediation", "Explain why the actual proposed correction addresses this finding and which concrete behavior it improves. No ranking promises or invented measurements.", { finding_id: integer, rationale: string }, required: %w[finding_id rationale]),
         function("discard_changes", "Discard a proposed edit when it cannot be validated safely.", { path: string }, required: %w[path]),
         function("validate_changes", "Run deterministic syntax and safety checks on all proposed changes. Inspect failures, repair and rerun. No project code executes on the host.", {}),
         function("mark_manual", "Explain why an accepted finding cannot be safely corrected automatically. Never claim a change is fixed without validated code.", { finding_id: integer, reason: string }, required: %w[finding_id reason])
@@ -24,6 +25,13 @@ module Agents
         else
           @workspace.replace(arguments.fetch("path"), arguments.fetch("old_text"), arguments.fetch("new_text"), finding_ids: ids)
         end
+      when "explain_remediation"
+        finding = @scan.findings.find_by(id: arguments.fetch("finding_id"))
+        raise ToolError, "El hallazgo no pertenece a este análisis." unless finding
+        rationale = arguments.fetch("rationale").to_s.strip.truncate(4000)
+        raise ToolError, "Explica por qué la corrección mejora el comportamiento observado." if rationale.blank?
+        finding.update!(remediation_rationale: rationale)
+        { "finding_id" => finding.id, "accepted" => true }
       when "discard_changes" then @workspace.discard(arguments.fetch("path"))
       when "validate_changes"
         results = @validator.call

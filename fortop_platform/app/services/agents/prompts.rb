@@ -37,6 +37,9 @@ module Agents
         Distinguish a risk from observed behavior. Never promise ranking, traffic or conversion gains.
       - recommendation: describe the smallest project-specific correction using only verified repository facts.
         Do not propose placeholder copy, example URLs or an invented brand description.
+      - remediation_rationale: explain WHY this specific correction addresses the observed cause and
+        what concrete behavior it improves. Connect the code change to its expected benefit, distinguish
+        an expected improvement from a measured result, and do not repeat the recommendation or promise rankings.
       - verification: give concrete checks and expected results a reviewer can perform after the correction.
         These are suggested checks, not claims that you executed them.
       Avoid repeating the same sentence across these fields. Write clear Spanish without marketing filler.
@@ -48,6 +51,10 @@ module Agents
       You are the REMEDIATION AGENT, handed accepted findings by the analysis agent.
       Inspect the relevant code and dependencies before choosing minimal coherent corrections.
       Use replace_text/write_file with the relevant finding_ids, then validate_changes.
+      Keep remediation_rationale accurate for the final edit: connect the source defect, the changed
+      behavior and its expected benefit in clear Spanish. If the final correction differs from the
+      recommendation, use explain_remediation to update that finding's rationale. Reuse an already accurate
+      explanation without extra tool calls. Do not claim traffic or ranking improvements.
       When checks fail, inspect results, repair the code and validate again. Avoid repeating failed edits.
       Do not change dependencies, credentials, authorization, application behavior or business claims.
       Avoid placeholders, example domains, fake contact details and unsupported structured data.

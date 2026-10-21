@@ -42,8 +42,8 @@
 </section>
 
 <% if @scans.size > 1 %>
-  <section class="repository-history" aria-labelledby="repository-history-title">
-    <div class="section-heading"><h2 id="repository-history-title">Historial de análisis</h2><span><%= pluralize(@scans.size, "análisis", "análisis") %></span></div>
+  <details class="repository-history" aria-labelledby="repository-history-title">
+    <summary id="repository-history-title">Historial de análisis <span><%= pluralize(@scans.size, "análisis", "análisis") %></span><%= app_icon(:chevron_down) %></summary>
     <div class="history-table">
       <div class="history-header" aria-hidden="true"><span>ANÁLISIS</span><span>ESTADO</span><span>MEJORAS</span><span></span></div>
       <% @scans.each do |scan| %>
@@ -55,7 +55,7 @@
         <% end %>
       <% end %>
     </div>
-  </section>
+  </details>
 <% end %>
 
 <div class="disconnect-row">

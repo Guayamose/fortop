@@ -505,9 +505,13 @@ main:focus { outline: none; }
 .repository-checks > div .icon, .repository-checks > p .icon { width: 14px; height: 14px; }
 .repository-checks small, .repository-checks > p > span { flex: 0 0 auto; margin-left: auto; color: var(--muted); font-size: 10px; }
 .repository-checks code { min-width: 0; overflow-wrap: anywhere; }
-.repository-history { margin-top: 31px; }
-.repository-history .section-heading { margin-bottom: 17px; }
-.repository-history .section-heading h2 { font-size: 18px; }
+.repository-history { margin-top: 31px; border-top: 1px solid var(--line); }
+.repository-history > summary { display: flex; align-items: center; gap: 9px; padding: 17px 0; list-style: none; font-size: 13px; font-weight: 450; }
+.repository-history > summary::-webkit-details-marker { display: none; }
+.repository-history > summary > span { color: var(--muted); font-size: 10px; }
+.repository-history > summary > .icon { width: 12px; height: 12px; margin-left: auto; color: var(--muted); transition: transform .2s; }
+.repository-history[open] > summary > .icon { transform: rotate(180deg); }
+.repository-history .history-table { padding-top: 4px; }
 .repository-history .history-row { padding: 14px 0; }
 .repository-history .history-row[aria-current=true] strong, .repository-history .history-row[aria-current=true] > .icon { color: var(--pine); }
 .repository-profile .disconnect-row { margin-top: 26px; padding-top: 14px; border-top: 1px solid var(--line); }

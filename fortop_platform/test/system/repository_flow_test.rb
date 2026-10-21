@@ -144,6 +144,8 @@ class RepositoryFlowTest < ApplicationSystemTestCase
       new_scan = repository.scans.recent.first
       assert_text "Historial de análisis"
       assert_current_path repository_path(repository)
+      assert_no_selector ".repository-history[open]"
+      find(".repository-history > summary").click
       find(".history-row", text: "Análisis ##{scan.id}").click
       assert_selector ".repository-scan-state h3", text: "Análisis completado"
       assert_current_path repository_path(repository, scan_id: scan.id)

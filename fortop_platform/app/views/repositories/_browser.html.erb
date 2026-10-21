@@ -1,0 +1,30 @@
+  <% groups = @latest_scans.values.map { |scan| scan&.active? ? 'running' : scan&.completed? ? 'completed' : scan&.failed? ? 'failed' : 'pending' }.tally %>
+  <section class="repository-browser" data-controller="repository-filter">
+    <div class="repository-toolbar">
+      <label class="repository-search"><%= app_icon(:search) %><input type="search" placeholder="Buscar por nombre o lenguaje" aria-label="Buscar repositorios" data-repository-filter-target="search" data-action="input->repository-filter#filter"></label>
+      <div class="repository-filters" role="group" aria-label="Filtrar por estado">
+        <% [['all', 'Todos', @repositories.size], ['running', 'En curso', groups.fetch('running', 0)], ['completed', 'Completados', groups.fetch('completed', 0)], ['failed', 'Con errores', groups.fetch('failed', 0)]].each do |value, label, count| %>
+          <button type="button" aria-pressed="<%= value == 'all' %>" data-repository-filter-target="filter" data-action="repository-filter#select" data-filter="<%= value %>"><%= label %> <small><%= count %></small></button>
+        <% end %>
+      </div>
+    </div>
+    <div class="repository-table-wrap">
+      <table class="repository-table">
+        <thead><tr><th>Repositorio</th><th>Último análisis</th><th>Estado</th><th>Hallazgos</th><th>Pull request</th></tr></thead>
+        <tbody>
+          <% @repositories.each do |repository| %>
+            <% scan = @latest_scans[repository.id]; state = scan&.active? ? 'running' : scan&.completed? ? 'completed' : scan&.failed? ? 'failed' : 'pending' %>
+            <tr data-repository-filter-target="row" data-search="<%= "#{repository.full_name} #{repository.language}".downcase %>" data-status="<%= state %>">
+              <td><%= link_to repository_path(repository), class: "repository-card" do %><span class="repository-glyph"><%= app_icon(:code) %></span><span class="repository-name"><strong><%= repository.full_name %></strong><small><%= repository.default_branch %><% if repository.language.present? %> · <%= repository.language %><% end %><% if repository.private? %> · Privado<% end %></small></span><% end %></td>
+              <td><% if scan %><%= link_to repository_scan_path(repository, scan), class: "latest-scan-link" do %><span class="mini-progress <%= state %>" aria-hidden="true"><% 5.times do |index| %><i class="<%= scan.progress >= (index + 1) * 20 ? 'is-done' : '' %>"></i><% end %></span><span>#<%= scan.id %> <small><%= human_timestamp(scan.created_at) %></small></span><% end %><% else %><span class="table-muted">Todavía sin análisis</span><% end %></td>
+              <td><%= status_badge(scan) %></td>
+              <td class="table-number"><%= scan ? @finding_counts.fetch(scan.id, 0) : '—' %></td>
+              <td class="table-pr"><% if scan&.pull_request_url.present? %><%= external_link(safe_join([app_icon(:pull_request), "##{scan.pull_request_number}", app_icon(:external)]), scan.pull_request_url, class: "text-link") %><% else %><span class="table-muted">—</span><% end %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    <div class="repository-no-results" data-repository-filter-target="empty" hidden><%= app_icon(:search) %><h2>No hay repositorios que coincidan.</h2><p>Prueba otro nombre o cambia el filtro de estado.</p><button type="button" class="text-link" data-action="repository-filter#reset">Quitar filtros</button></div>
+    <div class="section-bar"><span><%= pluralize(@repositories.size, 'repositorio conectado', 'repositorios conectados') %></span><span>GitHub · Análisis y remediación</span></div>
+  </section>

@@ -1,0 +1,64 @@
+/* Arrival: account context, clear next steps and a quiet repository list. */
+.welcome-page .page-content { padding-top:54px; }
+.workspace-welcome { width:100%; }
+.welcome-intro { display:grid; grid-template-columns:minmax(0,1fr) 310px; gap:48px; align-items:start; }
+.welcome-copy { padding-top:5px; min-width:0; }
+.welcome-copy h1 { display:flex; align-items:center; gap:17px; font-size:clamp(34px,3.3vw,46px); line-height:1.1; letter-spacing:-.035em; font-weight:450; }
+.welcome-copy h1 img { width:46px; height:auto; flex:0 0 auto; }
+.welcome-context { display:flex; align-items:baseline; flex-wrap:wrap; gap:5px; margin-top:29px; font-size:15px; color:var(--text-secondary); }
+.welcome-context strong { color:var(--shadow); font-weight:500; overflow-wrap:anywhere; }
+.welcome-account { display:flex; align-items:center; flex-wrap:wrap; gap:12px; margin-top:13px; font-size:11px; color:var(--muted); }
+.welcome-account a { display:inline-flex; align-items:center; gap:6px; color:#0f63b3; overflow-wrap:anywhere; }
+.welcome-account a .icon { width:13px; height:13px; }
+.welcome-account a .icon:last-child { width:11px; height:11px; color:#9ca2ad; margin-left:2px; }
+.welcome-account a:hover { text-decoration:underline; text-underline-offset:4px; }
+.welcome-account-divider { width:1px; height:12px; background:var(--line-strong); }
+.welcome-description { max-width:480px; margin-top:24px; color:var(--muted); font-size:13px; line-height:1.8; }
+.welcome-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:19px 26px; margin-top:28px; max-width:570px; }
+.welcome-action { display:flex; align-items:center; gap:10px; width:fit-content; color:#0f63b3; font-size:12px; line-height:1.5; }
+.welcome-action>span { display:grid; place-items:center; width:19px; height:19px; flex:0 0 auto; border-radius:5px; background:#1478d5; color:#fff; transition:background .2s,transform .2s; }
+.welcome-action .icon { width:12px; height:12px; stroke-width:2; }
+.welcome-action:hover { color:var(--shadow); }.welcome-action:hover>span { background:#0b4a87; transform:translateY(-1px); }
+.welcome-promo { position:relative; isolation:isolate; overflow:hidden; display:flex; flex-direction:column; min-height:306px; padding:28px 25px 25px; border-radius:16px; background:#080b10; color:#fff; }
+.welcome-promo-label { position:relative; z-index:1; color:#8e9caf; font:8px/1.5 var(--font-mono); letter-spacing:.1em; }
+.welcome-promo h2 { position:relative; z-index:1; margin-top:18px; max-width:260px; font-size:25px; line-height:1.2; letter-spacing:-.02em; font-weight:430; }
+.welcome-promo-art { position:absolute; left:0; bottom:18px; width:100%; height:180px; z-index:0; pointer-events:none; opacity:.9; }
+.welcome-promo-link { position:relative; z-index:1; display:flex; align-items:center; gap:9px; width:fit-content; margin-top:auto; padding-top:72px; color:#dce8f6; font-size:10px; }
+.welcome-promo-link .icon { width:14px; height:14px; color:#75baff; transition:transform .2s; }.welcome-promo-link:hover .icon { transform:translateX(4px); }
+.welcome-repositories { margin-top:58px; scroll-margin-top:90px; }
+.welcome-section-heading { display:flex; align-items:center; justify-content:space-between; gap:18px; margin-bottom:24px; }
+.welcome-section-heading h2 { font-size:25px; font-weight:450; line-height:1.2; letter-spacing:-.025em; }
+.welcome-section-heading>span { color:var(--muted); font-size:10px; }
+.workspace-welcome .welcome-empty { display:flex; flex-direction:row; justify-content:flex-start; align-items:flex-start; gap:20px; min-height:0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); padding:30px 0; text-align:left; }
+.welcome-empty-icon { display:grid; place-items:center; width:43px; height:43px; border:1px solid var(--line); border-radius:11px; background:var(--surface); color:#7c91a4; flex:0 0 auto; }
+.welcome-empty-icon .icon { width:20px; height:20px; }
+.welcome-empty h3 { margin:0 0 7px; font-size:20px; font-weight:450; letter-spacing:-.02em; }
+.welcome-empty p { max-width:600px; margin-bottom:14px; font-size:12px; color:var(--muted); line-height:1.8; }.welcome-empty .text-link { font-size:11px; }
+.workspace-welcome .repository-toolbar { margin-bottom:20px; }
+@media (max-width:1100px) {
+  .welcome-intro { grid-template-columns:minmax(0,1fr) 280px; gap:32px; }
+  .welcome-copy h1 { font-size:37px; gap:12px; }.welcome-copy h1 img { width:40px; }
+  .welcome-actions { gap:17px 18px; }.welcome-action { font-size:11px; }
+  .welcome-promo { min-height:300px; padding-inline:23px; }.welcome-promo h2 { font-size:24px; }
+}
+@media (max-width:850px) {
+  .welcome-intro { grid-template-columns:1fr; gap:30px; }
+  .welcome-promo { display:none; }
+  .welcome-copy h1 { font-size:40px; }.welcome-actions { max-width:540px; }
+  .welcome-repositories { margin-top:45px; }
+}
+@media (max-width:680px) {
+  .welcome-page .page-content { padding-top:34px; }
+  .welcome-copy h1 { gap:12px; align-items:flex-start; font-size:32px; max-width:340px; }.welcome-copy h1 img { width:35px; margin-top:3px; }
+  .welcome-context { margin-top:24px; font-size:13px; }
+  .welcome-account { gap:10px; font-size:10px; }.welcome-account-divider { margin-inline:1px; }
+  .welcome-description { font-size:12px; margin-top:21px; max-width:340px; }
+  .welcome-actions { gap:18px 14px; margin-top:25px; }.welcome-action { font-size:11px; align-items:flex-start; }
+  .welcome-action>span { width:18px; height:18px; margin-top:1px; }
+  .welcome-repositories { margin-top:39px; }.welcome-section-heading { margin-bottom:20px; }.welcome-section-heading h2 { font-size:23px; }
+  .workspace-welcome .welcome-empty { gap:13px; padding:24px 0; }.welcome-empty-icon { width:35px; height:35px; border-radius:9px; }.welcome-empty-icon .icon { width:17px; }
+  .welcome-empty h3 { font-size:18px; }.welcome-empty p { font-size:11px; line-height:1.8; }
+}
+@media (max-width:360px) {
+  .welcome-copy h1 { font-size:29px; }.welcome-actions { grid-template-columns:1fr; gap:14px; }.welcome-account-divider { display:none; }
+}

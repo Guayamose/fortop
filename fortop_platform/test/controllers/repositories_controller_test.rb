@@ -11,10 +11,12 @@ class RepositoriesControllerTest < ActionDispatch::IntegrationTest
   test "first workspace shows the connect action without fabricated repositories or metrics" do
     get repositories_path
     assert_response :success
-    assert_select "h1", "Repositorios"
+    assert_select "h1", "Te damos la bienvenida"
     assert_select "a[href=?]", new_repository_path, text: /Conectar un repositorio/
     assert_select ".repository-card", count: 0
     assert_select ".empty-state", count: 1
+    assert_select ".welcome-context", text: /Fortop Builder/
+    assert_select ".flash-notice", count: 0
     assert_select "a[href=?]", brands_path, text: /Visibilidad de marca/
     refute_includes response.body, @user.github_token
   end

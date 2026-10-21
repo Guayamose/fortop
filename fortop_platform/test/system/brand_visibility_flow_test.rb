@@ -104,7 +104,7 @@ class BrandVisibilityFlowTest < ApplicationSystemTestCase
   def sign_in
     visit new_session_path
     click_button "Continuar con GitHub"
-    assert_selector "h1", text: "Repositorios"
+    assert_selector "h1", text: "Te damos la bienvenida"
   end
 
   def assert_no_horizontal_overflow

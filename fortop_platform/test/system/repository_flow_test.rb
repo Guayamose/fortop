@@ -29,7 +29,7 @@ class RepositoryFlowTest < ApplicationSystemTestCase
       end
 
       click_button "Continuar con GitHub"
-      assert_selector "h1", text: "Repositorios"
+      assert_selector "h1", text: "Te damos la bienvenida"
       assert_text "GitHub conectado"
     end
   end
@@ -43,8 +43,9 @@ class RepositoryFlowTest < ApplicationSystemTestCase
       find("button[aria-label='Reanudar animación']").click
       save_review_screenshot("access-desktop")
       click_button "Continuar con GitHub"
-      assert_selector "h1", text: "Repositorios"
+      assert_selector "h1", text: "Te damos la bienvenida"
       assert_text "Tu primer repositorio"
+      assert_no_text "Has iniciado sesión con GitHub."
       assert_no_selector ".repository-card"
       assert_no_horizontal_overflow
       save_review_screenshot("repositories-empty-desktop")
@@ -138,7 +139,7 @@ class RepositoryFlowTest < ApplicationSystemTestCase
     with_browser_github do
       visit new_session_path
       click_button "Continuar con GitHub"
-      assert_selector "h1", text: "Repositorios"
+      assert_selector "h1", text: "Te damos la bienvenida"
       user = User.find_by!(github_id: 92001)
       repository = user.repositories.create!(github_id: 42001, installation_id: 88001, full_name: "browser-builder/website", html_url: "https://github.com/browser-builder/website")
       scan = repository.scans.create!(status: "analyzing", progress: 38, started_at: 1.minute.ago)
@@ -193,7 +194,7 @@ class RepositoryFlowTest < ApplicationSystemTestCase
     with_browser_github do
       visit new_session_path
       click_button "Continuar con GitHub"
-      assert_selector "h1", text: "Repositorios"
+      assert_selector "h1", text: "Te damos la bienvenida"
       user = User.find_by!(github_id: 92001)
       repository = user.repositories.create!(github_id: 42001, installation_id: 88001, full_name: "browser-builder/website", html_url: "https://github.com/browser-builder/website")
       scan = repository.scans.create!(status: "remediating", progress: 45, started_at: 1.minute.ago)
@@ -289,7 +290,7 @@ class RepositoryFlowTest < ApplicationSystemTestCase
     with_browser_github do
       visit new_session_path
       click_button "Continuar con GitHub"
-      assert_selector "h1", text: "Repositorios"
+      assert_selector "h1", text: "Te damos la bienvenida"
       user = User.find_by!(github_id: 92001)
       repository = user.repositories.create!(github_id: 42001, installation_id: 88001, full_name: "browser-builder/website", html_url: "https://github.com/browser-builder/website")
       scan = repository.scans.create!(status: "failed", progress: 88, error_message: "GitHub no responde.", finished_at: Time.current,
@@ -323,7 +324,7 @@ class RepositoryFlowTest < ApplicationSystemTestCase
     with_browser_github do
       visit new_session_path
       click_button "Continuar con GitHub"
-      assert_selector "h1", text: "Repositorios"
+      assert_selector "h1", text: "Te damos la bienvenida"
       user = User.find_by!(github_id: 92001)
       completed = user.repositories.create!(github_id: 42001, installation_id: 88001, full_name: "browser-builder/website", html_url: "https://github.com/browser-builder/website", language: "Ruby")
       completed.scans.create!(status: "completed", progress: 100, finished_at: Time.current)
@@ -360,7 +361,7 @@ class RepositoryFlowTest < ApplicationSystemTestCase
 
       visit new_session_path
       # Signed-in users are redirected to their workspace rather than shown login.
-      assert_selector "h1", text: "Repositorios"
+      assert_selector "h1", text: "Te damos la bienvenida"
     end
   end
 

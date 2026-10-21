@@ -35,7 +35,7 @@ class SessionsController < ApplicationController
     user = User.from_github(profile, **credentials)
     reset_session
     session[:user_id] = user.id
-    redirect_to repositories_path, notice: "Has iniciado sesión con GitHub."
+    redirect_to repositories_path
   rescue Github::Error => error
     redirect_to new_session_path, alert: error.message
   rescue ActiveRecord::RecordInvalid

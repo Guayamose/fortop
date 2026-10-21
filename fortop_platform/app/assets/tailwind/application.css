@@ -290,11 +290,15 @@ main:focus { outline: none; }
 .repository-scan-details > summary > .icon { width: 12px; height: 12px; margin-left: auto; color: var(--muted); transition: transform .2s; }
 .repository-scan-details[open] > summary > .icon { transform: rotate(180deg); }
 .repository-scan-details > summary > span { color: var(--muted); font: 10px var(--font-mono); }
+.repository-findings-section { margin-top: 27px; padding-top: 18px; border-top: 1px solid var(--line); }
+.repository-findings-heading { display: flex; align-items: center; gap: 9px; }
+.repository-findings-heading h3 { font-size: 13px; font-weight: 450; }
+.repository-findings-heading > span { color: var(--muted); font-size: 10px; }
 .repository-findings { margin-top: 12px; }
 .repository-findings .finding-card { border-radius: 0; }
 .repository-findings .finding-card + .finding-card { border-top: 1px solid var(--line); }
-.repository-findings .finding-card > summary { padding: 14px 0; }
-.repository-findings .finding-body { padding: 16px 0; }
+.repository-findings .repository-finding-heading { padding: 14px 0; }
+.repository-findings .finding-body { padding: 0 0 20px; border-top: 0; }
 .repository-console { --console-accent: #4b78c8; --console-tint: #eff5ff; margin-top: 32px; padding-top: 21px; border-top: 1px solid var(--line); }
 .activity-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-bottom: 15px; }
 .activity-heading h4 { font-size: 13px; font-weight: 500; }
@@ -595,7 +599,7 @@ main:focus { outline: none; }
 .coverage-note { margin-top: 15px; color: var(--muted); font-size: 11px; line-height: 1.7; }
 .findings-list { display: grid; gap: 10px; margin-bottom: 35px; }
 .finding-card { overflow: hidden; border-radius: 15px; }
-.finding-card > summary { display: flex; align-items: center; gap: 14px; padding: 20px 22px; list-style: none; }
+.finding-card > summary, .repository-finding-heading { display: flex; align-items: center; gap: 14px; padding: 20px 22px; list-style: none; }
 .finding-card > summary::-webkit-details-marker { display: none; }
 .severity-mark { width: 5px; height: 27px; flex: 0 0 auto; border-radius: 2px; background: var(--muted); }
 .severity-high { background: var(--risk); }
@@ -881,7 +885,7 @@ main:focus { outline: none; }
   .pull-request-callout .button { width: 100%; margin-top: 4px; }
   .pull-request-callout strong { font-size: 12px; }
   .no-changes-note, .coverage-note { font-size: 11px; }
-  .finding-card > summary { flex-wrap: wrap; padding: 18px; gap: 10px; }
+  .finding-card > summary, .repository-finding-heading { flex-wrap: wrap; padding: 18px; gap: 10px; }
   .finding-heading { flex-basis: calc(100% - 30px); }
   .finding-heading > strong { font-size: 12px; }
   .finding-heading > span, .finding-heading code { font-size: 9px; }

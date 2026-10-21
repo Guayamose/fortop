@@ -126,9 +126,8 @@ class RepositoryFlowTest < ApplicationSystemTestCase
       assert_no_selector ".repository-history"
       assert_no_horizontal_overflow
       save_review_screenshot("scan-completed-desktop")
-      find(".repository-scan-details > summary", text: "Ver hallazgos y recomendaciones").click
       assert_text "Revisión manual"
-      find(".finding-card summary").click
+      assert_text "La plantilla no define una descripción específica."
       assert_link "Ver issue en GitHub", href: "https://github.com/browser-builder/website/issues/11"
 
       page.current_window.resize_to(390, 844)

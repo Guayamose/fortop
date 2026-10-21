@@ -43,26 +43,6 @@
   <% end %>
 </div>
 
-<% if scan.findings.any? && !scan.active? %>
-  <details class="repository-scan-details">
-    <summary>Ver hallazgos y recomendaciones <span><%= @finding_counts.fetch(scan.id, 0) %></span><%= app_icon(:chevron_down) %></summary>
-    <div class="repository-findings">
-      <% scan.findings.order(:id).each do |finding| %>
-        <details class="finding-card">
-          <summary><span class="severity-mark severity-<%= finding.severity %>"></span><div class="finding-heading"><strong><%= finding.title %></strong><span><%= finding_status_label(finding.status) %></span></div><span class="badge badge-neutral"><%= severity_label(finding.severity) %></span><span class="details-toggle">+</span></summary>
-          <div class="finding-body">
-            <p><%= finding.description %></p>
-            <% if finding.file_path.present? %><p><code><%= finding.file_path %><%= ":#{finding.line_number}" if finding.line_number.present? %></code></p><% end %>
-            <% if finding.evidence.present? %><h4>Evidencia</h4><pre><%= finding.evidence %></pre><% end %>
-            <% if finding.recommendation.present? %><h4>Recomendación</h4><p><%= finding.recommendation %></p><% end %>
-            <% if finding.issue_url.present? %><%= external_link(safe_join(["Ver issue en GitHub", app_icon(:external)]), finding.issue_url, class: "text-link") %><% end %>
-          </div>
-        </details>
-      <% end %>
-    </div>
-  </details>
-<% end %>
-
 <%= render "repositories/agent_activity", scan: scan %>
 
 <% if scan.validation_results.any? || scan.changed_files.any? %>
@@ -73,4 +53,24 @@
       <% scan.changed_files.each do |file| %><p><%= app_icon(:code) %><code><%= file['path'] %></code><span>+<%= file['additions'] || 0 %> / −<%= file['deletions'] || 0 %></span></p><% end %>
     </div>
   </details>
+<% end %>
+
+<% if scan.findings.any? && !scan.active? %>
+  <section class="repository-findings-section" aria-labelledby="scan-<%= scan.id %>-findings-title">
+    <header class="repository-findings-heading"><h3 id="scan-<%= scan.id %>-findings-title">Hallazgos y recomendaciones</h3><span><%= @finding_counts.fetch(scan.id, 0) %></span></header>
+    <div class="repository-findings">
+      <% scan.findings.order(:id).each do |finding| %>
+        <article class="finding-card" aria-labelledby="finding-<%= finding.id %>-title">
+          <header class="repository-finding-heading"><span class="severity-mark severity-<%= finding.severity %>"></span><div class="finding-heading"><strong id="finding-<%= finding.id %>-title"><%= finding.title %></strong><span><%= finding_status_label(finding.status) %></span></div><span class="badge badge-neutral"><%= severity_label(finding.severity) %></span></header>
+          <div class="finding-body">
+            <p><%= finding.description %></p>
+            <% if finding.file_path.present? %><p><code><%= finding.file_path %><%= ":#{finding.line_number}" if finding.line_number.present? %></code></p><% end %>
+            <% if finding.evidence.present? %><h4>Evidencia</h4><pre><%= finding.evidence %></pre><% end %>
+            <% if finding.recommendation.present? %><h4>Recomendación</h4><p><%= finding.recommendation %></p><% end %>
+            <% if finding.issue_url.present? %><%= external_link(safe_join(["Ver issue en GitHub", app_icon(:external)]), finding.issue_url, class: "text-link") %><% end %>
+          </div>
+        </article>
+      <% end %>
+    </div>
+  </section>
 <% end %>

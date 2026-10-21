@@ -1,0 +1,7 @@
+<% content_for :title, "Análisis ##{@scan.id} · #{@repository.display_name} · Fortop" %><% content_for :breadcrumb, @repository.display_name %>
+<%= link_to repository_path(@repository), class: "back-link" do %><%= app_icon(:back) %> <%= @repository.full_name %><% end %>
+<div class="page-heading scan-page-heading"><div><span class="eyebrow">ANÁLISIS Y REMEDIACIÓN</span><h1>Análisis #<%= @scan.id %></h1><p><%= @repository.full_name %><span class="inline-divider">/</span><%= human_timestamp(@scan.created_at) %></p></div><%= external_link(safe_join([app_icon(:github), "Ver repositorio", app_icon(:external)]), @repository.html_url, class: "button button-secondary") %></div>
+<div data-controller="scan-progress" data-scan-progress-url-value="<%= repository_scan_path(@repository, @scan, format: :json) %>" data-scan-progress-active-value="<%= @scan.active? %>">
+  <div class="polling-error" role="status" data-scan-progress-target="error" hidden>No se puede actualizar el progreso en este momento. Reconectando…</div>
+  <div data-scan-progress-target="content"><%= render "scans/progress", scan: @scan %></div>
+</div>

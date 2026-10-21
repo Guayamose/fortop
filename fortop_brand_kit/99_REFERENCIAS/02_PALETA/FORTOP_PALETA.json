@@ -1,0 +1,46 @@
+{
+  "brand": "FORTOP",
+  "status": "approved",
+  "colors": [
+    {
+      "id": "shadow-grey",
+      "name": "Shadow Grey",
+      "hex": "#2E282A",
+      "rgb": [
+        46,
+        40,
+        42
+      ]
+    },
+    {
+      "id": "pine-teal",
+      "name": "Pine Teal",
+      "hex": "#2B4F42",
+      "rgb": [
+        43,
+        79,
+        66
+      ]
+    },
+    {
+      "id": "ivory",
+      "name": "Ivory",
+      "hex": "#FFFFF3",
+      "rgb": [
+        255,
+        255,
+        243
+      ]
+    },
+    {
+      "id": "honeydew",
+      "name": "Honeydew",
+      "hex": "#E0EFDA",
+      "rgb": [
+        224,
+        239,
+        218
+      ]
+    }
+  ]
+}

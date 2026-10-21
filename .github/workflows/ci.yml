@@ -1,0 +1,155 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, develop, "release/**", "hotfix/**"]
+  push:
+    branches: [main, develop, "release/**", "hotfix/**"]
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: fortop_platform
+
+jobs:
+  scan_ruby:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          working-directory: fortop_platform
+          bundler-cache: true
+
+      - name: Scan Rails code for security vulnerabilities
+        run: bin/brakeman --quiet --no-pager
+
+      - name: Audit Ruby dependencies
+        run: bin/bundler-audit
+
+  scan_js:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          working-directory: fortop_platform
+          bundler-cache: true
+
+      - name: Audit JavaScript dependencies
+        run: bin/importmap audit
+
+  lint:
+    runs-on: ubuntu-24.04
+    env:
+      RUBOCOP_CACHE_ROOT: ${{ github.workspace }}/fortop_platform/tmp/rubocop
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          working-directory: fortop_platform
+          bundler-cache: true
+
+      - name: Cache RuboCop results
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.RUBOCOP_CACHE_ROOT }}
+          key: rubocop-${{ runner.os }}-${{ hashFiles('fortop_platform/.ruby-version', 'fortop_platform/**/.rubocop.yml', 'fortop_platform/**/.rubocop_todo.yml', 'fortop_platform/Gemfile.lock') }}
+          restore-keys: |
+            rubocop-${{ runner.os }}-
+
+      - name: Check Ruby style
+        run: bin/rubocop -f github
+
+  test:
+    runs-on: ubuntu-24.04
+    env:
+      RAILS_ENV: test
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/fortop_test
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: --health-cmd="pg_isready -U postgres" --health-interval=10s --health-timeout=5s --health-retries=5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libpq-dev libvips
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          working-directory: fortop_platform
+          bundler-cache: true
+
+      - name: Prepare test database
+        run: bin/rails db:test:prepare
+
+      - name: Check Rails autoloading
+        run: bin/rails zeitwerk:check
+
+      - name: Run tests with simulated external services
+        run: bin/rails test
+
+  system-test:
+    runs-on: ubuntu-24.04
+    env:
+      RAILS_ENV: test
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/fortop_test
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: --health-cmd="pg_isready -U postgres" --health-interval=10s --health-timeout=5s --health-retries=5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libpq-dev libvips
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          working-directory: fortop_platform
+          bundler-cache: true
+
+      - name: Prepare test database
+        run: bin/rails db:test:prepare
+
+      - name: Run browser tests with simulated external services
+        run: bin/rails test:system
+
+      - name: Keep screenshots from failed browser tests
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: screenshots
+          path: fortop_platform/tmp/screenshots
+          if-no-files-found: ignore

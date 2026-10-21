@@ -1,0 +1,6 @@
+#!/bin/sh
+set -eu
+
+integration_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+cd "$integration_dir/../fortop_platform"
+exec bin/rails runner 'puts JSON.pretty_generate(Github::AppManifest.new.manifest)'

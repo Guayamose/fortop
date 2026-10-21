@@ -10,8 +10,11 @@
 **/.ruby-lsp/
 **/.bundle/
 **/node_modules/
+**/__pycache__/
+**/*.pyc
 /.vscode/
 /.idea/
+/.venv-deliverables/
 /.DS_Store
 **/.DS_Store
 /tmp/

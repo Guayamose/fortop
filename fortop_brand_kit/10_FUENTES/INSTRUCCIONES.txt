@@ -1,0 +1,24 @@
+FORTOP / FUENTES DE CONSTRUCCIÓN
+
+Los SVG entregados son el producto final editable. No necesitas ejecutar código para usarlos.
+Cada plano y cada letra tiene su propio trazado identificado. El logotipo no usa una fuente.
+Los textos del manual se convierten en curvas para evitar sustituciones tipográficas.
+
+Para regenerar en un entorno con Python 3.10+, Node.js e Inkscape:
+1. Instalar los paquetes de requirements.txt y ejecutar npm install en esta carpeta.
+2. Instalar DejaVu Sans regular y bold en /usr/share/fonts/truetype/dejavu/,
+   o cambiar las dos rutas de TTFont al inicio de generar_marca.py.
+   DejaVu Sans se usa exclusivamente en los textos del manual, nunca en FORTOP.
+3. python generar_marca.py
+4. node renderizar.cjs
+5. python exportar_pdf.py
+
+Por defecto se crea una carpeta hermana llamada FORTOP_Brand_Kit_rebuild.
+Para otro destino, definir FORTOP_OUTPUT antes de ejecutar generar_marca.py,
+y pasar esa misma ruta como argumento a renderizar.cjs y exportar_pdf.py.
+FORTOP_REFERENCES permite indicar otra ubicación para las referencias originales.
+La regeneración crea los gráficos, las variantes, los PNG, el favicon ICO y el manual.
+Los documentos de entrega, las referencias y los informes se conservan en este kit.
+
+La geometría numérica está además en 00_MAESTROS/FORTOP_geometria.json.
+No se ha utilizado calco automático, bitmap incrustado ni generación de imágenes.

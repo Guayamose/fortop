@@ -1,8 +1,45 @@
 <% content_for :title, "Repositorios · Fortop" %>
-<div class="page-heading"><div><span class="eyebrow">TU PUNTO DE PARTIDA</span><h1>Repositorios</h1><p>Conecta tu código. Tus agentes se encargan del siguiente paso.</p></div><% if @repositories.any? %><%= link_to new_repository_path, class: "button button-primary" do %><%= app_icon(:plus) %> Conectar un repositorio<% end %><% end %></div>
+<div class="page-heading">
+  <div><h1>Repositorios</h1><p>Tu código, sus análisis y las mejoras que están por llegar.</p></div>
+  <% if @repositories.any? %><%= link_to new_repository_path, class: "button button-secondary" do %><%= app_icon(:plus) %> Conectar un repositorio<% end %><% end %>
+</div>
 <% if @repositories.empty? %>
-  <section class="empty-state panel"><div class="empty-mark" aria-hidden="true"><%= image_tag "brand/ascenso.svg", alt: "", width: 88, height: 88 %><span class="empty-mark-plus">+</span></div><span class="eyebrow">AQUÍ EMPIEZA EL ASCENSO</span><h2>Tu primer repositorio,<br>un nuevo punto de partida.</h2><p>Conecta un repositorio de GitHub para analizar su presencia<br class="desktop-break"> en buscadores e IA y preparar mejoras en tu código.</p><%= link_to new_repository_path, class: "button button-primary" do %><%= app_icon(:plus) %> Conectar un repositorio <%= app_icon(:arrow) %><% end %><span class="empty-caption"><%= app_icon(:lock) %> Tú controlas el acceso y revisas cada pull request.</span></section>
+  <section class="empty-state">
+    <div class="empty-connection" aria-hidden="true"><span><%= app_icon(:github) %></span><i></i><span><%= image_tag "brand/ascenso.svg", alt: "", width: 39, height: 36 %></span></div>
+    <h2>Tu primer repositorio.<br>El principio de algo mejor.</h2>
+    <p>Conecta tu código con Fortop. Tus agentes encontrarán oportunidades<br class="desktop-break"> y prepararán las mejoras para que puedas revisarlas.</p>
+    <%= link_to new_repository_path, class: "button button-primary" do %><%= app_icon(:plus) %> Conectar un repositorio <%= app_icon(:arrow) %><% end %>
+    <span class="empty-caption"><%= app_icon(:lock) %> Tú eliges el acceso y apruebas cada cambio.</span>
+  </section>
 <% else %>
-  <div class="section-bar"><span><%= pluralize(@repositories.size, "repositorio conectado", "repositorios conectados") %></span><span>Tu código, organizado.</span></div>
-  <div class="repository-grid"><% @repositories.each do |repository| %><%= link_to repository_path(repository), class: "repository-card panel" do %><div class="repository-card-top"><span class="repository-glyph"><%= app_icon(:repository) %></span><%= app_icon(:arrow, css_class: "card-arrow") %></div><span class="repository-owner"><%= repository.full_name.split('/').first %></span><h2><%= repository.display_name %></h2><p class="repository-description"><%= repository.description.presence || "Tu repositorio está listo para su siguiente análisis." %></p><div class="repository-card-meta"><span><%= app_icon(:branch) %><%= repository.default_branch %></span><% if repository.language.present? %><span><span class="language-dot"></span><%= repository.language %></span><% end %></div><div class="repository-card-bottom"><%= status_badge(repository.latest_scan) %><span><%= repository.private? ? 'Privado' : 'Público' %></span></div><% end %><% end %></div>
+  <% groups = @latest_scans.values.map { |scan| scan&.active? ? 'running' : scan&.completed? ? 'completed' : scan&.failed? ? 'failed' : 'pending' }.tally %>
+  <section class="repository-browser" data-controller="repository-filter">
+    <div class="repository-toolbar">
+      <label class="repository-search"><%= app_icon(:search) %><input type="search" placeholder="Buscar por nombre o lenguaje" aria-label="Buscar repositorios" data-repository-filter-target="search" data-action="input->repository-filter#filter"></label>
+      <div class="repository-filters" role="group" aria-label="Filtrar por estado">
+        <% [['all', 'Todos', @repositories.size], ['running', 'En curso', groups.fetch('running', 0)], ['completed', 'Completados', groups.fetch('completed', 0)], ['failed', 'Con errores', groups.fetch('failed', 0)]].each do |value, label, count| %>
+          <button type="button" aria-pressed="<%= value == 'all' %>" data-repository-filter-target="filter" data-action="repository-filter#select" data-filter="<%= value %>"><%= label %> <small><%= count %></small></button>
+        <% end %>
+      </div>
+    </div>
+    <div class="repository-table-wrap">
+      <table class="repository-table">
+        <thead><tr><th>Repositorio</th><th>Último análisis</th><th>Estado</th><th>Hallazgos</th><th>Pull request</th></tr></thead>
+        <tbody>
+          <% @repositories.each do |repository| %>
+            <% scan = @latest_scans[repository.id]; state = scan&.active? ? 'running' : scan&.completed? ? 'completed' : scan&.failed? ? 'failed' : 'pending' %>
+            <tr data-repository-filter-target="row" data-search="<%= "#{repository.full_name} #{repository.language}".downcase %>" data-status="<%= state %>">
+              <td><%= link_to repository_path(repository), class: "repository-card" do %><span class="repository-glyph"><%= app_icon(:code) %></span><span class="repository-name"><strong><%= repository.full_name %></strong><small><%= repository.default_branch %><% if repository.language.present? %> · <%= repository.language %><% end %><% if repository.private? %> · Privado<% end %></small></span><% end %></td>
+              <td><% if scan %><%= link_to repository_scan_path(repository, scan), class: "latest-scan-link" do %><span class="mini-progress <%= state %>" aria-hidden="true"><% 5.times do |index| %><i class="<%= scan.progress >= (index + 1) * 20 ? 'is-done' : '' %>"></i><% end %></span><span>#<%= scan.id %> <small><%= human_timestamp(scan.created_at) %></small></span><% end %><% else %><span class="table-muted">Todavía sin análisis</span><% end %></td>
+              <td><%= status_badge(scan) %></td>
+              <td class="table-number"><%= scan ? @finding_counts.fetch(scan.id, 0) : '—' %></td>
+              <td class="table-pr"><% if scan&.pull_request_url.present? %><%= external_link(safe_join([app_icon(:pull_request), "##{scan.pull_request_number}", app_icon(:external)]), scan.pull_request_url, class: "text-link") %><% else %><span class="table-muted">—</span><% end %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    <div class="repository-no-results" data-repository-filter-target="empty" hidden><%= app_icon(:search) %><h2>No hay repositorios que coincidan.</h2><p>Prueba otro nombre o cambia el filtro de estado.</p><button type="button" class="text-link" data-action="repository-filter#reset">Quitar filtros</button></div>
+    <div class="section-bar"><span><%= pluralize(@repositories.size, 'repositorio conectado', 'repositorios conectados') %></span><span>GitHub · Análisis y remediación</span></div>
+  </section>
 <% end %>

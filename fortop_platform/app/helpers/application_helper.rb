@@ -1,5 +1,8 @@
 module ApplicationHelper
   ICON_PATHS = {
+    chevron_down: '<path d="m6 9 6 6 6-6"/>',
+    pause: '<path d="M9 5v14M15 5v14"/>',
+    play: '<path d="m8 5 11 7-11 7V5Z"/>',
     repository: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 3H20v19H6.5A2.5 2.5 0 0 1 4 19.5v-14A2.5 2.5 0 0 1 6.5 3Z"/><path d="M8 7h8M8 11h5"/>',
     plus: '<path d="M12 5v14M5 12h14"/>',
     arrow: '<path d="M5 12h14m-6-6 6 6-6 6"/>',

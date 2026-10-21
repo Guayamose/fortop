@@ -3,6 +3,8 @@ class RepositoriesController < ApplicationController
 
   def index
     @repositories = current_user.repositories.includes(:scans).order(connected_at: :desc)
+    @latest_scans = @repositories.to_h { |repository| [ repository.id, repository.scans.max_by { |scan| [ scan.created_at, scan.id ] } ] }
+    @finding_counts = Finding.where(scan_id: @latest_scans.values.compact.map(&:id)).group(:scan_id).count
   end
 
   def new

@@ -3,7 +3,7 @@
   <head>
     <title><%= content_for(:title) || "Fortop · Análisis y remediación GEO" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <meta name="theme-color" content="#2B4F42">
+    <meta name="theme-color" content="#ffffff">
     <meta name="application-name" content="Fortop">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
@@ -17,29 +17,27 @@
   <body class="<%= current_user ? 'workspace-body' : 'access-body' %>">
     <a href="#main-content" class="skip-link">Saltar al contenido</a>
     <% if current_user %>
-      <aside class="sidebar" aria-label="Navegación principal">
-        <%= link_to root_path, class: "brand-link", aria: { label: "Fortop, inicio" } do %>
-          <%= image_tag "brand/fortop-ivory.svg", alt: "FORTOP", class: "sidebar-logo", width: 164, height: 44 %>
-        <% end %>
-        <div class="workspace-label">Tu espacio de trabajo</div>
-        <nav class="main-nav">
-          <%= link_to repositories_path, class: "nav-item is-active", aria: { current: "page" } do %><%= app_icon(:repository) %><span>Repositorios</span><% end %>
-          <div class="nav-item is-disabled" aria-disabled="true"><%= app_icon(:globe) %><span>Visibilidad de marca <small>Próximamente</small></span></div>
+      <header class="topbar"><div class="topbar-inner">
+        <%= link_to root_path, class: "brand-link", aria: { label: "Fortop, inicio" } do %><%= image_tag "brand/fortop-dark.svg", alt: "FORTOP", class: "topbar-logo", width: 146, height: 38 %><% end %>
+        <span class="topbar-divider" aria-hidden="true"></span>
+        <span class="workspace-account"><span class="workspace-initial"><%= current_user.login.first.upcase %></span><span><%= current_user.login %></span></span>
+        <nav class="main-nav" aria-label="Navegación principal">
+          <%= link_to repositories_path, class: "nav-item is-active", aria: { current: "page" } do %>Repositorios<span class="nav-dot" aria-hidden="true"></span><% end %>
+          <span class="nav-item is-disabled" aria-disabled="true">Visibilidad de marca <small>Próximamente</small></span>
         </nav>
-        <div class="sidebar-bottom">
-          <div class="sidebar-note"><span class="tiny-dot"></span>De tu código a tu presencia en IA.</div>
-          <div class="account-row">
-            <span class="account-avatar" aria-hidden="true"><%= current_user.login.first.upcase %></span>
-            <div class="account-copy"><strong><%= current_user.display_name %></strong><span>@<%= current_user.login %></span></div>
-            <%= button_to logout_path, method: :delete, class: "icon-button logout-button", aria: { label: "Cerrar sesión" }, title: "Cerrar sesión" do %><%= app_icon(:logout) %><% end %>
-          </div>
+        <div class="topbar-right"><span class="topbar-github"><span class="status-dot"></span> GitHub conectado</span>
+          <details class="account-menu"><summary aria-label="Menú de cuenta"><span class="account-avatar"><%= current_user.login.first.upcase %></span><%= app_icon(:chevron_down) %></summary>
+            <div class="account-menu-panel"><div class="account-copy"><strong><%= current_user.display_name %></strong><span>@<%= current_user.login %></span></div>
+              <%= link_to new_repository_path, class: "account-menu-item" do %><%= app_icon(:plus) %> Conectar repositorio<% end %>
+              <%= button_to logout_path, method: :delete, class: "account-menu-item logout-button" do %><%= app_icon(:logout) %> Cerrar sesión<% end %>
+            </div>
+          </details>
         </div>
-      </aside>
+      </div></header>
       <div class="workspace-main">
-        <header class="topbar"><div class="topbar-label">Análisis y remediación <span>/</span> <strong><%= content_for(:breadcrumb) || "Repositorios" %></strong></div><span class="topbar-github"><%= app_icon(:github) %> GitHub conectado</span></header>
         <main id="main-content" class="page-content" tabindex="-1">
           <%= render "shared/flash" %><%= yield %>
-          <footer class="workspace-footer"><span>FORTOP</span><span>Geometría precisa. Presencia sólida.</span></footer>
+          <footer class="workspace-footer"><span>FORTOP</span><span>Tu código. Tu próxima mejora.</span></footer>
         </main>
       </div>
     <% else %>

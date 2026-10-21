@@ -1,10 +1,16 @@
 <% phases = [["discovering", "Preparar", "Contexto y código"], ["analyzing", "Analizar", "Investigación con IA"], ["remediating", "Remediar", "Propuesta de cambios"], ["validating", "Verificar", "Comprobaciones"], ["publishing", "Publicar", "Issues y pull request"]] %>
-<% phase_index = phases.index { |phase| phase.first == scan.status } || (scan.completed? ? phases.length : -1) %>
+<% phase_index = if scan.completed?
+  phases.length
+elsif scan.failed?
+  [5, 15, 45, 78, 88].rindex { |threshold| scan.progress >= threshold } || -1
+else
+  phases.index { |phase| phase.first == scan.status } || -1
+end %>
 <section class="panel scan-status-panel <%= scan.failed? ? 'scan-has-error' : '' %>" aria-label="Estado del análisis">
   <div class="scan-status-top"><div class="scan-state-heading"><span class="scan-state-symbol <%= scan.completed? ? 'is-complete' : scan.failed? ? 'is-error' : '' %>"><% if scan.active? %><span class="state-spinner"></span><% else %><%= app_icon(scan.completed? ? :check : :alert) %><% end %></span><div><span class="eyebrow"><%= scan.completed? ? 'EJECUCIÓN FINALIZADA' : scan.failed? ? 'LA EJECUCIÓN SE HA DETENIDO' : scan.cancelled? ? 'EJECUCIÓN CANCELADA' : 'TUS AGENTES ESTÁN TRABAJANDO' %></span><h2><%= scan.completed? ? 'Análisis completado' : scan.status_label %></h2></div></div><div class="scan-duration"><%= app_icon(:clock) %><%= elapsed_time(scan) %></div></div>
   <div class="progress-label"><span><%= scan.completed? ? 'Proceso finalizado' : scan.failed? ? 'Progreso hasta la interrupción' : scan.queued? ? 'Esperando al siguiente agente disponible' : 'El progreso se actualiza automáticamente' %></span><strong><%= scan.progress %>%</strong></div>
   <div class="progress-track" role="progressbar" aria-label="Progreso del análisis" aria-valuenow="<%= scan.progress %>" aria-valuemin="0" aria-valuemax="100"><span style="width: <%= scan.progress %>%"></span></div>
-  <ol class="phase-list"><% phases.each_with_index do |(status, label, detail), index| %><% state = scan.completed? || index < phase_index ? 'is-done' : status == scan.status ? 'is-current' : '' %><li class="<%= state %>"><span class="phase-number"><%= state == 'is-done' ? app_icon(:check) : format('%02d', index + 1) %></span><div><strong><%= label %></strong><span><%= detail %></span></div></li><% end %></ol>
+  <ol class="phase-list"><% phases.each_with_index do |(status, label, detail), index| %><% state = scan.completed? || index < phase_index ? 'is-done' : scan.failed? && index == phase_index ? 'is-blocked' : status == scan.status ? 'is-current' : '' %><li class="<%= state %>"><span class="phase-number"><%= state == 'is-done' ? app_icon(:check) : state == 'is-blocked' ? app_icon(:alert) : format('%02d', index + 1) %></span><div><strong><%= label %></strong><span><%= detail %></span></div></li><% end %></ol>
   <% if scan.failed? %>
     <div class="scan-error" role="alert"><%= app_icon(:alert) %><div><strong>No se ha podido completar el análisis.</strong><p><%= scan.error_message.presence || 'Se ha producido un error durante la ejecución. Puedes volver a intentarlo.' %></p></div></div>
     <% if scan.publication_retryable? %>

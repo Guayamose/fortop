@@ -1,6 +1,6 @@
 <% content_for :title, "Conectar repositorio · Fortop" %><% content_for :breadcrumb, "Conectar repositorio" %>
 <%= link_to repositories_path, class: "back-link" do %><%= app_icon(:back) %> Repositorios<% end %>
-<div class="page-heading"><div><span class="eyebrow">CONECTA TU CÓDIGO</span><h1>Elige un repositorio</h1><p>Solo mostramos los repositorios a los que has dado acceso a Fortop.</p></div></div>
+<div class="page-heading"><div><h1>Elige un repositorio</h1><p>Solo mostramos los repositorios a los que has dado acceso a Fortop.</p></div></div>
 <% if @installations.empty? %>
   <section class="panel empty-state compact-empty"><span class="repository-glyph large"><%= app_icon(:github) %></span><h2>Dale acceso a Fortop</h2><p>Instala la aplicación de GitHub y elige los repositorios<br class="desktop-break"> que quieres analizar. Puedes cambiarlo después.</p><%= button_to github_installation_path, class: "button button-primary", data: { turbo: false } do %><%= app_icon(:github) %> Elegir acceso en GitHub <%= app_icon(:external) %><% end %><%= link_to "Ya la he instalado. Actualizar lista", new_repository_path, class: "text-link" %></section>
 <% else %>

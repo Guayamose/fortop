@@ -173,6 +173,8 @@ class ScansControllerTest < ActionDispatch::IntegrationTest
     get repository_scan_path(@repository, scan)
     assert_select ".is-complete", count: 0
     assert_select ".scan-error", text: /Publicación incompleta/
+    assert_select ".phase-list .is-done", count: 4
+    assert_select ".phase-list .is-blocked", count: 1
     assert_select "a[href=?]", scan.pull_request_url, count: 1
   end
 

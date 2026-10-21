@@ -1,20 +1,33 @@
 <% content_for :title, "Acceder · Fortop" %>
 <div class="access-shell">
-  <section class="access-story" aria-label="Fortop">
-    <%= image_tag "brand/fortop-ivory.svg", alt: "FORTOP", class: "access-logo", width: 210, height: 56 %>
-    <div class="access-story-main"><span class="eyebrow eyebrow-light">PRESENCIA QUE SE CONSTRUYE</span><h1>Tu próximo paso.<br>Más visible.</h1><p>Del análisis a la mejora de tu web. Agentes que investigan tu código y preparan los cambios en GitHub.</p><div class="brand-monument" aria-hidden="true"><%= image_tag "brand/ascenso-ivory.svg", alt: "", width: 310, height: 310 %></div></div>
-    <span class="access-signature">Geometría precisa. Presencia sólida.</span>
+  <section class="access-side">
+    <header class="access-top">
+      <%= image_tag "brand/fortop-dark.svg", alt: "FORTOP", class: "access-logo", width: 164, height: 43 %>
+      <span class="access-top-label">Análisis y remediación</span>
+    </header>
+    <div class="access-card">
+      <span class="eyebrow">TU CÓDIGO. TU PRÓXIMO PASO.</span>
+      <h1>Todo empieza<br>en tu repositorio.</h1>
+      <p class="access-description">Encuentra qué mejorar. Deja que tus agentes preparen los cambios. Revisa cada propuesta en GitHub.</p>
+      <div class="access-login">
+        <% if Github::App.configured? %>
+          <%= button_to session_path, class: "button button-primary button-full", data: { turbo: false } do %><%= app_icon(:github) %> Continuar con GitHub <%= app_icon(:arrow) %><% end %>
+          <p class="form-note">Conecta tu cuenta para entrar en tu espacio de trabajo.</p>
+        <% elsif Rails.env.development? && request.local? %>
+          <%= link_to github_setup_path, class: "button button-primary button-full" do %><%= app_icon(:github) %> Conectar Fortop con GitHub <%= app_icon(:arrow) %><% end %>
+          <p class="form-note">Registra la aplicación en GitHub para activar el acceso.</p>
+        <% else %>
+          <div class="flash flash-alert" role="status"><%= app_icon(:clock) %><span>El acceso con GitHub estará disponible en cuanto se complete la configuración de la plataforma.</span></div>
+        <% end %>
+      </div>
+      <div class="access-steps" aria-label="Cómo funciona Fortop">
+        <div><span>01</span><p>Conecta tu repositorio</p><%= app_icon(:repository) %></div>
+        <div><span>02</span><p>Inicia el análisis y la remediación</p><%= app_icon(:sparkles) %></div>
+        <div><span>03</span><p>Revisa los issues y pull requests</p><%= app_icon(:pull_request) %></div>
+      </div>
+      <p class="access-footnote"><%= app_icon(:lock) %> Tú eliges los repositorios. Cada cambio queda pendiente de tu revisión.</p>
+    </div>
+    <footer class="access-footer"><span>© <%= Time.current.year %> Fortop</span><span>SEO / GEO</span><span class="access-language">ES</span></footer>
   </section>
-  <section class="access-card">
-    <span class="eyebrow">BIENVENIDO A FORTOP</span><h2>Todo empieza<br>en tu repositorio.</h2><p class="access-description">Conecta tu cuenta de GitHub y da el primer paso hacia una web preparada para los motores de IA.</p>
-    <% if Github::App.configured? %>
-      <%= button_to session_path, class: "button button-primary button-full", data: { turbo: false } do %><%= app_icon(:github) %> Continuar con GitHub <%= app_icon(:arrow) %><% end %><p class="form-note">Tú eliges los repositorios a los que Fortop puede acceder.</p>
-    <% elsif Rails.env.development? && request.local? %>
-      <%= link_to github_setup_path, class: "button button-primary button-full" do %><%= app_icon(:github) %> Conectar Fortop con GitHub <%= app_icon(:arrow) %><% end %><p class="form-note">Solo la primera vez: registra la aplicación en GitHub para activar el acceso.</p>
-    <% else %>
-      <div class="flash flash-alert" role="status"><%= app_icon(:clock) %><span>El acceso con GitHub estará disponible en cuanto se complete la configuración de la plataforma.</span></div>
-    <% end %>
-    <div class="access-steps"><div><span>01</span><p>Conecta un repositorio</p></div><div><span>02</span><p>Inicia tus agentes</p></div><div><span>03</span><p>Revisa las mejoras en GitHub</p></div></div>
-    <p class="access-footnote"><%= app_icon(:lock) %> Las propuestas llegan en pull requests para tu revisión.</p>
-  </section>
+  <%= render "shared/access_art", caption: "Del hallazgo al cambio. Con evidencia y bajo tu control." %>
 </div>

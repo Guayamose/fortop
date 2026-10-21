@@ -60,16 +60,7 @@
     <header class="repository-findings-heading"><h3 id="scan-<%= scan.id %>-findings-title">Hallazgos y recomendaciones</h3><span><%= @finding_counts.fetch(scan.id, 0) %></span></header>
     <div class="repository-findings">
       <% scan.findings.order(:id).each do |finding| %>
-        <article class="finding-card" aria-labelledby="finding-<%= finding.id %>-title">
-          <header class="repository-finding-heading"><span class="severity-mark severity-<%= finding.severity %>"></span><div class="finding-heading"><strong id="finding-<%= finding.id %>-title"><%= finding.title %></strong><span><%= finding_status_label(finding.status) %></span></div><span class="badge badge-neutral"><%= severity_label(finding.severity) %></span></header>
-          <div class="finding-body">
-            <p><%= finding.description %></p>
-            <% if finding.file_path.present? %><p><code><%= finding.file_path %><%= ":#{finding.line_number}" if finding.line_number.present? %></code></p><% end %>
-            <% if finding.evidence.present? %><h4>Evidencia</h4><pre><%= finding.evidence %></pre><% end %>
-            <% if finding.recommendation.present? %><h4>Recomendación</h4><p><%= finding.recommendation %></p><% end %>
-            <% if finding.issue_url.present? %><%= external_link(safe_join(["Ver issue en GitHub", app_icon(:external)]), finding.issue_url, class: "text-link") %><% end %>
-          </div>
-        </article>
+        <%= render "repositories/finding", finding: finding %>
       <% end %>
     </div>
   </section>

@@ -127,6 +127,7 @@ class RepositoryFlowTest < ApplicationSystemTestCase
       assert_no_horizontal_overflow
       save_review_screenshot("scan-completed-desktop")
       assert_text "Revisión manual"
+      find(".finding-review > summary").click
       assert_text "La plantilla no define una descripción específica."
       assert_link "Ver issue en GitHub", href: "https://github.com/browser-builder/website/issues/11"
 
@@ -152,6 +153,52 @@ class RepositoryFlowTest < ApplicationSystemTestCase
       click_link "Ver análisis en curso"
       assert_selector ".repository-scan-state h3", text: "En cola"
       assert_current_path repository_path(repository, scan_id: new_scan.id)
+    end
+  end
+
+  test "finding reviews expand with highlighted evidence and the actual remediation diff" do
+    with_browser_github do
+      visit new_session_path
+      click_button "Continuar con GitHub"
+      assert_selector "h1", text: "Te damos la bienvenida"
+      user = User.find_by!(github_id: 92001)
+      repository = user.repositories.create!(github_id: 42001, installation_id: 88001, full_name: "browser-builder/website", html_url: "https://github.com/browser-builder/website")
+      repository.scans.create!(status: "completed", progress: 100, created_at: 1.day.ago)
+      scan = repository.scans.create!(status: "completed", progress: 100, base_sha: "a" * 40, pull_request_url: "https://github.com/browser-builder/website/pull/42",
+        validation_results: [ { "name" => "HTML", "passed" => true } ])
+      before = "<!doctype html>\n<html>\n<head>\n<title>Fortop</title>\n<meta name=\"description\" content=\"\">\n</head>\n</html>\n"
+      after = before.sub('content=""', 'content="Fortop analiza y propone mejoras de SEO en tu repositorio."')
+      finding = scan.findings.create!(title: "La página principal tiene una descripción vacía", description: "La plantilla compartida declara una meta description sin contenido. Las páginas que heredan este layout no proporcionan un resumen propio en esta etiqueta.",
+        impact: "El buscador puede elegir un fragmento de otra parte del contenido. Este análisis de código no confirma qué fragmento se muestra actualmente.",
+        recommendation: "Completar la descripción con el propósito de Fortop, ya documentado en el repositorio, y mantener una única etiqueta en el HTML final.",
+        verification: "Abrir la página renderizada y comprobar que existe una sola meta description, con texto no vacío y coherente con la página.",
+        category: "metadata", severity: "medium", file_path: "app/views/layouts/application.html.erb", line_number: 5,
+        evidence: '<meta name="description" content="">', status: "fixed", issue_url: "https://github.com/browser-builder/website/issues/21")
+      delta = Scans::CodeDiff.call(before: before, after: after, path: finding.file_path)
+      scan.update!(changed_files: [ delta.merge("path" => finding.file_path, "finding_ids" => [ finding.id ]) ])
+      visit repository_path(repository)
+      assert_no_selector ".finding-review[open]"
+      assert_no_text "Qué hemos encontrado"
+      find(".finding-review > summary").click
+      within ".finding-review" do
+        assert_text "Qué hemos encontrado"
+        assert_text "Por qué importa"
+        assert_text "Cómo comprobarlo"
+        assert_selector ".syntax-highlight .nt", text: "<meta"
+        assert_selector ".finding-source-line .finding-line-number", text: "5"
+        assert_selector ".diff-deletion", text: 'content=""'
+        assert_selector ".diff-addition", text: "Fortop analiza y propone mejoras de SEO"
+        assert_link "Ver origen", href: "https://github.com/browser-builder/website/blob/#{'a' * 40}/app/views/layouts/application.html.erb#L5"
+        assert_link "Revisar en el PR", href: scan.pull_request_url
+      end
+      assert_no_horizontal_overflow
+      save_section_screenshot("finding-review-desktop", ".finding-review")
+      page.current_window.resize_to(390, 844)
+      assert_no_horizontal_overflow
+      save_section_screenshot("finding-review-mobile", ".finding-review")
+      find(".finding-review > summary").click
+      assert_no_text "Qué hemos encontrado"
+      assert_no_selector ".repository-history[open]"
     end
   end
 
@@ -240,7 +287,7 @@ class RepositoryFlowTest < ApplicationSystemTestCase
         assert_no_button "Ampliar consola"
         assert_no_horizontal_overflow
       end
-      save_console_screenshot("agent-workspace-desktop")
+      save_section_screenshot("agent-workspace-desktop")
 
       scan.record_event!("Remediación: verificando app/layout.tsx.", kind: "tool", metadata: { agent: "remediation", tool: "validate_changes", path: "app/layout.tsx", turn: 2 })
       within ".repository-console" do
@@ -256,10 +303,10 @@ class RepositoryFlowTest < ApplicationSystemTestCase
         assert_text "Verificación final: 2 de 2 comprobaciones correctas."
         assert_link "Ver en GitHub", href: "https://github.com/browser-builder/website/issues/21"
       end
-      save_console_screenshot("agent-workspace-publishing-desktop")
+      save_section_screenshot("agent-workspace-publishing-desktop")
       page.current_window.resize_to(390, 844)
       assert_no_horizontal_overflow
-      save_console_screenshot("agent-workspace-mobile")
+      save_section_screenshot("agent-workspace-mobile")
       scan.update!(status: "paused")
       assert_selector ".repository-console[data-console-state=paused]", wait: 10
       within ".repository-console" do
@@ -367,12 +414,12 @@ class RepositoryFlowTest < ApplicationSystemTestCase
     page.save_screenshot(directory.join("#{name}.png"))
   end
 
-  def save_console_screenshot(name)
+  def save_section_screenshot(name, selector = ".repository-console")
     return unless ENV["SYSTEM_SCREENSHOTS"] == "1"
 
     directory = Rails.root.join("tmp/screenshots")
     FileUtils.mkdir_p(directory)
-    console = find(".repository-console")
+    console = find(selector)
     page.execute_script("window.scrollTo({ top: window.scrollY + arguments[0].getBoundingClientRect().top - 80, behavior: 'instant' })", console)
     console.native.save_screenshot(directory.join("#{name}.png"))
   end

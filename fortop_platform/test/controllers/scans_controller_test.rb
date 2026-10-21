@@ -169,9 +169,9 @@ class ScansControllerTest < ActionDispatch::IntegrationTest
     follow_redirect!
     assert_response :success
     assert_select ".is-complete", count: 1
-    assert_select "a[href=?]", scan.pull_request_url, count: 1
+    assert_select "a[href=?]", scan.pull_request_url, text: /Ver pull request/, count: 1
     assert_select "a[href=?]", "https://github.com/fortop-builder/site/issues/6", count: 1
-    assert_select ".finding-heading span", "Corrección propuesta"
+    assert_select ".finding-review-status", "Corrección propuesta"
     assert_select ".repository-checks small", "Correcto"
     assert_select "[data-scan-progress-active-value=false]"
   end
@@ -192,7 +192,8 @@ class ScansControllerTest < ActionDispatch::IntegrationTest
 
   test "untrusted findings are escaped and invalid provider links never become executable" do
     scan = @repository.scans.create!(status: "completed", progress: 100, pull_request_url: "javascript:alert(1)")
-    scan.findings.create!(title: "<script>alert(1)</script>", description: "<img src=x onerror=alert(1)>", severity: "low", category: "metadata", evidence: "<iframe src=evil>", issue_url: "https://evil.example/steal")
+    finding = scan.findings.create!(title: "<script>alert(1)</script>", description: "<img src=x onerror=alert(1)>", severity: "low", category: "metadata", evidence: "<iframe src=evil>", issue_url: "https://evil.example/steal")
+    scan.update!(changed_files: [ { "path" => "index.html", "finding_ids" => [ finding.id ], "diff" => "@@ -1 +1 @@\n-<iframe src=evil>\n+<img src=x onerror=alert(1)>\n" } ])
     get repository_scan_path(@repository, scan)
     follow_redirect!
     assert_response :success
@@ -200,7 +201,8 @@ class ScansControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href^='javascript:']", count: 0
     assert_select "a[href^='https://evil.example']", count: 0
     assert_includes response.body, "&lt;script&gt;"
-    assert_select ".finding-body img", count: 0
+    assert_select ".finding-review-body img, .finding-review-body iframe, .finding-review-body script", count: 0
+    assert_select ".diff-addition .finding-source-text", text: "<img src=x onerror=alert(1)>"
   end
 
   test "pause resume and cancel enforce transitions and preserve the scan identity" do

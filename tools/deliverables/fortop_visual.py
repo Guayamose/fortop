@@ -208,4 +208,3 @@ def merge_pdfs(paths,destination):
     for path in paths: writer.append(str(path))
     writer.add_metadata({'/Title':'Fortop · entregables visuales','/Author':'Fortop','/Subject':'Modelo de negocio, viabilidad y arquitectura'})
     with open(destination,'wb') as f: writer.write(f)
-

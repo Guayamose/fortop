@@ -68,6 +68,15 @@ class BrandsController < ApplicationController
   end
 
   def brand_params
-    params.require(:brand).permit(:name, :website, :brief, :markets_text, :aliases_text, :known_competitors)
+    attributes = params.require(:brand).permit(:name, :website, :brief, :markets_text, :aliases_text, :known_competitors, document_ids: [])
+    if attributes.key?(:document_ids)
+      ids = attributes[:document_ids].reject(&:blank?).map { |id| Integer(id.to_s, 10) }.uniq
+      selected = current_user.brand_documents.joins(:brand_import).where(id: ids, brand_imports: { status: "completed" })
+      raise ActiveRecord::RecordNotFound unless selected.count == ids.size
+      attributes[:document_ids] = ids
+    end
+    attributes
+  rescue ArgumentError, TypeError
+    raise ActiveRecord::RecordNotFound
   end
 end

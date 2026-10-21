@@ -32,7 +32,9 @@ module VisibilityFixtures
       raise failure if failure
       schema, prompt = request.values_at(:schema, :prompt)
       props = schema&.fetch(:properties, {}) || {}
-      data = if props.key?("business")
+      data = if props.key?("fields")
+        { "fields" => { "name" => "Nébula", "website" => "https://nebula.com", "aliases_text" => "Nebula", "brief" => "Software de facturación sencillo para pequeños negocios de España, con soporte cercano y gestión de presupuestos.", "markets_text" => "España | es", "known_competitors" => "Contalia" }, "warnings" => [] }
+      elsif props.key?("business")
         { "business" => "Software de facturación", "value_proposition" => "Sencillez y cercanía", "audiences" => [ "Pequeños negocios" ], "products" => [ "Facturación" ], "needs" => [ "Emitir facturas" ], "assumptions" => [ "Validar el sector prioritario" ], "summary" => "Una herramienta para pymes." }
       elsif props.key?("competitors")
         { "competitors" => [ { "name" => "Contalia", "website" => "https://contalia.com", "aliases" => [], "kind" => "direct", "reason" => "Ayuda a pymes a facturar en el mismo mercado.", "markets" => [ "España" ], "source_indexes" => [ 0 ] } ], "facts" => [ { "claim" => "Nébula ofrece facturación.", "source_indexes" => [ 0 ] } ], "market_summary" => "Mercado de facturación." }

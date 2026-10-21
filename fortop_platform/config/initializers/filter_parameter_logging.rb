@@ -9,4 +9,4 @@ Rails.application.config.filter_parameters += [
 ]
 
 # Brand briefs and provider responses can contain commercially sensitive text.
-Rails.application.config.filter_parameters += [ :brief, :known_competitors, :aliases_text ]
+Rails.application.config.filter_parameters += [ :brief, :known_competitors, :aliases_text, :fields, :files ]

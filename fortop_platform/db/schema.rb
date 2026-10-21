@@ -10,9 +10,44 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_22_000200) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_22_000300) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "active_storage_attachments", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "record_type", null: false
+    t.bigint "record_id", null: false
+    t.bigint "blob_id", null: false
+    t.datetime "created_at", null: false
+    t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
+    t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
+  end
+
+  create_table "active_storage_blobs", force: :cascade do |t|
+    t.string "key", null: false
+    t.string "filename", null: false
+    t.string "content_type"
+    t.text "metadata"
+    t.string "service_name", null: false
+    t.bigint "byte_size", null: false
+    t.string "checksum"
+    t.datetime "created_at", null: false
+    t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
+  end
+
+  create_table "active_storage_variant_records", force: :cascade do |t|
+    t.bigint "blob_id", null: false
+    t.string "variation_digest", null: false
+    t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "brand_brief_documents", id: false, force: :cascade do |t|
+    t.bigint "brand_brief_id", null: false
+    t.bigint "brand_document_id", null: false
+    t.index ["brand_brief_id", "brand_document_id"], name: "idx_on_brand_brief_id_brand_document_id_4f3d209f2a", unique: true
+    t.index ["brand_document_id"], name: "index_brand_brief_documents_on_brand_document_id"
+  end
 
   create_table "brand_briefs", force: :cascade do |t|
     t.bigint "brand_id", null: false
@@ -23,6 +58,37 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_000200) do
     t.datetime "updated_at", null: false
     t.index ["brand_id", "version"], name: "index_brand_briefs_on_brand_id_and_version", unique: true
     t.index ["brand_id"], name: "index_brand_briefs_on_brand_id"
+  end
+
+  create_table "brand_document_links", id: false, force: :cascade do |t|
+    t.bigint "brand_id", null: false
+    t.bigint "brand_document_id", null: false
+    t.index ["brand_document_id"], name: "index_brand_document_links_on_brand_document_id"
+    t.index ["brand_id", "brand_document_id"], name: "index_brand_document_links_on_brand_id_and_brand_document_id", unique: true
+  end
+
+  create_table "brand_documents", force: :cascade do |t|
+    t.bigint "brand_import_id", null: false
+    t.text "extracted_text"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["brand_import_id"], name: "index_brand_documents_on_brand_import_id"
+  end
+
+  create_table "brand_imports", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "status", default: "queued", null: false
+    t.text "input_fields"
+    t.text "result"
+    t.string "model"
+    t.decimal "spent_usd", precision: 12, scale: 6, default: "0.0", null: false
+    t.integer "request_count", default: 0, null: false
+    t.jsonb "usage", default: {}, null: false
+    t.text "error_message"
+    t.boolean "retryable", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_brand_imports_on_user_id"
   end
 
   create_table "brands", force: :cascade do |t|
@@ -239,7 +305,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_000200) do
     t.check_constraint "progress >= 0 AND progress <= 100 AND budget_usd > 0::numeric AND spent_usd >= 0::numeric", name: "visibility_study_bounds"
   end
 
+  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "brand_brief_documents", "brand_briefs"
+  add_foreign_key "brand_brief_documents", "brand_documents"
   add_foreign_key "brand_briefs", "brands"
+  add_foreign_key "brand_document_links", "brand_documents"
+  add_foreign_key "brand_document_links", "brands"
+  add_foreign_key "brand_documents", "brand_imports"
+  add_foreign_key "brand_imports", "users"
   add_foreign_key "brands", "users"
   add_foreign_key "findings", "scans"
   add_foreign_key "repositories", "users"

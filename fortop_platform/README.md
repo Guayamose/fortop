@@ -204,6 +204,19 @@ En `/brands`, crea una marca con nombre, web pública, brief, mercados e idiomas
 aliases y competidores conocidos. No necesita conectar un repositorio. Las ediciones
 del contexto generan versiones inmutables: cada estudio conserva la suya.
 
+El formulario permite arrastrar PDF con texto, DOCX, PPTX, TXT, Markdown, CSV y JSON.
+La lectura de PDF necesita `pdftotext` (`poppler-utils`, incluido en Docker). Se admiten
+hasta 10 archivos de 20 MB, 50 MB y 300.000 caracteres de contexto en total. Se extrae
+el texto localmente y un trabajo de Solid Queue solicita a Gemini el autocompletado,
+sin búsqueda web y sin sobrescribir lo que el usuario edite durante la lectura.
+Los originales y su texto quedan asociados al brief; cada estudio conserva su selección.
+Se pueden consultar y descargar desde el brief original del informe. Las descargas
+requieren la sesión del propietario. El texto extraído y el resultado de importación
+se cifran en PostgreSQL. Las lecturas comparten el presupuesto diario de visibilidad,
+reservan el gasto antes de llamar a Google y solo reintentan a petición del usuario.
+Los documentos aportan contexto a interpretación, investigación y diagnóstico; nunca
+se incluyen en las preguntas independientes que miden la presencia de marca.
+
 Al iniciar un estudio se ejecutan tareas pequeñas en Solid Queue: interpretación
 del negocio, investigación con Google Search, investigación específica de cada mercado,
 contraste de competidores, diseño de preguntas, respuestas independientes de Gemini

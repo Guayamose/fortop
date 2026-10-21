@@ -4,6 +4,8 @@ class User < ApplicationRecord
 
   has_many :repositories, dependent: :destroy
   has_many :brands, dependent: :destroy
+  has_many :brand_imports, dependent: :destroy
+  has_many :brand_documents, through: :brand_imports, source: :documents
 
   validates :github_id, presence: true, uniqueness: true
   validates :login, :github_token, presence: true

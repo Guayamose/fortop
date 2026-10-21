@@ -79,6 +79,7 @@ module Visibility
             raise Error, "Se ha alcanzado el límite de solicitudes o tokens del estudio. Conserva este informe y crea otro con un alcance menor."
           end
           daily = VisibilityCall.joins(visibility_study: :brand).where(brands: { user_id: @study.brand.user_id }).where(created_at: Time.current.in_time_zone("Europe/Madrid").beginning_of_day..).sum(:cost_usd)
+          daily += @study.brand.user.brand_imports.where(updated_at: Time.current.in_time_zone("Europe/Madrid").beginning_of_day..).sum(:spent_usd)
           daily_limit = BigDecimal(ENV.fetch("VISIBILITY_DAILY_BUDGET_USD", "10"))
           if @study.spent_usd + reservation > @study.budget_usd || daily + reservation > daily_limit
             message = daily + reservation > daily_limit ? "Se ha alcanzado el presupuesto diario configurado. Puedes continuar otro día." : "El presupuesto disponible no cubre la reserva de la siguiente tarea. Puedes ampliarlo y continuar."

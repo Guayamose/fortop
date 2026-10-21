@@ -1,0 +1,17 @@
+<section class="brand-import" aria-labelledby="brand-import-title">
+  <header class="brand-import-heading"><div><span class="visibility-eyebrow">EMPIEZA CON LO QUE YA TIENES</span><h2 id="brand-import-title">Tus documentos cuentan tu historia.</h2></div><span class="brand-import-powered"><%= app_icon(:sparkles) %> Autocompletar con IA</span></header>
+  <label class="brand-dropzone" tabindex="0" role="button" aria-label="Añadir documentos de la marca" data-brand-import-target="dropzone" data-action="dragenter->brand-import#dragEnter dragover->brand-import#dragOver dragleave->brand-import#dragLeave drop->brand-import#drop keydown->brand-import#keyboard">
+    <input type="file" multiple accept=".pdf,.docx,.pptx,.txt,.md,.csv,.json" class="brand-import-input" tabindex="-1" data-brand-import-target="input" data-action="change->brand-import#choose">
+    <span class="brand-dropzone-art" aria-hidden="true"><span><%= app_icon(:file) %></span><span><%= app_icon(:file) %></span><%= app_icon(:sparkles, css_class: "brand-dropzone-sparkle") %></span>
+    <span class="brand-dropzone-copy"><strong>Arrastra aquí tu brief, dossier o presentación</strong><span>O <u>elige los archivos</u>. Completaremos los datos y los guardaremos como contexto.</span><small>PDF, Word, PowerPoint, TXT, MD, CSV o JSON · Hasta 10 archivos de 20 MB · 50 MB en total</small></span>
+    <span class="brand-import-loader" aria-hidden="true"></span>
+  </label>
+  <div class="brand-import-feedback"><p role="status" aria-live="polite" data-brand-import-target="status">Revisa los datos antes de guardar. Puedes seguir escribiendo mientras leemos los documentos.</p><button type="button" class="text-link" hidden data-brand-import-target="retry" data-action="brand-import#retry">Reintentar lectura</button><button type="button" class="text-link" hidden data-brand-import-target="undo" data-action="brand-import#undo">Deshacer autocompletado</button></div>
+  <div class="brand-document-list" data-brand-import-target="documents" <%= 'hidden' if @brand.documents.empty? %>>
+    <% @brand.documents.each do |document| %>
+      <div class="brand-document" data-document-id="<%= document.id %>" data-document-size="<%= document.file.byte_size %>"><span class="brand-document-icon"><%= app_icon(:file) %></span><div><%= link_to document.file.filename.to_s, brand_document_path(document), class: "brand-document-name" %><small><%= number_to_human_size(document.file.byte_size) %> · Contexto de la marca</small></div><input type="hidden" name="brand[document_ids][]" value="<%= document.id %>"><button type="button" class="brand-document-remove" aria-label="Quitar <%= document.file.filename %> del contexto" data-action="brand-import#remove">×</button></div>
+    <% end %>
+  </div>
+  <input type="hidden" name="brand[document_ids][]" value="">
+  <template data-brand-import-target="template"><div class="brand-document"><span class="brand-document-icon"><%= app_icon(:file) %></span><div><a class="brand-document-name"></a><small></small></div><button type="button" class="brand-document-remove" data-action="brand-import#remove">×</button></div></template>
+</section>

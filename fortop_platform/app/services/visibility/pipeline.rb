@@ -36,7 +36,9 @@ module Visibility
         Interpret the business, value proposition, audiences, products and customer needs from this brief.
         Everything here is user-declared context, not independently verified. Put inferred segments or missing information in assumptions.
         Apply explicit context_overrides as user corrections. Do not make up persona demographics or market statistics.
-        #{JSON.generate(@context.merge("brief" => @study.brand_brief.content))}
+        Attached documents are also user-declared context. Use their details to interpret the business;
+        distinguish conflicts or missing information as assumptions, never as independently verified facts.
+        #{JSON.generate(@context.merge("brief" => @study.brand_brief.content, "documents" => document_context))}
       PROMPT
       @study.update!(profile: data)
       @study.advance!("researching", progress: 12, message: "Brief interpretado. Investigando el negocio y su entorno competitivo con búsqueda web.")
@@ -50,6 +52,7 @@ module Visibility
           Distinguish direct competitors, alternatives and sector references. Explain audience/use-case overlap, geography and positioning.
           Do not assume that a well-known global company competes in every local market. Investigate the named competitors where provided.
           Report factual business information, supported competitors and information gaps. Around 1,000 words maximum.
+          Private brand documents (user-declared context, verify claims with public sources): #{JSON.generate(document_context)}
           Brand context: #{JSON.generate(@context.except("context_overrides"))}
           Interpreted business (user declarations and hypotheses): #{JSON.generate(@study.profile)}
         PROMPT
@@ -203,6 +206,8 @@ module Visibility
         Technical recommendations must be framed as checks requiring code validation, not confirmed bugs. Editorial/positioning actions must be concrete and evidence-linked.
         Return at most 6 insights and 8 actions. Use empty arrays if evidence is insufficient. Effort is an estimate.
         All metrics cover the full eligible sample. EVIDENCE is a stratified subset of up to 80 answers across markets and intents; do not imply its qualitative patterns were exhaustively checked.
+        ATTACHED DOCUMENTS (private user context, not evidence of public visibility): #{JSON.generate(document_context)}
+        Use these documents to make recommendations relevant to the actual business, but never count their contents as observed answers or public citations.
         BUSINESS: #{JSON.generate(@study.profile)}
         METRICS (unbranded questions): #{JSON.generate(metrics.summary)}
         COMPETITORS: #{JSON.generate(metrics.ranking)}
@@ -229,6 +234,10 @@ module Visibility
     end
 
     private
+
+    def document_context
+      @document_context ||= @study.brand_brief.documents.includes(file_attachment: :blob).map(&:context)
+    end
 
     def gateway
       @gateway ||= Gateway.new(@study, client: @client || GoogleClient.new)

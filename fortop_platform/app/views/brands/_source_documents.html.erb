@@ -1,0 +1,7 @@
+<% if documents.any? %>
+  <div class="brand-source-documents"><p>Documentos de contexto de esta versión del brief</p>
+    <% documents.includes(file_attachment: :blob).each do |document| %>
+      <details class="brand-source-document"><summary><%= app_icon(:file) %><%= document.file.filename %><%= app_icon(:chevron_down) %></summary><%= link_to "Descargar original", brand_document_path(document), class: "text-link" %><div class="visibility-original-text"><%= document.extracted_text %></div></details>
+    <% end %>
+  </div>
+<% end %>

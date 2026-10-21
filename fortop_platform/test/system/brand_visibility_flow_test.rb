@@ -75,6 +75,49 @@ class BrandVisibilityFlowTest < ApplicationSystemTestCase
     end
   end
 
+  test "dropping documents autocompletes the brief preserves edits and keeps versioned context" do
+    with_browser_github do
+      sign_in
+      visit new_brand_path
+      text = "Nébula ofrece software de facturación para pequeñas empresas de España. Su web es https://nebula.com. Compite con Contalia."
+      page.execute_script(<<~JS, text)
+        const transfer = new DataTransfer()
+        transfer.items.add(new File([arguments[0]], "dossier-marca.md", {type: "text/markdown"}))
+        document.querySelector('.brand-dropzone').dispatchEvent(new DragEvent('drop', {bubbles: true, cancelable: true, dataTransfer: transfer}))
+      JS
+      assert_text "Documentos recibidos. Preparando la lectura…"
+      fill_in "Nombre de la marca", with: "Nombre elegido mientras se lee"
+      import = User.find_by!(github_id: 93001).brand_imports.last
+      BrandImportJob.perform_now(import.id)
+      assert_field "Sitio web", with: "https://nebula.com", wait: 10
+      assert_field "Nombre de la marca", with: "Nombre elegido mientras se lee"
+      assert_field "Brief de la marca", with: /Software de facturación/
+      assert_selector ".brand-document", text: "dossier-marca.md"
+      assert_selector "input[name='brand[document_ids][]'][value='#{import.documents.sole.id}']", visible: :all
+      assert_button "Crear marca", disabled: false
+      assert_button "Deshacer autocompletado"
+      assert_no_horizontal_overflow
+      screenshot("visibility-import-desktop")
+      page.current_window.resize_to(390, 844)
+      assert_no_horizontal_overflow
+      screenshot("visibility-import-mobile")
+      fill_in "Nombre de la marca", with: "Nébula"
+      click_button "Crear marca", exact: true
+      assert_text "Descubre dónde estás hoy."
+      brand = User.find_by!(github_id: 93001).brands.last
+      original = brand.current_brief
+      assert_equal [ import.documents.sole.id ], original.documents.ids
+      click_link "Editar brief"
+      assert_selector ".brand-document", text: "dossier-marca.md"
+      find("button[aria-label='Quitar dossier-marca.md del contexto']").click
+      click_button "Guardar nueva versión"
+      assert_text "Descubre dónde estás hoy."
+      assert_empty brand.reload.documents
+      assert_equal [ import.documents.sole.id ], original.reload.documents.ids
+      assert_empty brand.current_brief.documents
+    end
+  end
+
   test "study controls pause resume and cancel through the real forms" do
     with_browser_github do
       sign_in

@@ -1,0 +1,19 @@
+<div id="brand-workspace">
+  <% if @study %>
+    <div class="visibility-study-toolbar"><div><span class="visibility-live-dot <%= 'is-live' if @study.work_pending? %>"></span><strong><%= @study.control_action ? 'Terminando la tarea en curso…' : @study.status_label %></strong><span>Estudio #<%= @study.id %> · <%= human_timestamp(@study.created_at) %> · Brief v<%= @study.brand_brief.version %></span></div><div class="visibility-controls">
+      <% if @study.active? && @study.control_action.blank? %>
+        <% if @study.paused? %><%= form_with url: resume_brand_visibility_study_path(@brand,@study), class: "visibility-resume-form" do %><label>Presupuesto total USD<%= number_field_tag :budget_usd, @study.budget_usd, min: @study.spent_usd.ceil(1), max: 50, step: 0.1, required: true %></label><%= button_tag "Continuar", class: "button button-primary button-small" %><% end %><% else %><%= button_to pause_brand_visibility_study_path(@brand,@study), class: "button button-secondary button-small" do %><%= app_icon(:pause) %> Pausar<% end %><% end %>
+        <%= button_to "Cancelar", cancel_brand_visibility_study_path(@brand,@study), class: "button button-quiet button-small", data: { turbo_confirm: "¿Cancelar este estudio? Se conservarán los resultados recogidos." } %>
+        <%= button_to restart_brand_visibility_study_path(@brand,@study), class: "button button-quiet button-small", data: { turbo_confirm: "¿Cancelar y empezar un estudio nuevo? Las nuevas solicitudes tendrán coste." } do %><%= app_icon(:restart) %> Reiniciar<% end %>
+      <% elsif @study.failed? %><%= button_to "Recuperar estudio", retry_brand_visibility_study_path(@brand,@study), class: "button button-primary button-small" %><% end %>
+      <% if !@study.active? && !@active_study %><%= button_to restart_brand_visibility_study_path(@brand,@study), class: "button button-secondary button-small", data: { turbo_confirm: "¿Empezar un estudio nuevo con este alcance? Las nuevas solicitudes tendrán coste." } do %><%= app_icon(:restart) %> Reiniciar<% end %><% end %>
+    </div></div>
+    <% if @study.active? %><div class="visibility-progress-track" role="progressbar" aria-label="Progreso del estudio" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<%= @study.progress %>"><span style="width: <%= @study.progress %>%"></span></div><% end %>
+    <% if @study.error_message.present? || @study.pause_reason.present? %><div class="visibility-notice is-warning" role="status"><%= app_icon(:alert) %><span><%= @study.error_message.presence || @study.pause_reason %></span></div><% end %>
+    <% if @study.active? || @study.failed? %><div class="visibility-active-console"><%= render "console" %></div><% end %>
+    <% if @study.panel.any? %><%= render "report" %><% elsif @study.profile.present? %><%= render "profile" %><% end %>
+    <% if !@study.active? && !@study.failed? %><details class="visibility-activity" id="visibility-activity"><summary><%= app_icon(:terminal) %> Actividad de los agentes <%= app_icon(:chevron_down) %></summary><%= render "console" %></details><% end %>
+  <% end %>
+  <% unless @active_study %><%= render "new_study" %><% end %>
+  <% if @studies.any? %><section class="visibility-history"><div><span class="visibility-eyebrow">HISTORIAL</span><h2>Cada estudio, guardado.</h2></div><div><% @studies.each do |study| %><%= link_to brand_path(@brand,study_id: study.id), class: "visibility-history-row #{'is-selected' if @study&.id == study.id}" do %><span>#<%= study.id %></span><strong><%= human_timestamp(study.created_at) %></strong><span>Brief v<%= study.brand_brief.version %></span><%= status_badge(study) %><%= app_icon(:arrow) %><% end %><% end %></div></section><% end %>
+</div>

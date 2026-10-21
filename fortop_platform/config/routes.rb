@@ -20,6 +20,21 @@ Rails.application.routes.draw do
   get "/github/installations/callback", to: "github/installations#callback", as: :github_installation_callback
 
   root "repositories#index"
+  resources :brands do
+    resources :visibility_studies, only: :create do
+      member do
+        post :pause
+        post :resume
+        post :cancel
+        post :retry
+        post :restart
+      end
+      resources :observations, controller: "visibility_observations", only: :show
+      resources :actions, controller: "visibility_actions", only: :update do
+        post :handoff, on: :member
+      end
+    end
+  end
   resources :repositories, only: %i[index new create show destroy] do
     resources :scans, only: %i[create show] do
       post :retry_publication, on: :member

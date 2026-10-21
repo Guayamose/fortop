@@ -171,7 +171,7 @@ repositorio: esas verificaciones corresponden a su CI y revisión del PR.
 
 Los hallazgos y el resumen reflejan la cobertura real. Este vertical estudia el
 código; el diagnóstico de visibilidad de marca en respuestas reales de IA es
-el siguiente vertical y todavía no está implementado.
+un vertical independiente disponible en la sección Visibilidad de marca.
 
 Los escaneos simultáneos del mismo repositorio se bloquean en PostgreSQL. Un
 escaneo sin actividad durante 30 minutos pasa a error y permite volver a
@@ -197,3 +197,69 @@ probar errores y presupuestos sin red.
 
 `.env`, las claves y los archivos temporales están excluidos de Git y Docker.
 La plantilla `.env.example` debe permanecer sin credenciales reales.
+
+## Visibilidad de marca
+
+En `/brands`, crea una marca con nombre, web pública, brief, mercados e idiomas,
+aliases y competidores conocidos. No necesita conectar un repositorio. Las ediciones
+del contexto generan versiones inmutables: cada estudio conserva la suya.
+
+Al iniciar un estudio se ejecutan tareas pequeñas en Solid Queue: interpretación
+del negocio, investigación con Google Search, investigación específica de cada mercado,
+contraste de competidores, diseño de preguntas, respuestas independientes de Gemini
+y evaluación con citas
+literales y diagnóstico con acciones. Las preguntas sin marca se envían sin brief,
+competidores ni respuesta esperada. Las preguntas con marca se separan del indicador
+principal. Las preguntas propuestas no representan demanda de búsqueda observada.
+
+El informe web se conserva en PostgreSQL: presencia, recomendaciones, citación de
+la web propia, consistencia entre repeticiones, comparativa competitiva, matriz de
+mercado e intención, preguntas/respuestas, fuentes, atributos, posibles discrepancias,
+acciones y evolución comparable. Cada respuesta guarda la pregunta y la instrucción
+exactas, modelo devuelto, configuración, fecha, citas y consumo. Briefs, investigación,
+prompts y respuestas se cifran mediante Active Record Encryption. No se persiste el
+pensamiento interno del proveedor. Los filtros y la consulta de informes no llaman a IA.
+
+Las tasas se calculan en Ruby sobre toda la muestra válida. El diagnóstico cualitativo
+usa hasta 80 respuestas repartidas entre mercados y etapas y conserva sus referencias. Las respuestas pendientes/fallidas y las identidades
+ambiguas no se convierten en ausencias. La cuota de menciones solo compara las marcas
+del panel y no es cuota de mercado. Los dominios sin resolver se excluyen del indicador
+de citación propia. El mercado es contexto lingüístico/geográfico de la pregunta,
+no una ubicación real. Las afirmaciones señaladas son candidatas a revisión, no errores
+probados. El entorno medido es **Gemini API con búsqueda habilitada**: no representa
+ChatGPT, Claude ni las interfaces de consumo. Google decide si ejecuta búsquedas en
+cada respuesta; se conserva el número devuelto y se distinguen fuentes recuperadas de
+citas enlazadas a un fragmento. La investigación requiere fuentes devueltas por Google.
+
+Puedes pausar, continuar, cancelar, reiniciar o recuperar un fallo. La pausa se atiende
+al acabar la petición en curso. Los reintentos automáticos de errores transitorios
+están limitados a tres por tarea; una recuperación manual permite intentarlo de nuevo.
+Las tareas completadas se reutilizan dentro del estudio. Reiniciar o volver a medir
+recoge nuevas respuestas y tiene coste. Una respuesta HTTP perdida conserva su reserva
+porque podría haber sido facturada. Los jobs duplicados están protegidos con un lock
+consultivo de PostgreSQL. Tras 30 minutos sin actividad se ofrece recuperación.
+
+Cada estudio tiene un presupuesto de hasta US$ 50 (por defecto US$ 3). Antes de cada
+solicitud se reservan tokens de entrada de forma conservadora, toda la salida permitida
+y hasta ocho consultas de búsqueda para los modelos facturados por consulta. Se
+reconcilia con el uso devuelto y se pausa antes de la siguiente solicitud si no alcanza
+el presupuesto. `VISIBILITY_DAILY_BUDGET_USD` limita el gasto estimado diario por usuario
+(por defecto US$ 10, día de Europe/Madrid). `VISIBILITY_MAX_REQUESTS` y
+`VISIBILITY_MAX_TOKENS` imponen topes de 1500 solicitudes y 2 millones de tokens por
+estudio. No se permiten valores cero para estos topes.
+
+**El coste es una estimación, no un máximo de factura:** Google no ofrece un límite
+duro de consultas internas de Search por solicitud; una petición puede superar la
+reserva. Las reservas de llamadas fallidas se mantienen, y la tarifa gratuita no se
+descuenta. Las tarifas configuradas se guardan en cada estudio con fecha y fuente.
+Revisa `Visibility::Settings::PRICING` al cambiar de modelo/precio y configura un
+límite de cuota/facturación en Google si necesitas un control externo adicional.
+Solo los modelos con tarifas explícitas se admiten en `VISIBILITY_GEMINI_MODEL`.
+
+Para comparar evolución, reutiliza un panel completado con el mismo brief. Se recogen
+respuestas nuevas y solo se dibuja una serie cuando hay al menos dos muestras completas
+con la misma huella de panel, competidores, método, temperatura, repeticiones y versiones
+de modelo devueltas. Cambiar el brief requiere un panel nuevo. Las acciones técnicas
+pueden enviarse explícitamente a un repositorio del mismo usuario: los agentes de código
+validan la recomendación contra sus archivos y usan el flujo existente de issues y PRs.
+Los estudios de marca no publican por sí solos en GitHub.

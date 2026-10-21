@@ -22,8 +22,8 @@
         <span class="topbar-divider" aria-hidden="true"></span>
         <span class="workspace-account"><span class="workspace-initial"><%= current_user.login.first.upcase %></span><span><%= current_user.login %></span></span>
         <nav class="main-nav" aria-label="Navegación principal">
-          <%= link_to repositories_path, class: "nav-item is-active", aria: { current: "page" } do %>Repositorios<span class="nav-dot" aria-hidden="true"></span><% end %>
-          <span class="nav-item is-disabled" aria-disabled="true">Visibilidad de marca <small>Próximamente</small></span>
+          <%= link_to repositories_path, class: "nav-item #{'is-active' unless controller_name.start_with?('brand', 'visibility')}", aria: { current: ("page" unless controller_name.start_with?("brand", "visibility")) } do %>Repositorios<% unless controller_name.start_with?("brand", "visibility") %><span class="nav-dot" aria-hidden="true"></span><% end %><% end %>
+          <%= link_to brands_path, class: "nav-item #{'is-active' if controller_name.start_with?('brand', 'visibility')}", aria: { label: "Visibilidad de marca", current: ("page" if controller_name.start_with?("brand", "visibility")) } do %><span class="nav-label-full">Visibilidad de marca</span><span class="nav-label-compact" aria-hidden="true">Marcas</span><% end %>
         </nav>
         <div class="topbar-right"><span class="topbar-github"><span class="status-dot"></span> GitHub conectado</span>
           <details class="account-menu"><summary aria-label="Menú de cuenta"><span class="account-avatar"><%= current_user.login.first.upcase %></span><%= app_icon(:chevron_down) %></summary>

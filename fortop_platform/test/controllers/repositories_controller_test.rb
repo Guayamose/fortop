@@ -15,7 +15,7 @@ class RepositoriesControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", new_repository_path, text: /Conectar un repositorio/
     assert_select ".repository-card", count: 0
     assert_select ".empty-state", count: 1
-    assert_select "[aria-disabled=true]", text: /Visibilidad de marca/
+    assert_select "a[href=?]", brands_path, text: /Visibilidad de marca/
     refute_includes response.body, @user.github_token
   end
 

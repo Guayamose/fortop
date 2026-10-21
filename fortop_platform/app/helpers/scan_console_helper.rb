@@ -1,5 +1,8 @@
 module ScanConsoleHelper
   CONSOLE_ACTORS = {
+    "research" => { label: "Investigación web", icon: :globe, tone: "blue" },
+    "planning" => { label: "Diseño de la medición", icon: :lightbulb, tone: "violet" },
+    "observation" => { label: "Respuestas de Gemini", icon: :search, tone: "violet" },
     "system" => { label: "Fortop", icon: :agent, tone: "neutral" },
     "analysis" => { label: "Agente de análisis", icon: :search, tone: "blue" },
     "remediation" => { label: "Agente de remediación", icon: :edit, tone: "violet" },
@@ -21,6 +24,7 @@ module ScanConsoleHelper
   }.freeze
 
   def console_event_actor(event)
+    return event.kind if %w[research planning observation].include?(event.kind)
     agent = event.metadata["agent"]
     return agent if %w[analysis remediation].include?(agent)
     return "analysis" if event.kind == "finding" || event.message.start_with?("Análisis:")
@@ -36,6 +40,9 @@ module ScanConsoleHelper
     tool = CONSOLE_TOOLS[event.metadata["tool"]]
     return tool if tool
     case event.kind
+    when "research" then { label: "Fuente contrastada", icon: :globe, category: "research" }
+    when "planning" then { label: "Panel de preguntas", icon: :lightbulb, category: "research" }
+    when "observation" then { label: "Respuesta guardada", icon: :search, category: "observation" }
     when "finding" then { label: "Hallazgo", icon: :lightbulb, category: "finding" }
     when "validation" then { label: "Comprobación", icon: :shield_check, category: "code" }
     when "publication" then { label: "Publicación", icon: :github, category: "github" }

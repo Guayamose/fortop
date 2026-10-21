@@ -1,18 +1,18 @@
-<% events = scan.scan_events.order(created_at: :desc, id: :desc).limit(80).to_a.reverse; phase = console_phase(scan); total_events = scan.scan_events.count; changed_files = scan.changed_files.index_by { |file| file['path'] } %>
-<section class="repository-console console-tone-<%= phase[:tone] %>" id="scan-<%= scan.id %>-console" data-controller="scan-console" data-console-state="<%= phase[:state] %>" data-action="scan-progress:before-render@document->scan-console#beforeRender scan-progress:after-render@document->scan-console#afterRender keydown->scan-console#keyboard" aria-label="Actividad de los agentes">
+<% event_scope = local_assigns[:event_scope] || scan.scan_events; events = event_scope.order(created_at: :desc, id: :desc).limit(80).to_a.reverse; phase = local_assigns[:phase] || console_phase(scan); total_events = event_scope.count; changed_files = scan.respond_to?(:changed_files) ? scan.changed_files.index_by { |file| file['path'] } : {}; console_prefix = local_assigns.fetch(:console_prefix, "scan"); finding_count = local_assigns.fetch(:finding_count) { @finding_counts.fetch(scan.id, 0) } %>
+<section class="repository-console console-tone-<%= phase[:tone] %>" id="<%= console_prefix %>-<%= scan.id %>-console" data-controller="scan-console" data-console-state="<%= phase[:state] %>" data-action="scan-progress:before-render@document->scan-console#beforeRender scan-progress:after-render@document->scan-console#afterRender keydown->scan-console#keyboard" aria-label="Actividad de los agentes">
   <header class="console-heading">
-    <div class="console-heading-title"><span class="console-brand-mark"><%= app_icon(:agent) %></span><div><h4>Actividad de los agentes</h4><span>Del código a las mejoras, paso a paso.</span></div></div>
+    <div class="console-heading-title"><span class="console-brand-mark"><%= app_icon(:agent) %></span><div><h4>Actividad de los agentes</h4><span><%= local_assigns.fetch(:console_description, "Del código a las mejoras, paso a paso.") %></span></div></div>
     <div class="console-heading-actions">
       <span class="repository-console-status"><span class="console-presence" aria-hidden="true"></span><%= scan.work_pending? ? 'En directo' : scan.paused? ? 'En pausa' : scan.failed? ? 'Interrumpido' : scan.cancelled? ? 'Cancelado' : 'Finalizado' %></span>
       <span class="console-action-divider" aria-hidden="true"></span>
       <button type="button" class="console-icon-button" aria-label="Copiar actividad" title="Copiar actividad" data-action="scan-console#copy" data-scan-console-target="copyButton"><span class="console-copy-default"><%= app_icon(:copy) %></span><span class="console-copy-success"><%= app_icon(:check) %></span></button>
-      <button type="button" class="console-icon-button" aria-label="Ampliar consola" title="Ampliar consola" aria-expanded="false" aria-controls="scan-<%= scan.id %>-output" data-action="scan-console#expand" data-scan-console-target="expandButton"><span class="console-expand-icon"><%= app_icon(:expand) %></span><span class="console-collapse-icon"><%= app_icon(:collapse) %></span></button>
+      <button type="button" class="console-icon-button" aria-label="Ampliar consola" title="Ampliar consola" aria-expanded="false" aria-controls="<%= console_prefix %>-<%= scan.id %>-output" data-action="scan-console#expand" data-scan-console-target="expandButton"><span class="console-expand-icon"><%= app_icon(:expand) %></span><span class="console-collapse-icon"><%= app_icon(:collapse) %></span></button>
     </div>
   </header>
 
   <div class="console-toolbar">
     <div class="console-filters" role="group" aria-label="Filtrar actividad">
-      <% [["all", "Todo"], ["code", "Código"], ["finding", "Hallazgos"], ["github", "GitHub"]].each do |value, label| %>
+      <% local_assigns.fetch(:filters, [["all", "Todo"], ["code", "Código"], ["finding", "Hallazgos"], ["github", "GitHub"]]).each do |value, label| %>
         <button type="button" data-filter="<%= value %>" aria-pressed="<%= value == 'all' %>" data-action="scan-console#filter" data-scan-console-target="filterButton"><%= label %><% if value == 'all' %><span><%= events.size %></span><% end %></button>
       <% end %>
     </div>
@@ -20,15 +20,15 @@
   </div>
 
   <div class="console-stream-wrap">
-    <div class="repository-console-output" id="scan-<%= scan.id %>-output" data-scan-console-target="output" data-action="scroll->scan-console#track" tabindex="0" role="log" aria-live="polite" aria-relevant="additions" aria-atomic="false" aria-label="Acciones del agente">
+    <div class="repository-console-output" id="<%= console_prefix %>-<%= scan.id %>-output" data-scan-console-target="output" data-action="scroll->scan-console#track" tabindex="0" role="log" aria-live="polite" aria-relevant="additions" aria-atomic="false" aria-label="Acciones del agente">
       <% console_event_groups(events).each do |actor_key, group| %>
         <% actor = ScanConsoleHelper::CONSOLE_ACTORS.fetch(actor_key) %>
-        <div class="console-group console-tone-<%= actor[:tone] %>" id="scan-<%= scan.id %>-group-<%= group.first.id %>" data-console-group>
+        <div class="console-group console-tone-<%= actor[:tone] %>" id="<%= console_prefix %>-<%= scan.id %>-group-<%= group.first.id %>" data-console-group>
           <div class="console-group-heading"><span class="console-actor-icon"><%= app_icon(actor[:icon]) %></span><strong><%= actor[:label] %></strong><span class="console-group-line" aria-hidden="true"></span></div>
           <ol>
             <% group.each do |event| %>
               <% style = console_event_style(event); checks = console_event_checks(event); path = event.metadata["path"].to_s.presence; severity = event.kind == "finding" && %w[high medium low].include?(event.metadata["severity"]) ? event.metadata["severity"] : nil %>
-              <li id="scan-event-<%= event.id %>" class="console-event console-event-<%= %w[tool finding warning publication validation control].include?(event.kind) ? event.kind : 'status' %>" data-console-event data-category="<%= style[:category] %>">
+              <li id="<%= console_prefix %>-event-<%= event.id %>" class="console-event console-event-<%= %w[tool finding warning publication validation control].include?(event.kind) ? event.kind : 'status' %>" data-console-event data-category="<%= style[:category] %>">
                 <span class="console-event-icon" title="<%= style[:label] %>"><%= app_icon(style[:icon]) %></span>
                 <div class="console-event-content">
                   <div class="console-event-text" data-console-message data-original-message="<%= event.message %>"><%= console_event_message(event) %></div>
@@ -54,14 +54,14 @@
     <button type="button" class="console-follow-button" data-scan-console-target="latest" data-action="scan-console#follow" aria-label="Ir a las últimas acciones" hidden><%= app_icon(:arrow_down) %><span data-scan-console-target="unread">Volver al directo</span></button>
   </div>
 
-  <div class="console-current console-tone-<%= phase[:tone] %>" id="scan-<%= scan.id %>-current">
+  <div class="console-current console-tone-<%= phase[:tone] %>" id="<%= console_prefix %>-<%= scan.id %>-current">
     <div class="console-current-symbol" aria-hidden="true"><span class="console-current-halo"></span><span class="console-current-orbit"></span><%= app_icon(phase[:icon]) %></div>
     <div class="console-current-copy"><span class="console-current-actor"><%= phase[:actor] %><% if %w[live waiting stopping].include?(phase[:state]) %><span class="console-thinking-dots" aria-hidden="true"><i></i><i></i><i></i></span><% end %></span><strong><%= phase[:title] %></strong><p><%= phase[:description] %></p></div>
     <%= render "repositories/console_signal" %>
   </div>
 
   <footer class="console-footer">
-    <span class="console-footprint"><span><%= app_icon(:terminal) %><%= total_events %> <%= total_events == 1 ? 'entrada' : 'entradas' %><% if total_events > events.size %><small> · últimas <%= events.size %></small><% end %></span><span><%= app_icon(:lightbulb) %><%= @finding_counts.fetch(scan.id, 0) %> <%= @finding_counts.fetch(scan.id, 0) == 1 ? 'hallazgo' : 'hallazgos' %></span></span>
+    <span class="console-footprint"><span><%= app_icon(:terminal) %><%= total_events %> <%= total_events == 1 ? 'entrada' : 'entradas' %><% if total_events > events.size %><small> · últimas <%= events.size %></small><% end %></span><span><%= app_icon(:lightbulb) %><%= finding_count %> <%= local_assigns[:finding_label] || (finding_count == 1 ? 'hallazgo' : 'hallazgos') %></span></span>
     <span class="console-footer-right"><span class="console-copy-feedback" role="status" data-scan-console-target="feedback"></span><span class="console-follow-label" data-scan-console-target="followLabel">Siguiendo actividad</span></span>
   </footer>
 </section>

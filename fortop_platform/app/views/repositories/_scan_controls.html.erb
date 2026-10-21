@@ -1,0 +1,9 @@
+<div class="repository-scan-controls" aria-label="Controles del análisis">
+  <% if scan.paused? && scan.control_action.nil? %>
+    <%= button_to resume_repository_scan_path(@repository, scan), class: "button button-primary", data: { turbo_submits_with: "Continuando…" } do %><%= app_icon(:play) %>Continuar<% end %>
+  <% elsif scan.control_action.nil? %>
+    <%= button_to pause_repository_scan_path(@repository, scan), class: "button button-outline", data: { turbo_submits_with: "Solicitando pausa…" } do %><%= app_icon(:pause) %>Pausar<% end %>
+  <% end %>
+  <%= button_to restart_repository_scan_path(@repository, scan), class: "repository-control-link", data: { turbo_confirm: "¿Reiniciar desde cero? Se conservará este análisis en el historial y se iniciará uno nuevo con IA.", turbo_submits_with: "Reiniciando…" } do %><%= app_icon(:restart) %>Reiniciar<% end %>
+  <%= button_to cancel_repository_scan_path(@repository, scan), class: "repository-control-link repository-control-cancel", data: { turbo_submits_with: "Cancelando…" } do %><%= app_icon(:stop) %>Cancelar<% end %>
+</div>

@@ -1,10 +1,9 @@
-<div class="repository-scan-state <%= scan.completed? ? 'is-complete' : scan.failed? ? 'is-error' : '' %>">
+<div class="repository-scan-state <%= scan.completed? ? 'is-complete' : scan.failed? ? 'is-error' : scan.paused? ? 'is-paused' : '' %>">
   <div class="repository-scan-state-heading">
-    <% if scan.active? %><span class="repository-scan-signal" aria-hidden="true"><i></i><i></i><i></i><i></i></span><% else %><span class="repository-state-icon"><%= app_icon(scan.completed? ? :check : scan.cancelled? ? :pause : :alert) %></span><% end %>
+    <% if scan.active? && !scan.paused? && scan.control_action.nil? %><span class="repository-scan-signal" aria-hidden="true"><i></i><i></i><i></i><i></i></span><% else %><span class="repository-state-icon"><%= app_icon(scan.completed? ? :check : scan.paused? ? :pause : scan.cancelled? ? :stop : scan.control_action ? :clock : :alert) %></span><% end %>
     <div>
-      <% stage_labels = { "queued" => "En cola", "discovering" => "Preparando el repositorio", "analyzing" => "Analizando el código", "remediating" => "Preparando las mejoras", "validating" => "Verificando los cambios", "publishing" => "Publicando en GitHub" } %>
-      <h3><%= scan.completed? ? 'Análisis completado' : scan.failed? ? 'Análisis interrumpido' : scan.cancelled? ? 'Análisis cancelado' : stage_labels.fetch(scan.status) %></h3>
-      <% if scan.cancelled? %><p>Puedes iniciar un nuevo análisis cuando quieras.</p><% end %>
+      <h3><%= scan_heading(scan) %></h3>
+      <% if scan.control_action %><p>La operación en curso terminará antes de detener el agente.</p><% elsif scan.paused? %><p>Tu progreso está guardado. Continúa desde aquí o reinicia desde cero.</p><% elsif scan.cancelled? %><p>El agente se ha detenido. Las publicaciones ya realizadas en GitHub se conservan.</p><% end %>
     </div>
     <% if scan.active? %><span class="repository-progress-value"><strong><%= scan.progress %></strong><span>%</span></span><% end %>
   </div>
@@ -17,7 +16,6 @@
         <%= tag.li class: index < phase_index ? 'is-done' : index == phase_index ? 'is-current' : nil, aria: { current: status == scan.status ? 'step' : nil } do %><span><%= format('%02d', index + 1) %></span><%= label %><% end %>
       <% end %>
     </ol>
-    <p class="repository-live-activity" role="status"><%= scan.scan_events.order(created_at: :desc, id: :desc).first&.message || "Preparando el análisis del repositorio." %></p>
   <% end %>
 
   <% if scan.failed? %>
@@ -25,7 +23,7 @@
     <% if scan.publication_retryable? %><p class="quiet-note">Las correcciones se conservan. Reintenta la publicación sin repetir la IA.</p><% else %><p class="quiet-note">Al reintentar se iniciará un nuevo análisis con IA.</p><% end %>
   <% end %>
 
-  <% if scan.completed? || scan.failed? %>
+  <% if scan.completed? || scan.failed? || scan.cancelled? %>
     <% if scan.summary.present? %><p class="repository-scan-summary"><%= scan.summary %></p><% end %>
     <% if scan.completed? || @finding_counts.fetch(scan.id, 0).positive? || scan.changed_files.any? || scan.pull_request_url.present? %>
     <dl class="repository-scan-metrics">
@@ -63,14 +61,7 @@
   </details>
 <% end %>
 
-<details class="repository-scan-details">
-  <summary>Actividad reciente de los agentes <%= app_icon(:chevron_down) %></summary>
-  <ol class="repository-activity">
-    <% scan.scan_events.order(created_at: :desc, id: :desc).limit(20).each do |event| %>
-      <li><time datetime="<%= event.created_at.iso8601 %>"><%= event.created_at.in_time_zone('Europe/Madrid').strftime('%H:%M:%S') %></time><span><%= event.message %></span></li>
-    <% end %>
-  </ol>
-</details>
+<%= render "repositories/scan_console", scan: scan %>
 
 <% if scan.validation_results.any? || scan.changed_files.any? %>
   <details class="repository-scan-details">

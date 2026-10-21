@@ -156,7 +156,7 @@ class RepositoriesControllerTest < ActionDispatch::IntegrationTest
     newer = repository.scans.create!(status: "completed", progress: 100)
     older.update!(status: "queued")
     get repository_path(repository)
-    assert_select "[data-scan-progress-url-value=?]", repository_path(repository, scan_id: older.id, format: :json)
+    assert_select "[data-scan-progress-url-value=?]", repository_path(repository, scan_id: older.id, follow_restart: "1", format: :json)
     assert_select ".repository-selected-scan", text: /Análisis ##{older.id}/
     assert_select "a[href=?]", repository_path(repository, scan_id: newer.id), text: "Volver al último análisis"
     assert_select "button", text: "Nuevo análisis", count: 0

@@ -198,6 +198,29 @@ class Scans::WorkspaceTest < ActiveSupport::TestCase
     workspace&.close
   end
 
+  test "pause snapshot restores edits and evidence lazily without storing the complete source inventory" do
+    @workspace.read("index.html")
+    @workspace.read("data.json")
+    @workspace.replace("index.html", "<html>", '<html lang="es">', finding_ids: [ 7 ])
+    snapshot = JSON.parse(JSON.generate(@workspace.snapshot))
+    refute snapshot.key?("originals")
+    refute_includes JSON.generate(snapshot), @files["data.json"]
+    restored = fresh_workspace
+    restored.restore!(snapshot)
+    assert_equal @workspace.coverage.except("total_files"), restored.coverage.except("total_files")
+    assert_equal @workspace.changes, restored.changes
+    assert_equal @workspace.changed_files, restored.changed_files
+    assert_equal @files["index.html"], restored.original("index.html")
+    assert_equal @files["data.json"], restored.original("data.json")
+    assert_equal @workspace.coverage.except("total_files"), restored.coverage.except("total_files")
+    restored.replace("index.html", "<head>", '<head><meta name="description" content="Fortop">', finding_ids: [ 9 ])
+    assert_equal [ 7, 9 ], restored.finding_ids("index.html")
+    restored.discard("index.html")
+    assert_equal @files["index.html"], restored.read("index.html")
+  ensure
+    restored&.close
+  end
+
   private
 
   def fresh_workspace

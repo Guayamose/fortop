@@ -23,6 +23,10 @@ Rails.application.routes.draw do
   resources :repositories, only: %i[index new create show destroy] do
     resources :scans, only: %i[create show] do
       post :retry_publication, on: :member
+      post :pause, on: :member
+      post :resume, on: :member
+      post :cancel, on: :member
+      post :restart, on: :member
     end
   end
 end

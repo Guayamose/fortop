@@ -1,0 +1,13 @@
+<section class="repository-console" id="scan-<%= scan.id %>-console" data-controller="scan-console" aria-label="Actividad de los agentes">
+  <header><h4><%= app_icon(:terminal) %>Actividad de los agentes</h4><span class="repository-console-status"><% if scan.work_pending? %><span class="status-dot"></span>En directo<% elsif scan.paused? %>En pausa<% else %>Finalizado<% end %></span></header>
+  <div class="repository-console-output" data-scan-console-target="output" data-action="scroll->scan-console#track" tabindex="0" role="log" aria-live="polite" aria-relevant="additions" aria-atomic="false" aria-label="Acciones del agente">
+    <ol>
+      <% events = scan.scan_events.order(created_at: :desc, id: :desc).limit(80).to_a.reverse %>
+      <% events.each do |event| %>
+        <li id="scan-event-<%= event.id %>" class="console-event-<%= %w[tool warning publication validation control].include?(event.kind) ? event.kind : 'status' %>"><time datetime="<%= event.created_at.iso8601 %>"><%= event.created_at.in_time_zone('Europe/Madrid').strftime('%H:%M:%S') %></time><span class="console-event-prompt" aria-hidden="true">›</span><span><%= event.message %></span></li>
+      <% end %>
+      <% if events.empty? %><li class="console-empty">Esperando la primera acción del agente…</li><% end %>
+    </ol>
+  </div>
+  <footer><span>Acciones y resultados<% if events.size == 80 %> · últimas 80 entradas<% end %></span><button type="button" data-scan-console-target="latest" data-action="scan-console#follow" hidden>Ir a las últimas acciones ↓</button></footer>
+</section>

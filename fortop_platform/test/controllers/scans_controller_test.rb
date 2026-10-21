@@ -203,6 +203,89 @@ class ScansControllerTest < ActionDispatch::IntegrationTest
     assert_select ".finding-body img", count: 0
   end
 
+  test "pause resume and cancel enforce transitions and preserve the scan identity" do
+    scan = @repository.scans.create!(status: "analyzing", progress: 38)
+    assert_enqueued_with(job: ScanJob, args: [ scan.id ]) { post pause_repository_scan_path(@repository, scan) }
+    assert_redirected_to repository_path(@repository)
+    assert_equal "pause", scan.reload.control_action
+    assert_equal "analyzing", scan.status
+    assert_raises(Scans::Control::Halted) { Scans::Control.new(scan).check! { { "phase" => "analysis", "private" => "hidden source" } } }
+    get repository_path(@repository)
+    assert_select "h3", "Análisis en pausa"
+    assert_select "button", text: "Continuar"
+    assert_select "button", text: "Pausar", count: 0
+    refute_includes response.body, "hidden source"
+    assert_no_difference("Scan.count") do
+      assert_enqueued_with(job: ScanJob, args: [ scan.id ]) { post resume_repository_scan_path(@repository, scan) }
+    end
+    assert scan.reload.queued?
+    assert_equal 38, scan.progress
+    assert_no_enqueued_jobs { post resume_repository_scan_path(@repository, scan) }
+    post cancel_repository_scan_path(@repository, scan)
+    assert_equal "cancel", scan.reload.control_action
+    assert_raises(Scans::Control::Halted) { Scans::Control.new(scan).check! }
+    assert scan.reload.cancelled?
+    assert_no_enqueued_jobs { post pause_repository_scan_path(@repository, scan) }
+  end
+
+  test "restart waits for worker acknowledgment before allowing a new scan" do
+    scan = @repository.scans.create!(status: "analyzing", progress: 38)
+    assert_no_difference("Scan.count") { post restart_repository_scan_path(@repository, scan) }
+    assert_equal "restart", scan.reload.control_action
+    assert_no_difference("Scan.count") { post repository_scans_path(@repository) }
+    assert_difference("Scan.count", 1) do
+      assert_raises(Scans::Control::Halted) { Scans::Control.new(scan).check! }
+    end
+    replacement = @repository.scans.active.sole
+    get repository_path(@repository, format: :json)
+    assert_includes response.parsed_body["html"], "Análisis ##{replacement.id}"
+    assert_equal true, response.parsed_body["active"]
+    get repository_path(@repository, format: :json), params: { scan_id: scan.id, follow_restart: "1" }
+    assert_includes response.parsed_body["html"], "Análisis ##{replacement.id}"
+    get repository_path(@repository, format: :json), params: { scan_id: scan.id }
+    assert_includes response.parsed_body["html"], "Análisis cancelado"
+    assert_no_difference("Scan.count") { post restart_repository_scan_path(@repository, scan) }
+  end
+
+  test "continuation queue failure keeps the saved context available and the repository reserved" do
+    scan = @repository.scans.create!(status: "paused", execution_state: '{"phase":"analysis"}')
+    ScanJob.stub(:perform_later, ->(*) { raise ActiveJob::EnqueueError, "private detail" }) do
+      post resume_repository_scan_path(@repository, scan)
+    end
+    assert scan.reload.paused?
+    assert_equal '{"phase":"analysis"}', scan.execution_state
+    assert scan.scan_events.last.message.include?("Continuar")
+    refute_includes scan.scan_events.last.message, "private detail"
+  end
+
+  test "all execution controls enforce repository and scan ownership" do
+    another = User.create!(github_id: 90005, login: "someone", github_token: "private-token")
+    theirs = connected_repository(another, github_id: 205, name: "someone/site")
+    scan = theirs.scans.create!
+    %w[pause resume cancel restart].each do |action|
+      assert_no_enqueued_jobs do
+        post public_send("#{action}_repository_scan_path", theirs, scan)
+        assert_response :not_found
+        post public_send("#{action}_repository_scan_path", @repository, scan)
+        assert_response :not_found
+      end
+    end
+    assert scan.reload.queued?
+    assert_nil scan.control_action
+  end
+
+  test "console renders actual events in order escapes content and never exposes execution state" do
+    scan = @repository.scans.create!(status: "analyzing", execution_state: '{"private":"secret-model-history"}')
+    scan.record_event!("Primera lectura", kind: "tool")
+    scan.record_event!("<script>alert('raw')</script>", kind: "tool")
+    get repository_path(@repository, format: :json)
+    html = response.parsed_body["html"]
+    assert html.index("Primera lectura") < html.index("&lt;script&gt;")
+    assert_includes html, 'role="log"'
+    refute_includes html, "secret-model-history"
+    refute_includes html, "<script>alert"
+  end
+
   private
 
   def saved_publication

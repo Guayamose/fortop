@@ -2,6 +2,9 @@ module ApplicationHelper
   ICON_PATHS = {
     chevron_down: '<path d="m6 9 6 6 6-6"/>',
     pause: '<path d="M9 5v14M15 5v14"/>',
+    restart: '<path d="M3 10a9 9 0 1 1 2 8M3 4v6h6"/>',
+    stop: '<rect x="6" y="6" width="12" height="12" rx="1"/>',
+    terminal: '<path d="m4 6 6 6-6 6m9 0h7"/>',
     play: '<path d="m8 5 11 7-11 7V5Z"/>',
     repository: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 3H20v19H6.5A2.5 2.5 0 0 1 4 19.5v-14A2.5 2.5 0 0 1 6.5 3Z"/><path d="M8 7h8M8 11h5"/>',
     plus: '<path d="M12 5v14M5 12h14"/>',
@@ -36,6 +39,13 @@ module ApplicationHelper
     content_tag(:span, class: "badge badge-#{tone}") do
       safe_join([ content_tag(:span, "", class: "status-dot"), scan.status_label ])
     end
+  end
+
+  def scan_heading(scan)
+    return { "pause" => "Pausando el análisis…", "cancel" => "Cancelando el análisis…", "restart" => "Reiniciando el análisis…" }.fetch(scan.control_action) if scan.control_action
+    { "queued" => "En cola", "discovering" => "Preparando el repositorio", "analyzing" => "Analizando el código",
+      "remediating" => "Preparando las mejoras", "validating" => "Verificando los cambios", "publishing" => "Publicando en GitHub",
+      "paused" => "Análisis en pausa", "completed" => "Análisis completado", "failed" => "Análisis interrumpido", "cancelled" => "Análisis cancelado" }.fetch(scan.status)
   end
 
   def human_timestamp(time)

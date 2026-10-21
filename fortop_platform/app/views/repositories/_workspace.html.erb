@@ -5,13 +5,13 @@
     </div>
     <% if @active_scan %>
       <% if @selected_scan&.id == @active_scan.id %>
-        <span class="repository-running-label"><span class="status-dot"></span> En directo</span>
+        <%= render "repositories/scan_controls", scan: @active_scan %>
       <% else %>
         <%= link_to repository_path(@repository, scan_id: @active_scan.id), class: "button button-primary button-small" do %>Ver análisis en curso <%= app_icon(:arrow) %><% end %>
       <% end %>
     <% elsif @selected_scan&.publication_retryable? %>
       <%= button_to "Reintentar publicación", retry_publication_repository_scan_path(@repository, @selected_scan), params: { return_to: "repository" }, class: "button button-primary", data: { turbo_submits_with: "Solicitando reintento…" } %>
-    <% else %>
+    <% elsif @selected_scan %>
       <%= button_to repository_scans_path(@repository), params: { return_to: "repository" }, class: "button button-primary", data: { turbo_submits_with: "Preparando agentes…" } do %>
         <%= app_icon(:play) %><%= @selected_scan&.failed? ? "Reintentar análisis" : @latest_scan ? "Nuevo análisis" : "Iniciar análisis" %>
       <% end %>
@@ -26,9 +26,18 @@
     <%= render "repositories/analysis", scan: @selected_scan %>
   <% else %>
     <div class="repository-analysis-empty">
-      <h3>Listo para analizar.</h3>
-      <p>Los agentes revisarán tu código y prepararán las mejoras en GitHub.</p>
-      <span>Tú revisas y apruebas los cambios. El progreso y los resultados aparecen aquí.</span>
+      <div class="repository-ready-intro">
+        <span class="repository-ready-eyebrow">TU PRIMER ANÁLISIS</span>
+        <h3>Descubre qué puede mejorar tu web.</h3>
+        <p>Los agentes revisan tu código para mejorar el SEO y la visibilidad en motores de IA. Tú recibes los hallazgos y las correcciones para revisarlos en GitHub.</p>
+        <%= button_to repository_scans_path(@repository), params: { return_to: "repository" }, class: "button button-primary", data: { turbo_submits_with: "Preparando agentes…" } do %><%= app_icon(:play) %>Iniciar análisis<% end %>
+        <small>Puedes pausar, continuar o cancelar el análisis.</small>
+      </div>
+      <ol class="repository-ready-steps" aria-label="Cómo funciona el análisis">
+        <li><span>01</span><div><h4>Revisamos el código</h4><p>Exploramos los archivos y documentamos problemas con evidencia.</p></div></li>
+        <li><span>02</span><div><h4>Preparamos las mejoras</h4><p>Proponemos cambios y comprobamos que sean válidos.</p></div></li>
+        <li><span>03</span><div><h4>Tú tienes la última palabra</h4><p>Issues y un pull request en GitHub. Tú revisas y decides qué fusionar.</p></div></li>
+      </ol>
     </div>
   <% end %>
 </section>

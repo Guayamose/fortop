@@ -4,43 +4,38 @@ module Agents
   class Runner
     Result = Data.define(:summary, :steps, :tool_calls)
 
-    def initialize(provider:, tools:, system:, observer: ->(*) { }, max_turns: ENV.fetch("AGENT_MAX_TURNS", 0), max_tool_calls: ENV.fetch("AGENT_MAX_TOOL_CALLS", 0), timeout: ENV.fetch("AGENT_TIMEOUT_SECONDS", 0), context_max_bytes: ENV.fetch("AGENT_CONTEXT_MAX_BYTES", 120_000))
+    def initialize(provider:, tools:, system:, observer: ->(*) { }, checkpoint: ->(*) { }, max_turns: ENV.fetch("AGENT_MAX_TURNS", 0), max_tool_calls: ENV.fetch("AGENT_MAX_TOOL_CALLS", 0), timeout: ENV.fetch("AGENT_TIMEOUT_SECONDS", 0), context_max_bytes: ENV.fetch("AGENT_CONTEXT_MAX_BYTES", 120_000))
       @provider, @tools, @system, @observer = provider, tools, system, observer
+      @checkpoint = checkpoint
       @max_turns, @max_tool_calls, @timeout, @context_max_bytes = [ max_turns, max_tool_calls, timeout, context_max_bytes ].map { |value| Integer(value) }
       raise ArgumentError if [ @max_turns, @max_tool_calls, @timeout, @context_max_bytes ].any?(&:negative?)
     rescue ArgumentError, TypeError
       raise ConfigurationError, "Los límites del agente deben ser enteros no negativos; 0 desactiva el límite."
     end
 
-    def call(prompt:)
-      history = [ { "role" => "user", "parts" => [ { "text" => prompt } ] } ]
+    def call(prompt:, state: nil)
+      state = state&.deep_dup || { "history" => [ { "role" => "user", "parts" => [ { "text" => prompt } ] } ], "turn" => 0, "tool_count" => 0, "pending" => [], "responses" => [] }
       deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + @timeout if @timeout.positive?
-      tool_count = turn = 0
       loop do
-        raise BudgetExceeded, "El agente ha agotado el número máximo de turnos configurado." if @max_turns.positive? && turn >= @max_turns
+        # This boundary also follows every HTTP result and individual tool result.
+        # A suspended batch resumes at the next tool, preserving Gemini signatures.
+        @checkpoint.call(state)
         check_deadline!(deadline)
-        history = compact_history(history, prompt)
-        check_deadline!(deadline)
-        turn += 1
-
-        content = @provider.generate(system: @system, contents: history, declarations: @tools.declarations)
-        history << content.deep_dup
-        calls = content.fetch("parts", []).filter_map { |part| part["functionCall"] }
-        if calls.empty?
-          summary = content.fetch("parts", []).reject { |part| part["thought"] }.filter_map { |part| part["text"] }.join("\n")
-          raise Error, "El agente terminó sin un resumen." if summary.blank?
-          return Result.new(summary: summary.truncate(12_000), steps: turn, tool_calls: tool_count)
-        end
-
-        raise BudgetExceeded, "El agente ha agotado su presupuesto de herramientas configurado." if @max_tool_calls.positive? && tool_count + calls.length > @max_tool_calls
-        responses = calls.map do |function|
-          check_deadline!(deadline)
+        return Result.new(**state["result"].symbolize_keys) if state["result"]
+        if state["pending"].present?
+          remaining = state["pending"].size - state["responses"].size
+          raise BudgetExceeded, "El agente ha agotado su presupuesto de herramientas configurado." if @max_tool_calls.positive? && state["tool_count"] + remaining > @max_tool_calls
+          if state["responses"].size == state["pending"].size
+            state["history"] << { "role" => "user", "parts" => state["responses"] }
+            state["pending"], state["responses"] = [], []
+            next
+          end
+          function = state["pending"][state["responses"].size]
           name = function.fetch("name")
           arguments = function.fetch("args", {})
           raise ToolError, "Los argumentos de la herramienta no son válidos." unless arguments.is_a?(Hash)
 
-          tool_count += 1
-          @observer.call(name, arguments, turn)
+          @observer.call(name, arguments, state["turn"])
           result = begin
             @tools.call(name, arguments)
           rescue ToolError => error
@@ -49,9 +44,26 @@ module Agents
           end
           response = { "name" => name, "response" => { "result" => result } }
           response["id"] = function["id"] if function["id"]
-          { "functionResponse" => response }
+          state["responses"] << { "functionResponse" => response }
+          state["tool_count"] += 1
+          next
         end
-        history << { "role" => "user", "parts" => responses }
+
+        raise BudgetExceeded, "El agente ha agotado el número máximo de turnos configurado." if @max_turns.positive? && state["turn"] >= @max_turns
+        state["history"] = compact_history(state["history"], prompt)
+        @checkpoint.call(state)
+        check_deadline!(deadline)
+        state["turn"] += 1
+        content = @provider.generate(system: @system, contents: state["history"], declarations: @tools.declarations)
+        state["history"] << content.deep_dup
+        calls = content.fetch("parts", []).filter_map { |part| part["functionCall"] }
+        if calls.empty?
+          summary = content.fetch("parts", []).reject { |part| part["thought"] }.filter_map { |part| part["text"] }.join("\n")
+          raise Error, "El agente terminó sin un resumen." if summary.blank?
+          state["result"] = { "summary" => summary.truncate(12_000), "steps" => state["turn"], "tool_calls" => state["tool_count"] }
+        else
+          state["pending"] = calls
+        end
       end
     end
 

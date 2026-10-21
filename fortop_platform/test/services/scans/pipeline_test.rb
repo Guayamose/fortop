@@ -483,6 +483,106 @@ class Scans::PipelineTest < ActiveSupport::TestCase
     assert_equal 1, @github.pulls.size
   end
 
+  test "pause and resume at every model response preserves all work without repeating AI requests" do
+    8.times do |position|
+      @scan = @repository.scans.create! if position.positive?
+      @github = Github.new
+      script = successful_script
+      original = script[position]
+      script[position] = lambda do
+        response = original.respond_to?(:call) ? original.call : original
+        Scans::Control.new(@scan).request!("pause")
+        response
+      end
+      before_pause = Provider.new(script)
+      Scans::Pipeline.new(@scan, github: @github, provider: before_pause).call
+      assert @scan.reload.paused?, "response #{position}: #{@scan.error_message}"
+      assert_equal position + 1, before_pause.usage["requests"]
+      assert @scan.execution_state.present?
+      refute_includes @scan.ciphertext_for(:execution_state), "thoughtSignature"
+      assert_empty @github.issues
+
+      Scans::Control.new(@scan).resume!
+      after_pause = Provider.new(script)
+      Scans::Pipeline.new(@scan, github: @github, provider: after_pause).call
+      assert @scan.reload.completed?, "response #{position}: #{@scan.error_message}"
+      assert_equal 8, @scan.metadata.dig("usage", "requests")
+      assert_equal 8, before_pause.usage["requests"] + after_pause.usage["requests"]
+      assert_equal 1, @scan.findings.count
+      assert_equal 1, @github.issues.size
+      assert_equal 1, @github.commits.size
+      assert_nil @scan.execution_state
+    end
+  end
+
+  test "queued stop requests are honored before acquiring GitHub credentials or calling a model" do
+    %w[pause cancel].each do |action|
+      @scan = @repository.scans.create! if action == "cancel"
+      Scans::Control.new(@scan).request!(action)
+      ::Github::Access.stub(:client_for, ->(*) { flunk "No GitHub access should be needed" }) do
+        Agents::Provider.stub(:build, ->(*) { flunk "No model should be built" }) do
+          Scans::Pipeline.new(@scan).call
+        end
+      end
+      assert_equal action == "pause" ? "paused" : "cancelled", @scan.reload.status
+      @scan.update!(status: "cancelled") if action == "pause"
+    end
+  end
+
+  test "cancellation received during model HTTP prevents tools publication and further paid calls" do
+    provider = Provider.new([ lambda do
+      Scans::Control.new(@scan).request!("cancel")
+      tool("report_finding", finding_arguments)
+    end ])
+    Scans::Pipeline.new(@scan, github: @github, provider: provider).call
+    assert @scan.reload.cancelled?
+    assert_equal 1, @scan.metadata.dig("usage", "requests")
+    assert_empty @scan.findings
+    assert_empty @github.issues
+    assert_empty @github.commits
+    assert_nil @scan.error_message
+  end
+
+  test "pause after an accepted issue keeps the publication recoverable without another agent run" do
+    github = @github
+    scan = @scan
+    original = github.method(:create_issue)
+    github.define_singleton_method(:create_issue) do |*args, **kwargs|
+      result = original.call(*args, **kwargs)
+      Scans::Control.new(scan).request!("pause")
+      result
+    end
+    Scans::Pipeline.new(@scan, github: github, provider: Provider.new(successful_script)).call
+    assert @scan.reload.paused?
+    assert @scan.publication_prepared?
+    assert @scan.findings.first.issue_url
+    assert_empty github.commits
+    Scans::Control.new(@scan).resume!
+    unused = Provider.new([])
+    Scans::Pipeline.new(@scan, github: github, provider: unused).call
+    assert @scan.reload.completed?, @scan.error_message
+    assert_equal 0, unused.usage["requests"]
+    assert_equal 1, github.issues.size
+    assert_equal 1, github.commits.size
+    assert_equal 8, @scan.metadata.dig("usage", "requests")
+  end
+
+  test "cancel after an accepted commit preserves its receipt and prevents opening a PR" do
+    github = @github
+    scan = @scan
+    original = github.method(:commit_files)
+    github.define_singleton_method(:commit_files) do |*args, **kwargs|
+      result = original.call(*args, **kwargs)
+      Scans::Control.new(scan).request!("cancel")
+      result
+    end
+    Scans::Pipeline.new(@scan, github: github, provider: Provider.new(successful_script)).call
+    assert @scan.reload.cancelled?
+    assert_equal "b" * 40, @scan.metadata.dig("publication", "commit_sha")
+    assert_equal 1, github.commits.size
+    assert_empty github.pulls
+  end
+
   private
 
   def run_pipeline(provider: Provider.new([]))

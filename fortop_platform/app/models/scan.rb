@@ -1,12 +1,12 @@
 class Scan < ApplicationRecord
-  encrypts :publication_changes
+  encrypts :publication_changes, :execution_state
 
-  ACTIVE_STATUSES = %w[queued discovering analyzing remediating validating publishing].freeze
+  ACTIVE_STATUSES = %w[queued discovering analyzing remediating validating publishing paused].freeze
   STATUS_LABELS = {
     "queued" => "En cola", "discovering" => "Preparando repositorio",
     "analyzing" => "Agente de análisis", "remediating" => "Agente de remediación",
     "validating" => "Verificando cambios", "publishing" => "Publicando en GitHub",
-    "completed" => "Completado", "failed" => "Error", "cancelled" => "Cancelado"
+    "paused" => "En pausa", "completed" => "Completado", "failed" => "Error", "cancelled" => "Cancelado"
   }.freeze
 
   belongs_to :repository
@@ -18,10 +18,15 @@ class Scan < ApplicationRecord
   scope :active, -> { where(status: ACTIVE_STATUSES) }
 
   validates :progress, numericality: { only_integer: true, in: 0..100 }
+  validates :control_action, inclusion: { in: %w[pause cancel restart] }, allow_nil: true
   validate :one_active_scan, on: :create
 
   def active?
     ACTIVE_STATUSES.include?(status)
+  end
+
+  def work_pending?
+    active? && (!paused? || control_action.present?)
   end
 
   def publication_prepared?
@@ -51,11 +56,11 @@ class Scan < ApplicationRecord
   end
 
   def expire_if_stale!(now: Time.current)
-    return self unless active? && updated_at < now - 30.minutes
+    return self unless active? && !paused? && updated_at < now - 30.minutes
 
     with_lock do
       last_activity = [ updated_at, scan_events.maximum(:created_at) ].compact.max
-      if active? && last_activity < now - 30.minutes
+      if active? && !paused? && last_activity < now - 30.minutes
         message = "La ejecución se ha detenido tras 30 minutos sin actividad. Puedes iniciar un nuevo análisis."
         update!(status: "failed", error_message: message, finished_at: now)
         record_event!(message, kind: "warning")

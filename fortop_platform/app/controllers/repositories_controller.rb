@@ -52,6 +52,13 @@ class RepositoriesController < ApplicationController
     if params[:scan_id].present?
       raise ActiveRecord::RecordNotFound unless params[:scan_id].is_a?(String) && params[:scan_id].match?(/\A[1-9]\d*\z/)
       @selected_scan = @scans.find(params[:scan_id])
+      if request.format.json? && params[:follow_restart] == "1"
+        # A live workspace follows its replacement. Explicit history navigation
+        # continues to show the requested scan, including cancelled executions.
+        while (next_id = @selected_scan.metadata["restart_scan_id"]) && next_id.to_i > @selected_scan.id
+          @selected_scan = @scans.find(next_id)
+        end
+      end
     else
       @selected_scan = @active_scan || @latest_scan
     end

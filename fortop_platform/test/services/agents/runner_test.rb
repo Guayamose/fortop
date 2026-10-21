@@ -44,6 +44,32 @@ class Agents::RunnerTest < ActiveSupport::TestCase
     assert_equal "Código inspeccionado.", result.summary
   end
 
+  test "checkpoint between batched tools resumes exactly once with signed context intact" do
+    turn = { "role" => "model", "parts" => [
+      { "functionCall" => { "id" => "first", "name" => "read_file", "args" => { "path" => "one.html" } }, "thoughtSignature" => "opaque-signature" },
+      { "functionCall" => { "id" => "second", "name" => "read_file", "args" => { "path" => "two.html" } } }
+    ] }
+    saved = nil
+    checkpoint = lambda do |state|
+      if state["responses"].size == 1
+        saved = JSON.parse(JSON.generate(state))
+        raise Scans::Control::Halted
+      end
+    end
+    tools = Tools.new
+    assert_raises(Scans::Control::Halted) do
+      Agents::Runner.new(provider: Provider.new([ turn ]), tools: tools, system: "system", checkpoint: checkpoint).call(prompt: "audit")
+    end
+    assert_equal [ [ "read_file", { "path" => "one.html" } ] ], tools.called
+    provider = Provider.new([ final("Done") ])
+    result = Agents::Runner.new(provider: provider, tools: tools, system: "system").call(prompt: "audit", state: saved)
+    assert_equal %w[one.html two.html], tools.called.map { |_, args| args["path"] }
+    assert_equal turn, provider.history[1]
+    assert_equal %w[first second], provider.history[2]["parts"].map { |part| part.dig("functionResponse", "id") }
+    assert_equal 2, result.steps
+    assert_equal 2, result.tool_calls
+  end
+
   test "returns tool rejection to the model so it can repair its approach" do
     provider = Provider.new([ call("../secret"), call("index.html"), final("Hecho.") ])
     tools = Tools.new

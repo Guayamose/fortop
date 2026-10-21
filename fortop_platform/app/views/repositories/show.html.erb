@@ -9,7 +9,7 @@
   </div>
   <%= external_link(safe_join([app_icon(:github), "GitHub", app_icon(:external)]), @repository.html_url, class: "repository-github-link text-link") %>
 </header>
-<div data-controller="scan-progress" data-scan-progress-url-value="<%= repository_path(@repository, scan_id: @selected_scan&.id, format: :json) %>" data-scan-progress-active-value="<%= @active_scan.present? %>">
+<div data-controller="scan-progress" data-scan-progress-url-value="<%= repository_path(@repository, scan_id: @selected_scan&.id, follow_restart: params[:scan_id].blank? ? '1' : nil, format: :json) %>" data-scan-progress-active-value="<%= @active_scan.present? %>">
   <div class="polling-error" role="status" data-scan-progress-target="error" hidden>No se puede actualizar el progreso en este momento. Reconectando…</div>
   <div data-scan-progress-target="content"><%= render "repositories/workspace" %></div>
 </div>

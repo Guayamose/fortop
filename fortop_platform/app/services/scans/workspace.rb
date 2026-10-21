@@ -48,7 +48,11 @@ module Scans
     def read(path)
       check_path!(path)
       return @changes[path] if @changes.key?(path)
-      return original(path) if @originals.include?(path)
+      load_original(path)
+    end
+
+    def load_original(path)
+      return File.read(original_path(path), encoding: Encoding::UTF_8) if @originals.include?(path)
 
       entry = @entries[path]
       raise Agents::ToolError, "Archivo inexistente o excluido de la lectura." unless entry
@@ -62,7 +66,7 @@ module Scans
         raise Agents::ToolError, "El archivo se ha excluido porque contiene un posible secreto. No se enviará al proveedor ni se modificará."
       end
 
-      @total_bytes += content.bytesize
+      @total_bytes += content.bytesize unless @read_paths.include?(path)
       FileUtils.mkdir_p(File.dirname(original_path(path)))
       File.write(original_path(path), content)
       @originals << path
@@ -70,6 +74,7 @@ module Scans
       materialize(path, content)
       content
     end
+    private :load_original
 
     def read_lines(path, start_line: 1, end_line: nil)
       content = read(path)
@@ -166,7 +171,9 @@ module Scans
     end
 
     def original(path)
-      File.read(original_path(path), encoding: Encoding::UTF_8) if @originals.include?(path)
+      # After a pause, unchanged source is fetched lazily from the same pinned
+      # commit. Avoid serializing an entire large repository into a DB column.
+      load_original(path) if @read_paths.include?(path)
     end
 
     def finding_ids(path)
@@ -191,6 +198,31 @@ module Scans
 
     def close
       FileUtils.remove_entry_secure(@directory) if @directory && File.directory?(@directory)
+    end
+
+    # Stored only in the encrypted pause checkpoint, never in public metadata.
+    def snapshot
+      { "read_paths" => @read_paths.to_a, "read_bytes" => @total_bytes,
+        "changes" => @changes, "finding_ids" => @finding_ids, "blocked_paths" => @blocked_paths.to_a }
+    end
+
+    def restore!(snapshot)
+      snapshot.fetch("read_paths").each do |path|
+        check_path!(path)
+        raise Agents::ToolError, "El archivo guardado no es válido." unless @entries.key?(path)
+        @read_paths << path
+      end
+      @total_bytes = snapshot.fetch("read_bytes")
+      snapshot.fetch("changes").each do |path, content|
+        check_writable_path!(path)
+        raise Agents::ToolError, "El cambio guardado no procede de un archivo inspeccionado." if @entries.key?(path) && !@read_paths.include?(path)
+        raise Agents::ToolError, "El cambio guardado no es válido." unless content.is_a?(String) && content.valid_encoding? && content.bytesize <= MAX_FILE_BYTES && !content.include?("\0") && !secret_content?(content)
+        @changes[path] = content
+        @finding_ids[path] = snapshot.fetch("finding_ids").fetch(path, [])
+        materialize(path, content)
+      end
+      @blocked_paths.merge(snapshot.fetch("blocked_paths", []))
+      self
     end
 
     def check_writable_path!(path)

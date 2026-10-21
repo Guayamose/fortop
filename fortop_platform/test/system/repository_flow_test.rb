@@ -52,8 +52,15 @@ class RepositoryFlowTest < ApplicationSystemTestCase
       save_review_screenshot("repository-picker-desktop")
       click_button "Conectar", exact: true
       assert_selector "h1", text: "website"
-      assert_text "Listo para analizar."
+      assert_text "Descubre qué puede mejorar tu web."
+      assert_selector ".repository-ready-steps li", count: 3
+      assert_no_horizontal_overflow
       save_review_screenshot("repository-profile-desktop")
+      page.current_window.resize_to(390, 844)
+      assert_no_horizontal_overflow
+      assert_button "Iniciar análisis"
+      save_review_screenshot("repository-ready-mobile")
+      page.current_window.resize_to(1440, 1000)
       repository = User.find_by!(github_id: 92001).repositories.find_by!(github_id: 42001)
 
       assert_enqueued_with(job: ScanJob) do
@@ -67,14 +74,16 @@ class RepositoryFlowTest < ApplicationSystemTestCase
       assert_no_selector ".repository-scan-state.is-complete"
       scan = repository.scans.last
       assert scan.queued?
-      find(".repository-scan-details > summary", text: "Actividad reciente de los agentes").click
+      assert_selector ".repository-console [role=log]"
+      assert_button "Pausar"
+      assert_button "Reiniciar"
+      assert_button "Cancelar"
 
       scan.update!(status: "analyzing", progress: 38, started_at: Time.current)
       scan.record_event!("El agente de análisis está revisando las plantillas.", kind: "tool")
       assert_selector "[role=progressbar][aria-valuenow='38']", wait: 10
       assert_text "El agente de análisis está revisando las plantillas."
-      assert_selector ".repository-scan-details[open] > summary", text: "Actividad reciente de los agentes"
-      find(".repository-scan-details > summary", text: "Actividad reciente de los agentes").click
+      assert_selector ".repository-console li", text: "El agente de análisis está revisando las plantillas."
       save_review_screenshot("scan-running-desktop")
 
       scan.update!(status: "completed", progress: 100, summary: "El agente ha revisado la estructura y documentado una oportunidad de mejora.", finished_at: Time.current)
@@ -120,6 +129,61 @@ class RepositoryFlowTest < ApplicationSystemTestCase
       click_link "Ver análisis en curso"
       assert_selector ".repository-scan-state h3", text: "En cola"
       assert_current_path repository_path(repository, scan_id: new_scan.id)
+    end
+  end
+
+  test "scan controls pause continue restart and cancel with live console scroll preserved" do
+    with_browser_github do
+      visit new_session_path
+      click_button "Continuar con GitHub"
+      assert_selector "h1", text: "Repositorios"
+      user = User.find_by!(github_id: 92001)
+      repository = user.repositories.create!(github_id: 42001, installation_id: 88001, full_name: "browser-builder/website", html_url: "https://github.com/browser-builder/website")
+      scan = repository.scans.create!(status: "analyzing", progress: 38, started_at: 1.minute.ago)
+      45.times { |index| scan.record_event!("Leyendo plantilla #{index}.", kind: "tool") }
+      visit repository_path(repository)
+      assert_selector ".repository-console li", count: 45
+      assert page.evaluate_script("(() => { const c = document.querySelector('[role=log]'); return c.scrollTop > 0 })()")
+      page.execute_script("const c = document.querySelector('[role=log]'); c.scrollTop = 0; c.dispatchEvent(new Event('scroll'))")
+      scan.record_event!("Buscando metadatos adicionales.", kind: "tool")
+      assert_selector ".repository-console li", text: "Buscando metadatos adicionales.", visible: :all, wait: 10
+      assert_equal 0, page.evaluate_script("document.querySelector('[role=log]').scrollTop")
+      click_button "Ir a las últimas acciones ↓"
+      assert page.evaluate_script("document.querySelector('[role=log]').scrollTop > 0")
+
+      click_button "Pausar"
+      assert_selector "h3", text: "Pausando el análisis…"
+      assert_raises(Scans::Control::Halted) { Scans::Control.new(scan).check! { { "phase" => "analysis" } } }
+      assert_selector "h3", text: "Análisis en pausa", wait: 10
+      assert_button "Continuar"
+      assert_no_button "Pausar"
+      assert_button "Desconectar repositorio", disabled: true
+      save_review_screenshot("scan-paused-desktop")
+      assert_no_difference("Scan.count") do
+        click_button "Continuar"
+        assert_selector "h3", text: "En cola"
+      end
+      assert scan.reload.queued?
+      accept_confirm { click_button "Reiniciar" }
+      assert_selector "h3", text: "Reiniciando el análisis…"
+      assert_raises(Scans::Control::Halted) { Scans::Control.new(scan).check! }
+      replacement = repository.scans.active.sole
+      assert_selector ".repository-selected-scan", text: "Análisis ##{replacement.id}", wait: 10
+      assert_current_path repository_path(repository)
+      assert_selector "h3", text: "En cola"
+      assert_text "Historial de análisis"
+      page.current_window.resize_to(390, 844)
+      assert_no_horizontal_overflow
+      assert_button "Pausar"
+      save_review_screenshot("scan-controls-mobile")
+      click_button "Cancelar"
+      assert_selector "h3", text: "Cancelando el análisis…"
+      assert_raises(Scans::Control::Halted) { Scans::Control.new(replacement).check! }
+      assert_selector "h3", text: "Análisis cancelado", wait: 10
+      assert_button "Nuevo análisis"
+      assert_button "Desconectar repositorio", disabled: false
+      assert_no_button "Continuar"
+      assert_selector "[data-scan-progress-active-value='false']"
     end
   end
 

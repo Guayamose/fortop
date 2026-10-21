@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_21_000100) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_21_000200) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -83,9 +83,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_21_000100) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.text "publication_changes"
+    t.string "control_action"
+    t.text "execution_state"
     t.index ["repository_id", "created_at"], name: "index_scans_on_repository_id_and_created_at"
     t.index ["repository_id"], name: "index_scans_on_repository_id"
-    t.index ["repository_id"], name: "one_active_scan_per_repository", unique: true, where: "((status)::text = ANY ((ARRAY['queued'::character varying, 'discovering'::character varying, 'analyzing'::character varying, 'remediating'::character varying, 'validating'::character varying, 'publishing'::character varying])::text[]))"
+    t.index ["repository_id"], name: "one_active_scan_per_repository", unique: true, where: "((status)::text = ANY ((ARRAY['queued'::character varying, 'discovering'::character varying, 'analyzing'::character varying, 'remediating'::character varying, 'validating'::character varying, 'publishing'::character varying, 'paused'::character varying])::text[]))"
     t.check_constraint "progress >= 0 AND progress <= 100", name: "scan_progress_range"
   end
 

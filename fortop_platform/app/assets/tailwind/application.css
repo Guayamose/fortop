@@ -175,6 +175,10 @@ main:focus { outline: none; }
 
 /* Repository installation, selection and profile. */
 .picker-panel { overflow: hidden; border: 0; border-radius: 0; }
+.picker-access { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-bottom: 25px; margin-bottom: 25px; border-bottom: 1px solid var(--line); }
+.picker-access strong { font-size: 13px; font-weight: 500; }
+.picker-access p { max-width: 700px; margin-top: 6px; color: var(--muted); font-size: 12px; line-height: 1.7; }
+.picker-access > .text-link { flex: 0 0 auto; }
 .picker-filters { display: flex; align-items: flex-end; gap: 15px; padding-bottom: 27px; }
 .form-field { display: flex; flex-direction: column; gap: 8px; min-width: 190px; }
 .form-field label { color: var(--text-secondary); font-size: 12px; font-weight: 500; }
@@ -731,6 +735,7 @@ main:focus { outline: none; }
   .desktop-break { display: none; }
   .compact-empty { padding: 30px 19px; border-radius: 18px; }
   .picker-filters { flex-wrap: wrap; gap: 13px; }
+  .picker-access { align-items: flex-start; flex-direction: column; gap: 12px; }
   .form-field { width: 100%; min-width: 0; }
   .search-field { flex-basis: calc(100% - 93px); }
   .picker-filters > .button { width: 80px; padding: 0 10px; }

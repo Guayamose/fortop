@@ -17,4 +17,14 @@ module RepositoriesHelper
       app_icon(:code, css_class: "repository-language-logo repository-language-unknown")
     end
   end
+
+  def github_installation_settings_url(installation)
+    id = installation.fetch("id")
+    if installation.dig("account", "type") == "Organization"
+      account = ERB::Util.url_encode(installation.dig("account", "login"))
+      "https://github.com/organizations/#{account}/settings/installations/#{id}"
+    else
+      "https://github.com/settings/installations/#{id}"
+    end
+  end
 end

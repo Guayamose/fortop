@@ -52,7 +52,8 @@ class RepositoriesControllerTest < ActionDispatch::IntegrationTest
   test "picker uses the selected permitted installation and labels page scoped search" do
     client = Object.new
     client.define_singleton_method(:installations) do |**|
-      [ { "id" => 5001, "account" => { "login" => "fortop-builder" } }, { "id" => 5002, "account" => { "login" => "team" } } ]
+      [ { "id" => 5001, "account" => { "login" => "fortop-builder", "type" => "User" } },
+        { "id" => 5002, "account" => { "login" => "team", "type" => "Organization" } } ]
     end
     repo = github_repository(full_name: "team/landing")
     calls = []
@@ -65,6 +66,43 @@ class RepositoriesControllerTest < ActionDispatch::IntegrationTest
     assert_select "label[for=q]", "Filtrar esta página"
     assert_select ".picker-repo-copy strong", "team/landing"
     assert_select "input[name=installation_id][value='5002']"
+    assert_select "a[href='https://github.com/organizations/team/settings/installations/5002'][target='_blank']", text: /Añadir repositorios en GitHub/
+    assert_select ".picker-access a[href=?]", new_repository_path(installation_id: 5002), text: "Actualizar lista"
+  end
+
+  test "selected repository access can be expanded in GitHub then refreshed and connected" do
+    existing = github_repository
+    added = github_repository(id: 102, full_name: "fortop-builder/new-website")
+    connected_repository(@user)
+    permitted = [ existing ]
+    client = Object.new
+    client.define_singleton_method(:installations) do |**|
+      [ { "id" => 5001, "account" => { "login" => "fortop-builder", "type" => "User" }, "repository_selection" => "selected" } ]
+    end
+    client.define_singleton_method(:installation_repositories) { |*, **| permitted }
+    client.define_singleton_method(:repository) { |name| permitted.find { |repo| repo.fetch("full_name") == name } }
+
+    Github::Access.stub(:user_client, client) do
+      get new_repository_path
+      assert_response :success
+      assert_select ".picker-access", text: /solo tiene acceso a los repositorios seleccionados/
+      assert_select "a[href='https://github.com/settings/installations/5001']", text: /Añadir repositorios en GitHub/
+      assert_select ".picker-row", count: 1
+      assert_select ".picker-row .badge", text: /Conectado/
+
+      # GitHub returns the additional repository after its owner saves the grant.
+      permitted << added
+      get new_repository_path, params: { installation_id: 5001 }
+      assert_response :success
+      assert_select ".picker-row", count: 2
+      assert_select ".picker-row", text: /fortop-builder\/new-website/ do
+        assert_select "button", text: /Conectar/
+      end
+      assert_difference "@user.repositories.count", 1 do
+        post repositories_path, params: { installation_id: 5001, full_name: added.fetch("full_name") }
+      end
+      assert_redirected_to repository_path(@user.repositories.find_by!(github_id: 102))
+    end
   end
 
   test "connect uses canonical authorized GitHub data and does not accept injected attributes" do

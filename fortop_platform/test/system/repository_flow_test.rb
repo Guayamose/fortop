@@ -65,7 +65,13 @@ class RepositoryFlowTest < ApplicationSystemTestCase
 
       click_link "Conectar un repositorio"
       assert_selector ".picker-repo-copy strong", text: "browser-builder/website"
+      assert_text "Fortop solo tiene acceso a los repositorios seleccionados"
+      assert_link "Añadir repositorios en GitHub", href: "https://github.com/settings/installations/88001"
       save_review_screenshot("repository-picker-desktop")
+      page.current_window.resize_to(390, 844)
+      assert_no_horizontal_overflow
+      save_review_screenshot("repository-picker-mobile")
+      page.current_window.resize_to(1440, 1000)
       click_button "Conectar", exact: true
       assert_selector "h1", text: "website"
       assert_text "Descubre qué puede mejorar tu web."
@@ -414,7 +420,9 @@ class RepositoryFlowTest < ApplicationSystemTestCase
     oauth.define_singleton_method(:exchange) { |**| { token: "ghu_browser_test_only", refresh_token: "ghr_browser_test_only", expires_at: 8.hours.from_now } }
     client = Object.new
     client.define_singleton_method(:user) { { "id" => 92001, "login" => "browser-builder", "name" => "Browser Builder" } }
-    client.define_singleton_method(:installations) { |**| [ { "id" => 88001, "account" => { "login" => "browser-builder" } } ] }
+    client.define_singleton_method(:installations) do |**|
+      [ { "id" => 88001, "account" => { "login" => "browser-builder", "type" => "User" }, "repository_selection" => "selected" } ]
+    end
     repository = { "id" => 42001, "full_name" => "browser-builder/website", "default_branch" => "main", "html_url" => "https://github.com/browser-builder/website", "description" => "La web del proyecto", "language" => "Ruby", "private" => true, "permissions" => { "push" => true }, "archived" => false, "disabled" => false }
     client.define_singleton_method(:installation_repositories) { |*, **| [ repository ] }
 

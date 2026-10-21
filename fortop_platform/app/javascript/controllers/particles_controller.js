@@ -64,6 +64,7 @@ export default class extends Controller {
     this.points.forEach(point => { point.offsetX = 0; point.offsetY = 0 })
     this.stars.forEach(star => { star.offsetX = 0; star.offsetY = 0 })
     this.draw()
+    if (this.image?.complete) this.schedule()
   }
 
   trackPointer(event) {
@@ -130,7 +131,7 @@ export default class extends Controller {
 
   tick(timestamp) {
     this.frame = null
-    if (this.paused || document.hidden) return
+    if (this.paused || document.hidden || !this.width || !this.height) return
     const elapsed = this.previous == null ? 0 : Math.min((timestamp - this.previous) / 1000, .05)
     this.time += elapsed
     this.previous = timestamp
@@ -141,7 +142,7 @@ export default class extends Controller {
   schedule() {
     cancelAnimationFrame(this.frame)
     this.previous = null
-    if (!this.paused && !document.hidden) this.frame = requestAnimationFrame(this.tick)
+    if (!this.paused && !document.hidden && this.width && this.height) this.frame = requestAnimationFrame(this.tick)
   }
 
   toggle() {

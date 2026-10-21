@@ -1,0 +1,13 @@
+{
+  "name": "fortop-platform-assets",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:syntax": "node script/build-syntax-highlighter.mjs",
+    "test:syntax": "node --test test/javascript/syntax_highlighter_test.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "shiki": "4.5.0"
+  }
+}

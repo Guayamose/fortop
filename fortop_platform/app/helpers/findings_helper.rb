@@ -1,5 +1,3 @@
-require "rouge"
-
 module FindingsHelper
   CATEGORIES = {
     "indexability" => "Rastreo e indexación", "metadata" => "Metadatos", "structured_data" => "Datos estructurados",
@@ -7,25 +5,24 @@ module FindingsHelper
   }.freeze
   DIFF_PREVIEW_LINES = 400
 
-  class LineFormatter < Rouge::Formatters::HTML
-    def lines(tokens)
-      # The formatter escapes repository text before adding its own token spans.
-      token_lines(tokens).map { |line| format(line).html_safe }
-    end
-  end
+  LANGUAGES = JSON.parse(Rails.root.join("config/syntax_languages.json").read).index_by { |language| language.fetch("id") }.freeze
+  LANGUAGE_EXTENSIONS = LANGUAGES.values.each_with_object({}) do |language, mapping|
+    ([ language["id"] ] + language["aliases"] + language["extensions"]).each { |extension| mapping[extension.downcase] = language["id"] }
+  end.merge({ "htm" => "html", "xhtml" => "html", "h" => "c", "hpp" => "cpp", "cc" => "cpp", "cshtml" => "razor", "svg" => "xml", "gemfile" => "ruby", "rakefile" => "ruby", "gemspec" => "ruby", "rake" => "ruby", "containerfile" => "docker", "bashrc" => "shellscript", "zshrc" => "shellscript" }).freeze
 
   def finding_category(finding)
     CATEGORIES.fetch(finding.category, finding.category.to_s.humanize)
   end
 
-  def finding_lexer(source, path)
-    Rouge::Lexer.guess(filename: path.to_s.presence, source: source.to_s)
-  rescue Rouge::Lexer::Guesser::Ambiguous, Rouge::Lexer::Guesser::NoLexersFound
-    Rouge::Lexers::PlainText
+  def finding_language(path)
+    filename = File.basename(path.to_s).downcase
+    candidates = [ filename ] + filename.split(".").drop(1).each_index.map { |index| filename.split(".").drop(index + 1).join(".") }
+    id = candidates.filter_map { |extension| LANGUAGE_EXTENSIONS[extension] }.first
+    LANGUAGES[id] || { "id" => "text", "name" => "Texto" }
   end
 
-  def highlighted_evidence(finding)
-    highlighted_source_lines(finding.evidence, finding.file_path)
+  def finding_evidence_lines(finding)
+    finding.evidence.to_s.split("\n", -1)
   end
 
   def finding_changes(finding)
@@ -34,9 +31,9 @@ module FindingsHelper
     end
   end
 
-  def finding_diff_rows(patch, path:)
+  def finding_diff_rows(patch)
     old_line = new_line = nil
-    rows = patch.to_s.lines.first(DIFF_PREVIEW_LINES).filter_map do |raw|
+    patch.to_s.lines.first(DIFF_PREVIEW_LINES).filter_map do |raw|
       text = raw.chomp
       if (header = text.match(/\A@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@/))
         old_line, new_line = header.captures.map(&:to_i)
@@ -52,22 +49,6 @@ module FindingsHelper
         { kind: "note", text: text, marker: "", old: nil, new: nil }
       end
     end
-    rows.slice_before { |row| row[:kind] == "hunk" }.each do |hunk|
-      original = hunk.select { |row| %w[context deletion].include?(row[:kind]) }
-      proposed = hunk.select { |row| %w[context addition].include?(row[:kind]) }
-      before = highlighted_source_lines(original.map { |row| row[:text] }.join("\n"), path)
-      after = highlighted_source_lines(proposed.map { |row| row[:text] }.join("\n"), path)
-      hunk.each do |row|
-        case row[:kind]
-        when "deletion" then row[:html] = before.shift
-        when "addition" then row[:html] = after.shift
-        when "context"
-          before.shift
-          row[:html] = after.shift
-        end
-      end
-    end
-    rows
   end
 
   def finding_source_url(finding)
@@ -76,11 +57,5 @@ module FindingsHelper
     return unless sha.to_s.match?(/\A[0-9a-f]{40,64}\z/) && path.present?
     encoded = path.split("/").map { |part| ERB::Util.url_encode(part) }.join("/")
     "#{finding.scan.repository.html_url}/blob/#{sha}/#{encoded}#L#{finding.line_number || 1}"
-  end
-
-  private
-
-  def highlighted_source_lines(source, path)
-    LineFormatter.new.lines(finding_lexer(source, path).new.lex(source.to_s))
   end
 end

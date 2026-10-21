@@ -1,4 +1,4 @@
-<details class="finding-review" id="finding-<%= finding.id %>">
+<details class="finding-review" id="finding-<%= finding.id %>" data-controller="finding-code" data-action="toggle->finding-code#highlight scan-progress:after-render@document->finding-code#highlight">
   <summary class="finding-review-summary">
     <span class="severity-mark severity-<%= finding.severity %>" aria-hidden="true"></span>
     <div class="finding-review-title">
@@ -12,15 +12,15 @@
   <div class="finding-review-body">
     <div class="finding-explanation">
       <section><h4>Qué hemos encontrado</h4><%= simple_format(h(finding.description), class: "finding-copy", sanitize: false) %></section>
-      <% if finding.impact.present? %><section><h4>Por qué importa</h4><%= simple_format(h(finding.impact), class: "finding-copy", sanitize: false) %></section><% end %>
+      <% if finding.impact.present? %><section><h4>Por qué afecta</h4><%= simple_format(h(finding.impact), class: "finding-copy", sanitize: false) %></section><% end %>
     </div>
 
     <section class="finding-evidence" aria-label="Evidencia del código">
       <div class="finding-section-heading"><h4>Evidencia</h4><span>Código original<% if finding.scan.base_sha.present? %> · <code><%= finding.scan.base_sha.first(7) %></code><% end %></span></div>
-      <div class="finding-code-frame">
-        <header><span><%= app_icon(:file) %><%= finding.file_path.presence || "Fragmento observado" %></span><span><%= finding_lexer(finding.evidence, finding.file_path).title %><% if (url = finding_source_url(finding)) %><%= external_link(safe_join(["Ver origen", app_icon(:external)]), url, class: "text-link") %><% end %></span></header>
+      <div class="finding-code-frame" data-code-language="<%= finding_language(finding.file_path).fetch('id') %>">
+        <header><span><%= app_icon(:file) %><%= finding.file_path.presence || "Fragmento observado" %></span><span><%= finding_language(finding.file_path).fetch('name') %><% if (url = finding_source_url(finding)) %><%= external_link(safe_join(["Ver origen", app_icon(:external)]), url, class: "text-link") %><% end %></span></header>
         <div class="finding-code-scroll" tabindex="0" role="region" aria-label="Código de evidencia">
-          <pre class="finding-source"><code><% highlighted_evidence(finding).each_with_index do |line, index| %><span class="finding-source-line"><span class="finding-line-number" aria-hidden="true"><%= (finding.line_number || 1) + index %></span><span class="finding-source-text syntax-highlight"><%= line %></span></span><% end %></code></pre>
+          <pre class="finding-source"><code><% finding_evidence_lines(finding).each_with_index do |line, index| %><span class="finding-source-line"><span class="finding-line-number" aria-hidden="true"><%= (finding.line_number || 1) + index %></span><span class="finding-source-text syntax-highlight"><%= line %></span></span><% end %></code></pre>
         </div>
       </div>
     </section>
@@ -28,12 +28,13 @@
     <section class="finding-remediation" aria-label="Remediación del hallazgo">
       <div class="finding-section-heading"><h4>Remediación</h4><% if finding.status_fixed? && finding.scan.pull_request_url.present? %><%= external_link(safe_join(["Revisar en el PR", app_icon(:external)]), finding.scan.pull_request_url, class: "text-link") %><% end %></div>
       <% if finding.recommendation.present? %><%= simple_format(h(finding.recommendation), class: "finding-copy", sanitize: false) %><% end %>
+      <% if finding.remediation_rationale.present? %><div class="finding-remediation-rationale"><h4>Por qué mejora esta remediación</h4><%= simple_format(h(finding.remediation_rationale), class: "finding-copy", sanitize: false) %></div><% end %>
       <% changes = finding_changes(finding) %>
       <% changes.each do |file| %>
-        <div class="finding-code-frame finding-diff">
+        <div class="finding-code-frame finding-diff" data-code-language="<%= finding_language(file.fetch('path')).fetch('id') %>">
           <header><span><%= app_icon(:file) %><%= file.fetch("path") %></span><span class="finding-diff-counts"><span>+<%= file["additions"].to_i %></span><span>−<%= file["deletions"].to_i %></span></span></header>
           <div class="finding-code-scroll" tabindex="0" role="region" aria-label="Diff de <%= file.fetch('path') %>">
-            <pre class="finding-source"><code><% finding_diff_rows(file.fetch('diff'), path: file.fetch('path')).each do |row| %><span class="finding-diff-line diff-<%= row[:kind] %>"><span class="finding-line-number" aria-hidden="true"><%= row[:old] %></span><span class="finding-line-number" aria-hidden="true"><%= row[:new] %></span><span class="finding-diff-marker" aria-hidden="true"><%= row[:marker] %></span><span class="finding-source-text syntax-highlight"><%= row[:html] || row[:text] %></span></span><% end %></code></pre>
+            <pre class="finding-source"><code><% finding_diff_rows(file.fetch('diff')).each do |row| %><span class="finding-diff-line diff-<%= row[:kind] %>" data-diff-kind="<%= row[:kind] %>"><span class="finding-line-number" aria-hidden="true"><%= row[:old] %></span><span class="finding-line-number" aria-hidden="true"><%= row[:new] %></span><span class="finding-diff-marker" aria-hidden="true"><%= row[:marker] %></span><span class="finding-source-text syntax-highlight"><%= row[:text] %></span></span><% end %></code></pre>
           </div>
         </div>
         <% if Array(file['finding_ids']).size > 1 %><p class="finding-note">Este archivo contiene correcciones asociadas a varios hallazgos.</p><% end %>

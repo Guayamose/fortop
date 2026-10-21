@@ -170,25 +170,33 @@ class RepositoryFlowTest < ApplicationSystemTestCase
       after = before.sub('content=""', 'content="Fortop analiza y propone mejoras de SEO en tu repositorio."')
       finding = scan.findings.create!(title: "La página principal tiene una descripción vacía", description: "La plantilla compartida declara una meta description sin contenido. Las páginas que heredan este layout no proporcionan un resumen propio en esta etiqueta.",
         impact: "El buscador puede elegir un fragmento de otra parte del contenido. Este análisis de código no confirma qué fragmento se muestra actualmente.",
+        remediation_rationale: "El cambio sustituye el valor vacío por un resumen basado en el contenido real. Así la etiqueta aporta contexto sobre la página sin prometer qué fragmento elegirá el buscador.",
         recommendation: "Completar la descripción con el propósito de Fortop, ya documentado en el repositorio, y mantener una única etiqueta en el HTML final.",
         verification: "Abrir la página renderizada y comprobar que existe una sola meta description, con texto no vacío y coherente con la página.",
         category: "metadata", severity: "medium", file_path: "app/views/layouts/application.html.erb", line_number: 5,
         evidence: '<meta name="description" content="">', status: "fixed", issue_url: "https://github.com/browser-builder/website/issues/21")
       delta = Scans::CodeDiff.call(before: before, after: after, path: finding.file_path)
       scan.update!(changed_files: [ delta.merge("path" => finding.file_path, "finding_ids" => [ finding.id ]) ])
-      visit repository_path(repository)
+      active_scan = repository.scans.create!(status: "queued")
+      visit repository_path(repository, scan_id: scan.id)
       assert_no_selector ".finding-review[open]"
       assert_no_text "Qué hemos encontrado"
       find(".finding-review > summary").click
       within ".finding-review" do
         assert_text "Qué hemos encontrado"
-        assert_text "Por qué importa"
+        assert_text "Por qué afecta"
+        assert_text "Por qué mejora esta remediación"
+        assert_text finding.remediation_rationale
         assert_text "Cómo comprobarlo"
-        assert_selector ".syntax-highlight .nt", text: "<meta"
+        assert_selector ".finding-evidence [data-code-highlighted='true']"
+        assert_selector ".finding-evidence .syntax-highlight span[style*='rgb(86, 156, 214)']", text: "meta"
+        assert_selector ".finding-evidence .syntax-highlight span[style*='rgb(156, 220, 254)']", text: "name"
+        assert_selector ".finding-evidence .syntax-highlight span[style*='rgb(206, 145, 120)']", text: "description"
         assert_selector ".finding-source-line .finding-line-number", text: "5"
         assert_selector ".diff-deletion", text: 'content=""'
         assert_selector ".diff-addition", text: "Fortop analiza y propone mejoras de SEO"
-        assert_selector ".diff-addition .syntax-highlight .nt", text: "<meta"
+        assert_selector ".finding-diff[data-code-highlighted='true']"
+        assert_selector ".diff-addition .syntax-highlight span[style*='rgb(86, 156, 214)']", text: "meta"
         assert_link "Ver origen", href: "https://github.com/browser-builder/website/blob/#{'a' * 40}/app/views/layouts/application.html.erb#L5"
         assert_link "Revisar en el PR", href: scan.pull_request_url
       end
@@ -197,6 +205,11 @@ class RepositoryFlowTest < ApplicationSystemTestCase
       page.current_window.resize_to(390, 844)
       assert_no_horizontal_overflow
       save_section_screenshot("finding-review-mobile", ".finding-review")
+      active_scan.update!(status: "discovering")
+      assert_selector ".repository-history .badge", text: "Preparando repositorio", visible: :all, wait: 10
+      assert_selector ".finding-review[open] .finding-evidence [data-code-highlighted='true']"
+      assert_selector ".finding-evidence .syntax-highlight span[style*='rgb(86, 156, 214)']", text: "meta"
+      assert_selector ".finding-review[open] .finding-diff[data-code-highlighted='true']"
       find(".finding-review > summary").click
       assert_no_text "Qué hemos encontrado"
       assert_no_selector ".repository-history[open]"

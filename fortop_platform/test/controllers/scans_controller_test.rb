@@ -192,7 +192,7 @@ class ScansControllerTest < ActionDispatch::IntegrationTest
 
   test "untrusted findings are escaped and invalid provider links never become executable" do
     scan = @repository.scans.create!(status: "completed", progress: 100, pull_request_url: "javascript:alert(1)")
-    finding = scan.findings.create!(title: "<script>alert(1)</script>", description: "<img src=x onerror=alert(1)>", severity: "low", category: "metadata", evidence: "<iframe src=evil>", issue_url: "https://evil.example/steal")
+    finding = scan.findings.create!(title: "<script>alert(1)</script>", description: "<img src=x onerror=alert(1)>", impact: "<script>bad()</script>", remediation_rationale: "<iframe src=evil>", severity: "low", category: "metadata", evidence: "<iframe src=evil>", issue_url: "https://evil.example/steal")
     scan.update!(changed_files: [ { "path" => "index.html", "finding_ids" => [ finding.id ], "diff" => "@@ -1 +1 @@\n-<iframe src=evil>\n+<img src=x onerror=alert(1)>\n" } ])
     get repository_scan_path(@repository, scan)
     follow_redirect!

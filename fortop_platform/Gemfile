@@ -19,8 +19,7 @@ gem "tailwindcss-rails"
 # Build JSON APIs with ease [https://github.com/rails/jbuilder]
 gem "jbuilder"
 
-# Render source evidence and retain reviewable, deterministic code patches.
-gem "rouge", "~> 4.7"
+# Retain reviewable, deterministic code patches.
 gem "diff-lcs", "~> 1.6", require: "diff/lcs"
 
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]

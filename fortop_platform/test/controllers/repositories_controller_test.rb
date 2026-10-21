@@ -187,7 +187,7 @@ class RepositoriesControllerTest < ActionDispatch::IntegrationTest
     get repository_path(repository, format: :json), params: { scan_id: scan.id }
     assert_equal false, response.parsed_body["active"]
     assert_includes response.parsed_body["html"], "Análisis completado"
-    assert_includes response.parsed_body["html"], "Se ha revisado el código del sitio."
+    refute_includes response.parsed_body["html"], "Se ha revisado el código del sitio."
     assert_includes response.parsed_body["html"], "Nuevo análisis"
   end
 
@@ -210,7 +210,7 @@ class RepositoriesControllerTest < ActionDispatch::IntegrationTest
     older.update!(status: "completed", progress: 100, summary: "Publicación recuperada.")
     get repository_path(repository, format: :json), params: { scan_id: older.id }
     assert_equal false, response.parsed_body["active"]
-    assert_includes response.parsed_body["html"], "Publicación recuperada."
+    assert_includes response.parsed_body["html"], "Análisis completado"
   end
 
   test "profile history cannot select a scan belonging to a different repository" do

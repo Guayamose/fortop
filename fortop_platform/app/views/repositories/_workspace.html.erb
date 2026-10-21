@@ -1,8 +1,6 @@
-<section class="repository-analysis" id="repository-analysis" aria-labelledby="repository-analysis-title">
+<section class="repository-analysis" id="repository-analysis" aria-label="Análisis del repositorio">
+  <% if @selected_scan %>
   <header class="repository-analysis-heading">
-    <div>
-      <h2 id="repository-analysis-title">Análisis y remediación</h2>
-    </div>
     <% if @active_scan %>
       <% if @selected_scan&.id == @active_scan.id %>
         <%= render "repositories/scan_controls", scan: @active_scan %>
@@ -17,6 +15,7 @@
       <% end %>
     <% end %>
   </header>
+  <% end %>
 
   <% if @selected_scan %>
     <div class="repository-selected-scan">

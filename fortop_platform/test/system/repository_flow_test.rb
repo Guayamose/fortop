@@ -114,11 +114,11 @@ class RepositoryFlowTest < ApplicationSystemTestCase
       scan.record_event!("Ejecución completada. El diagnóstico ya está disponible.")
 
       # No navigation or reload: Stimulus fetches the real JSON endpoint and
-      # replaces the progress with the terminal summary rendered by Rails.
+      # replaces the progress with the terminal results rendered by Rails.
       assert_text "Análisis completado", wait: 10
       assert_selector ".repository-scan-state.is-complete"
       assert_current_path repository_path(repository)
-      assert_text "El agente ha revisado la estructura y documentado una oportunidad de mejora."
+      assert_no_text "El agente ha revisado la estructura y documentado una oportunidad de mejora."
       assert_text "No se ha creado un pull request."
       assert_selector "[data-scan-progress-active-value='false']"
       assert_button "Nuevo análisis"
@@ -331,7 +331,7 @@ class RepositoryFlowTest < ApplicationSystemTestCase
       scan.update!(status: "completed", progress: 100, publication_changes: nil, summary: "Publicación recuperada.", finished_at: Time.current,
         pull_request_url: "https://github.com/browser-builder/website/pull/42", pull_request_number: 42)
       assert_text "Análisis completado", wait: 10
-      assert_text "Publicación recuperada."
+      assert_no_text "Publicación recuperada."
       assert_no_button "Reintentar publicación"
       assert_selector "[data-scan-progress-active-value='false']"
       assert_link "Ver pull request", href: scan.pull_request_url

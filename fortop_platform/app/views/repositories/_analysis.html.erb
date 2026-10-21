@@ -1,11 +1,21 @@
+<% terminal = scan.completed? || scan.failed? || scan.cancelled? %>
+<% show_metrics = terminal && (scan.completed? || @finding_counts.fetch(scan.id, 0).positive? || scan.changed_files.any? || scan.pull_request_url.present?) %>
 <div class="repository-scan-state <%= scan.completed? ? 'is-complete' : scan.failed? ? 'is-error' : scan.paused? ? 'is-paused' : '' %>">
-  <div class="repository-scan-state-heading">
+  <div class="repository-scan-state-heading <%= 'has-metrics' if show_metrics %>">
     <% if scan.active? && !scan.paused? && scan.control_action.nil? %><span class="repository-scan-signal" aria-hidden="true"><i></i><i></i><i></i><i></i></span><% else %><span class="repository-state-icon"><%= app_icon(scan.completed? ? :check : scan.paused? ? :pause : scan.cancelled? ? :stop : scan.control_action ? :clock : :alert) %></span><% end %>
     <div>
       <h3><%= scan_heading(scan) %></h3>
       <% if scan.control_action %><p>La operación en curso terminará antes de detener el agente.</p><% elsif scan.paused? %><p>Tu progreso está guardado. Continúa desde aquí o reinicia desde cero.</p><% elsif scan.cancelled? %><p>El agente se ha detenido. Las publicaciones ya realizadas en GitHub se conservan.</p><% end %>
     </div>
     <% if scan.active? %><span class="repository-progress-value"><strong><%= scan.progress %></strong><span>%</span></span><% end %>
+    <% if show_metrics %>
+      <dl class="repository-scan-metrics">
+        <div><dt>Mejoras detectadas</dt><dd><%= @finding_counts.fetch(scan.id, 0) %></dd></div>
+        <div><dt>Archivos con cambios</dt><dd><%= scan.changed_files.size %></dd></div>
+        <div><dt>Issues en GitHub</dt><dd><%= scan.findings.where.not(issue_url: [nil, ""]).count %></dd></div>
+        <div><dt>Pull request</dt><dd><%= scan.pull_request_url.present? ? '1' : '0' %></dd></div>
+      </dl>
+    <% end %>
   </div>
 
   <% if scan.active? %>
@@ -23,16 +33,8 @@
     <% if scan.publication_retryable? %><p class="quiet-note">Las correcciones se conservan. Reintenta la publicación sin repetir la IA.</p><% else %><p class="quiet-note">Al reintentar se iniciará un nuevo análisis con IA.</p><% end %>
   <% end %>
 
-  <% if scan.completed? || scan.failed? || scan.cancelled? %>
-    <% if scan.summary.present? %><p class="repository-scan-summary"><%= scan.summary %></p><% end %>
-    <% if scan.completed? || @finding_counts.fetch(scan.id, 0).positive? || scan.changed_files.any? || scan.pull_request_url.present? %>
-    <dl class="repository-scan-metrics">
-      <div><dt>Mejoras detectadas</dt><dd><%= @finding_counts.fetch(scan.id, 0) %></dd></div>
-      <div><dt>Archivos con cambios</dt><dd><%= scan.changed_files.size %></dd></div>
-      <div><dt>Issues en GitHub</dt><dd><%= scan.findings.where.not(issue_url: [nil, ""]).count %></dd></div>
-      <div><dt>Pull request</dt><dd><%= scan.pull_request_url.present? ? '1' : '0' %></dd></div>
-    </dl>
-    <% end %>
+  <% if terminal %>
+    <% if !scan.completed? && scan.summary.present? %><p class="repository-scan-summary"><%= scan.summary %></p><% end %>
     <% if scan.pull_request_url.present? %>
       <div class="repository-proposal"><span><%= app_icon(:pull_request) %> Correcciones listas para revisar.</span><%= external_link(safe_join(["Ver pull request", app_icon(:external)]), scan.pull_request_url, class: "text-link") %></div>
     <% elsif scan.completed? %>

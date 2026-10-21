@@ -38,6 +38,35 @@ class ScansController < ApplicationController
     end
   end
 
+  def retry_publication
+    @scan = @repository.scans.find(params[:id])
+    requested = false
+    @repository.with_lock do
+      @scan.reload
+      if @scan.publication_retryable? && !@repository.scans.active.exists?
+        @scan.update!(error_message: nil)
+        @scan.advance!("queued", progress: 88, message: "Reintento de publicación solicitado. Se recuperarán las correcciones sin repetir la IA.")
+        requested = true
+      end
+    end
+    unless requested
+      redirect_to repository_scan_path(@repository, @scan), alert: "No se puede reintentar esta publicación o ya hay una ejecución en curso."
+      return
+    end
+
+    begin
+      ScanJob.perform_later(@scan.id)
+    rescue StandardError
+      message = "No se ha podido encolar la publicación. Puedes volver a intentarlo."
+      @scan.update!(error_message: message)
+      @scan.advance!("failed", progress: 88, message: message)
+      Rails.logger.error("No se ha podido encolar la publicación #{@scan.id}.")
+    end
+    redirect_to repository_scan_path(@repository, @scan)
+  rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique
+    redirect_to repository_scan_path(@repository, @scan), alert: "Ya hay una ejecución en curso para este repositorio."
+  end
+
   private
 
   def set_repository

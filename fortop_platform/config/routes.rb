@@ -21,6 +21,8 @@ Rails.application.routes.draw do
 
   root "repositories#index"
   resources :repositories, only: %i[index new create show destroy] do
-    resources :scans, only: %i[create show]
+    resources :scans, only: %i[create show] do
+      post :retry_publication, on: :member
+    end
   end
 end

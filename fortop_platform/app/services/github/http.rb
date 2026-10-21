@@ -25,18 +25,19 @@ module Github
           retry_request = true
         else
           retry_request = false
-          raise Error.new(error_message(status), status: status) unless (200..299).cover?(status)
+          raise Error.new(error_message(status), status: status, retryable: RETRY_STATUSES.include?(status)) unless (200..299).cover?(status)
           return {} if raw.empty?
           return JSON.parse(raw)
         end
-      rescue *NETWORK_ERRORS
+      rescue *NETWORK_ERRORS => error
+        Rails.logger.warn("GitHub network failure method=#{method} host=#{uri.host} attempt=#{attempts} cause=#{error.class.name}")
         if method == :get && attempts < 3
           sleep(0.25 * attempts)
           retry
         end
-        raise Error, "GitHub no responde. Vuelve a intentarlo en unos minutos."
+        raise Error.new("GitHub no responde. Vuelve a intentarlo en unos minutos.", retryable: true)
       rescue JSON::ParserError
-        raise Error, "GitHub ha devuelto una respuesta que no se puede interpretar."
+        raise Error.new("GitHub ha devuelto una respuesta que no se puede interpretar.", retryable: true)
       end while retry_request
     end
 

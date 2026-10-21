@@ -1,4 +1,6 @@
 class Scan < ApplicationRecord
+  encrypts :publication_changes
+
   ACTIVE_STATUSES = %w[queued discovering analyzing remediating validating publishing].freeze
   STATUS_LABELS = {
     "queued" => "En cola", "discovering" => "Preparando repositorio",
@@ -20,6 +22,15 @@ class Scan < ApplicationRecord
 
   def active?
     ACTIVE_STATUSES.include?(status)
+  end
+
+  def publication_prepared?
+    validation_results.present? && validation_results.all? { |result| result["passed"] } &&
+      (publication_changes.present? || (metadata.dig("publication", "commit_sha").present? && changed_files.present?))
+  end
+
+  def publication_retryable?
+    failed? && publication_prepared?
   end
 
   def status_label

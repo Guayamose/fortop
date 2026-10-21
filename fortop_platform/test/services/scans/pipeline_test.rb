@@ -3,11 +3,13 @@ require "test_helper"
 class Scans::PipelineTest < ActiveSupport::TestCase
   class Github
     attr_reader :issues, :commits, :pulls, :branches
-    attr_accessor :fail_pr_once
+    attr_accessor :fail_pr_once, :fail_issue_count, :lose_issue_response, :lose_branch_response, :lose_commit_response, :lose_pr_response
     SOURCE = "<!doctype html>\n<html><head>\n<title>Fortop</title>\n</head><body><h1>Fortop</h1><p>Fortop analiza y mejora la visibilidad del código web.</p></body></html>\n".freeze
 
     def initialize
       @issues, @commits, @pulls, @branches = [], [], [], { "main" => "a" * 40 }
+      @files_by_sha = { "a" * 40 => { "index.html" => SOURCE, "README.md" => "Página oficial: https://fortop.dev/" } }
+      @fail_issue_count = 0
     end
     def repository(_name)
       { "default_branch" => "main", "permissions" => { "push" => true } }
@@ -15,25 +17,35 @@ class Scans::PipelineTest < ActiveSupport::TestCase
     def branch_sha(_name, branch)
       @branches.fetch(branch) { raise ::Github::Error.new("Missing branch", status: 404) }
     end
-    def tree(_name, _sha)
-      [ { "path" => "index.html", "type" => "blob", "mode" => "100644", "size" => SOURCE.bytesize } ]
+    def tree(_name, sha)
+      @files_by_sha.fetch(sha).map do |path, content|
+        { "path" => path, "type" => "blob", "mode" => "100644", "size" => content.bytesize, "sha" => Digest::SHA1.hexdigest(content) }
+      end
     end
-    def file(_name, _path, ref:)
-      SOURCE
+    def file(_name, path, ref:)
+      @files_by_sha.fetch(ref).fetch(path)
     end
     def find_issue(_name, marker:)
       @issues.find { |issue| issue["body"].include?(marker) }
     end
     def create_issue(_name, title:, body:)
+      if @fail_issue_count.positive?
+        @fail_issue_count -= 1
+        raise ::Github::Error.new("Fallo temporal de conexión.", retryable: true)
+      end
       @issues << { "number" => @issues.size + 1, "html_url" => "https://github.com/test/repo/issues/#{@issues.size + 1}", "title" => title, "body" => body }
+      lose_response!(:issue)
       @issues.last
     end
     def create_branch(_name, name:, sha:)
       @branches[name] = sha
+      lose_response!(:branch)
     end
     def commit_files(_name, branch:, base_sha:, files:, message:)
       @commits << { branch: branch, base_sha: base_sha, files: files.deep_dup, message: message }
       @branches[branch] = "b" * 40
+      @files_by_sha["b" * 40] = @files_by_sha.fetch(base_sha).merge(files)
+      lose_response!(:commit)
       { "sha" => "b" * 40 }
     end
     def find_pull_request(_name, head:)
@@ -45,7 +57,15 @@ class Scans::PipelineTest < ActiveSupport::TestCase
         raise ::Github::Error, "GitHub no está disponible temporalmente."
       end
       @pulls << { "number" => 2, "html_url" => "https://github.com/test/repo/pull/2", "head" => head, "base" => base, "title" => title, "body" => body }
+      lose_response!(:pr)
       @pulls.last
+    end
+
+    def lose_response!(operation)
+      if public_send("lose_#{operation}_response")
+        public_send("lose_#{operation}_response=", false)
+        raise ::Github::Error.new("Respuesta perdida tras aceptar la escritura.", retryable: true)
+      end
     end
   end
 
@@ -151,7 +171,7 @@ class Scans::PipelineTest < ActiveSupport::TestCase
     assert @scan.reload.failed?
     assert_equal "b" * 40, @scan.metadata.dig("publication", "commit_sha")
 
-    @scan.update!(status: "queued", error_message: nil)
+    @scan.update!(status: "queued", error_message: nil, publication_changes: nil)
     never_call_ai = Provider.new([])
     Scans::Pipeline.new(@scan, github: @github, provider: never_call_ai).call
 
@@ -161,6 +181,132 @@ class Scans::PipelineTest < ActiveSupport::TestCase
     assert_equal 1, @github.pulls.size
     assert_equal 0, never_call_ai.usage["requests"]
     assert_equal 8, @scan.metadata.dig("usage", "requests")
+  end
+
+  test "automatically retries an issue failure without repeating either agent" do
+    @github.fail_issue_count = 1
+    run_pipeline(provider: Provider.new(successful_script))
+
+    assert @scan.reload.completed?, @scan.error_message
+    assert_equal 1, @github.issues.size
+    assert_equal 1, @github.commits.size
+    assert_equal 1, @github.pulls.size
+    assert_equal 8, @scan.metadata.dig("usage", "requests")
+    assert_equal 1, @scan.scan_events.where(kind: "warning").count
+    assert_nil @scan.publication_changes
+  end
+
+  %w[issue branch commit pr].each do |operation|
+    test "recovers a lost #{operation} write response without duplicate publications" do
+      @github.public_send("lose_#{operation}_response=", true)
+      run_pipeline(provider: Provider.new(successful_script))
+
+      assert @scan.reload.completed?, @scan.error_message
+      assert_equal 1, @github.issues.size
+      assert_equal 1, @github.commits.size
+      assert_equal 1, @github.pulls.size
+      assert_equal 8, @scan.metadata.dig("usage", "requests")
+      assert_equal 1, @scan.scan_events.where(kind: "warning").count
+    end
+  end
+
+  test "exhausted retries keep an encrypted checkpoint and resume before any commit without AI" do
+    @github.fail_issue_count = 3
+    run_pipeline(provider: Provider.new(successful_script))
+
+    assert @scan.reload.failed?
+    assert @scan.publication_retryable?
+    assert_equal 2, @scan.scan_events.where(kind: "warning").count
+    assert_empty @github.commits
+    saved = JSON.parse(@scan.publication_changes).fetch("files")
+    assert_includes saved.fetch("index.html"), '<meta name="description"'
+    raw = Scan.connection.select_value("SELECT publication_changes FROM scans WHERE id = #{@scan.id}")
+    refute_includes raw, saved.fetch("index.html")
+    assert @scan.metadata.dig("publication", "commit_sha").blank?
+
+    @scan.update!(status: "queued", error_message: nil)
+    provider = Provider.new([])
+    run_pipeline(provider: provider)
+
+    assert @scan.reload.completed?, @scan.error_message
+    assert_equal 0, provider.usage["requests"]
+    assert_equal 8, @scan.metadata.dig("usage", "requests")
+    assert_equal 1, @github.issues.size
+    assert_equal 1, @github.commits.size
+    assert_equal 1, @github.pulls.size
+    assert_nil @scan.publication_changes
+  end
+
+  test "an issues-only publication can resume without AI or a proposed commit" do
+    @github.fail_issue_count = 3
+    script = [ tool("read_file", path: "index.html"), tool("report_finding", finding_arguments.merge("automatable" => false)), final("Requiere revisión manual.") ]
+    run_pipeline(provider: Provider.new(script))
+    assert @scan.reload.publication_retryable?
+    assert_empty JSON.parse(@scan.publication_changes).fetch("files")
+    @scan.update!(status: "queued", error_message: nil)
+
+    run_pipeline
+
+    assert @scan.reload.completed?, @scan.error_message
+    assert_equal 3, @scan.metadata.dig("usage", "requests")
+    assert_equal 1, @github.issues.size
+    assert_empty @github.commits
+    assert_empty @github.pulls
+  end
+
+  test "permission errors are not automatically retried" do
+    calls = 0
+    @github.define_singleton_method(:create_issue) do |*, **|
+      calls += 1
+      raise ::Github::Error.new("Autorización caducada.", status: 401)
+    end
+    run_pipeline(provider: Provider.new(successful_script))
+    assert @scan.reload.failed?
+    assert_equal 1, calls
+    assert_equal 0, @scan.scan_events.where(kind: "warning").count
+    assert @scan.publication_retryable?
+  end
+
+  test "recovery preserves validation context from inspected files that were not modified" do
+    @github.fail_issue_count = 3
+    script = successful_script
+    script.insert(2, tool("read_file", path: "README.md"))
+    script[6] = -> { tool("replace_text", path: "index.html", old_text: "<title>Fortop</title>", new_text: '<title>Fortop</title><meta name="description" content="Visita https://fortop.dev/ para conocer Fortop.">', finding_ids: [ @scan.findings.first.id ]) }
+    run_pipeline(provider: Provider.new(script))
+    assert @scan.reload.publication_retryable?, @scan.error_message
+    assert_includes JSON.parse(@scan.publication_changes).fetch("read_paths"), "README.md"
+    @scan.update!(status: "queued", error_message: nil)
+
+    run_pipeline
+
+    assert @scan.reload.completed?, @scan.error_message
+    assert_equal 9, @scan.metadata.dig("usage", "requests")
+    assert_equal 1, @github.commits.size
+  end
+
+  test "recovered changes must pass independent validation again before publishing" do
+    @github.fail_issue_count = 3
+    run_pipeline(provider: Provider.new(successful_script))
+    @scan.update!(status: "queued", error_message: nil)
+    provider = Provider.new([])
+    invalid = ->(_workspace) { -> { [ { "name" => "recheck", "passed" => false } ] } }
+    Scans::Pipeline.new(@scan, github: @github, provider: provider, validator_factory: invalid).call
+
+    assert @scan.reload.failed?
+    assert_includes @scan.error_message, "recuperadas"
+    assert_equal 0, provider.usage["requests"]
+    assert_empty @github.issues
+    assert_empty @github.commits
+    assert_empty @github.pulls
+  end
+
+  test "a checkpoint with mismatched files is rejected without spending AI or publishing" do
+    @scan.update!(publication_changes: '{"../private.rb":"unsafe"}', validation_results: [ { "name" => "scope", "passed" => true } ])
+    run_pipeline
+    assert @scan.reload.failed?
+    assert_includes @scan.error_message, "no corresponden"
+    assert_empty @github.issues
+    assert_empty @github.commits
   end
 
   test "no findings is an honest successful audit without fake publications" do
@@ -296,6 +442,12 @@ class Scans::PipelineTest < ActiveSupport::TestCase
   end
 
   private
+
+  def run_pipeline(provider: Provider.new([]))
+    pipeline = Scans::Pipeline.new(@scan, github: @github, provider: provider)
+    pipeline.define_singleton_method(:sleep) { |_duration| }
+    pipeline.call
+  end
 
   def two_finding_script(revert: nil)
     description_tag = '<meta name="description" content="Fortop analiza y mejora la visibilidad del código web.">'

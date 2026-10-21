@@ -1,5 +1,6 @@
 module Scans
   class Pipeline
+    MAX_PUBLICATION_ATTEMPTS = 3
     class ValidationError < Agents::Error; end
 
     def initialize(scan, github: nil, provider: nil, validator_factory: nil)
@@ -12,14 +13,15 @@ module Scans
 
     def call
       return @scan unless @scan.active?
-      @github ||= Github::Access.client_for(@repository)
+      # A durable checkpoint precedes the first write, including issue creation.
+      if @scan.publication_changes.present? || @scan.metadata.dig("publication", "commit_sha").present?
+        raise ValidationError, "No se ha podido recuperar una publicación sin verificaciones correctas." unless @scan.publication_prepared?
 
-      # Resume a completed GitHub commit without rerunning AI or rewriting its branch.
-      if @scan.metadata.dig("publication", "commit_sha").present?
-        resume_publication
+        publish_with_retries(recover: true)
         return @scan
       end
 
+      @github ||= Github::Access.client_for(@repository)
       @provider ||= Agents::Provider.build
       @provider.account_for_previous_usage(@previous_usage) if @provider.respond_to?(:account_for_previous_usage)
       @scan.advance!("discovering", progress: 5, message: "Preparando una instantánea del repositorio y sus permisos.")
@@ -53,15 +55,10 @@ module Scans
       analyze
       remediate
       validate
-      @scan.advance!("publishing", progress: 88, message: "Publicando hallazgos y preparando las correcciones verificadas en GitHub.")
-      publish_issues
-      unless @scan.validation_results.all? { |result| result["passed"] }
-        @scan.findings.where(status: "open").update_all(status: "manual")
-        raise ValidationError, "Los cambios propuestos no han superado la verificación. Se han publicado los hallazgos; no se ha abierto ningún PR."
+      if @scan.validation_results.all? { |result| result["passed"] }
+        @scan.update!(publication_changes: JSON.generate({ "files" => @workspace.changes, "read_paths" => @workspace.read_paths.to_a }))
       end
-
-      publish_changes if @workspace.changes.present?
-      complete
+      publish_with_retries
       @scan
     rescue StandardError => error
       fail_scan(error)
@@ -101,8 +98,8 @@ module Scans
       @scan.findings.where(automatable: true, status: "open").where.not(id: fixed_ids).update_all(status: "manual")
     end
 
-    def validate
-      @scan.advance!("validating", progress: 78, message: "Verificando de forma independiente el alcance y la sintaxis de los cambios.")
+    def validate(progress: 78)
+      @scan.advance!("validating", progress: progress, message: "Verificando de forma independiente el alcance y la sintaxis de los cambios.")
       results = @validator.call
       valid_ids = @scan.findings.where(automatable: true).pluck(:id)
       linked_ids = @workspace.changed_files.flat_map { |file| file["finding_ids"] }
@@ -197,14 +194,57 @@ module Scans
       end
     end
 
-    def resume_publication
-      unless @scan.validation_results.present? && @scan.validation_results.all? { |result| result["passed"] } && @scan.changed_files.present?
-        raise ValidationError, "No se ha podido recuperar una publicación sin verificaciones correctas."
+    def publish_with_retries(recover: false)
+      attempts = 0
+      begin
+        attempts += 1
+        @github ||= Github::Access.client_for(@repository)
+        restore_publication if recover && !@publication_restored
+        @scan.advance!("publishing", progress: 88, message: "Publicando hallazgos y preparando las correcciones verificadas en GitHub.")
+        publish_issues
+        unless @scan.validation_results.all? { |result| result["passed"] }
+          @scan.findings.where(status: "open").update_all(status: "manual")
+          raise ValidationError, "Los cambios propuestos no han superado la verificación. Se han publicado los hallazgos; no se ha abierto ningún PR."
+        end
+        if @scan.metadata.dig("publication", "commit_sha").present?
+          create_or_recover_pull_request
+        elsif @workspace.changes.present?
+          publish_changes
+        end
+        complete
+      rescue Github::Error => error
+        raise unless error.retryable? && attempts < MAX_PUBLICATION_ATTEMPTS
+
+        @scan.record_event!("GitHub no ha completado la publicación. Reintento #{attempts + 1} de #{MAX_PUBLICATION_ATTEMPTS}, comprobando lo ya publicado.", kind: "warning")
+        sleep(2**(attempts - 1))
+        retry
       end
-      @scan.advance!("publishing", progress: 92, message: "Recuperando una publicación ya verificada sin duplicar issues ni PRs.")
-      publish_issues
-      create_or_recover_pull_request
-      complete
+    end
+
+    def restore_publication
+      if @scan.metadata.dig("publication", "commit_sha").blank?
+        snapshot = JSON.parse(@scan.publication_changes)
+        files, read_paths = snapshot.is_a?(Hash) ? snapshot.values_at("files", "read_paths") : []
+        unless files.is_a?(Hash) && read_paths.is_a?(Array) && read_paths.size <= Workspace::MAX_READ_FILES && files.keys.sort == @scan.changed_files.map { |file| file["path"] }.sort
+          raise ValidationError, "Las correcciones guardadas no corresponden a los archivos verificados. Inicia un nuevo análisis."
+        end
+        @workspace&.close
+        tree = @github.tree(@repository.full_name, @scan.base_sha)
+        @workspace = Workspace.new(github: @github, full_name: @repository.full_name, sha: @scan.base_sha, tree: tree)
+        read_paths.each { |path| @workspace.read(path) }
+        files.each do |path, content|
+          finding_ids = @scan.changed_files.find { |file| file["path"] == path }.fetch("finding_ids", [])
+          @workspace.write(path, content, finding_ids: finding_ids)
+        end
+        @validator = @validator_factory.call(@workspace)
+        validate(progress: 88)
+        unless @scan.validation_results.all? { |result| result["passed"] }
+          raise ValidationError, "Las correcciones recuperadas no han superado la verificación. Inicia un nuevo análisis."
+        end
+      end
+      @publication_restored = true
+    rescue JSON::ParserError
+      raise ValidationError, "No se han podido recuperar las correcciones guardadas. Inicia un nuevo análisis."
     end
 
     def create_or_recover_pull_request
@@ -259,8 +299,10 @@ module Scans
       else
         "Análisis terminado: #{count} #{findings_label} en GitHub. #{@scan.pull_request_url.present? ? "Se ha abierto un PR con #{files_count} #{files_label} y correcciones propuestas para revisión." : "No se han publicado cambios de código."} #{manual} #{manual_label} intervención manual."
       end
-      @scan.update!(summary: summary, error_message: nil)
-      @scan.advance!("completed", progress: 100, message: summary)
+      @scan.transaction do
+        @scan.update!(summary: summary, error_message: nil, publication_changes: nil)
+        @scan.advance!("completed", progress: 100, message: summary)
+      end
     end
 
     def merge_metadata!(values)

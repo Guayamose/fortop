@@ -109,6 +109,18 @@ issues y PRs al recuperar una publicación. No se modifica ni fusiona la rama
 principal. Una corrección publicada se muestra como **propuesta**, pendiente de
 revisión y CI.
 
+Antes de publicar se guardan cifradas las correcciones verificadas. Los fallos
+transitorios de GitHub tienen hasta tres intentos de publicación, con espera
+entre intentos y comprobación de los recursos ya creados. No se repiten los
+agentes ni su consumo de IA. Los errores de autorización o validación detienen
+el reintento automático.
+
+Si los intentos se agotan, la pantalla ofrece **Reintentar publicación** sobre
+la misma ejecución. Se recuperan las correcciones desde la base analizada y se
+verifican de nuevo antes de publicarlas. Los datos de recuperación se eliminan
+al completar la ejecución. Las ejecuciones antiguas o fallidas antes de guardar
+correcciones ofrecen **Reintentar análisis**, que inicia otro análisis con IA.
+
 ## Alcance y validación
 
 El MVP inspecciona hasta 100 archivos de texto y 2 MB por ejecución, acepta hasta

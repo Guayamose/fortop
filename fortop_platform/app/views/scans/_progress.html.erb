@@ -5,7 +5,16 @@
   <div class="progress-label"><span><%= scan.completed? ? 'Proceso finalizado' : scan.failed? ? 'Progreso hasta la interrupción' : scan.queued? ? 'Esperando al siguiente agente disponible' : 'El progreso se actualiza automáticamente' %></span><strong><%= scan.progress %>%</strong></div>
   <div class="progress-track" role="progressbar" aria-label="Progreso del análisis" aria-valuenow="<%= scan.progress %>" aria-valuemin="0" aria-valuemax="100"><span style="width: <%= scan.progress %>%"></span></div>
   <ol class="phase-list"><% phases.each_with_index do |(status, label, detail), index| %><% state = scan.completed? || index < phase_index ? 'is-done' : status == scan.status ? 'is-current' : '' %><li class="<%= state %>"><span class="phase-number"><%= state == 'is-done' ? app_icon(:check) : format('%02d', index + 1) %></span><div><strong><%= label %></strong><span><%= detail %></span></div></li><% end %></ol>
-  <% if scan.failed? %><div class="scan-error" role="alert"><%= app_icon(:alert) %><div><strong>No se ha podido completar el análisis.</strong><p><%= scan.error_message.presence || 'Se ha producido un error durante la ejecución. Puedes volver a intentarlo desde el repositorio.' %></p></div></div><%= link_to "Volver al repositorio para reintentar", repository_path(scan.repository), class: "text-link retry-link" %><% end %>
+  <% if scan.failed? %>
+    <div class="scan-error" role="alert"><%= app_icon(:alert) %><div><strong>No se ha podido completar el análisis.</strong><p><%= scan.error_message.presence || 'Se ha producido un error durante la ejecución. Puedes volver a intentarlo.' %></p></div></div>
+    <% if scan.publication_retryable? %>
+      <%= button_to "Reintentar publicación", retry_publication_repository_scan_path(scan.repository, scan), class: "button button-primary button-small", data: { turbo_submits_with: "Solicitando reintento…" } %>
+      <p class="quiet-note">Conserva las correcciones y reintenta GitHub sin repetir la IA.</p>
+    <% else %>
+      <%= button_to "Reintentar análisis", repository_scans_path(scan.repository), class: "button button-primary button-small", data: { turbo_submits_with: "Solicitando análisis…" } %>
+      <p class="quiet-note">Se iniciará un nuevo análisis con IA.</p>
+    <% end %>
+  <% end %>
   <% if scan.cancelled? %><div class="scan-error" role="status"><%= app_icon(:alert) %><p>Este análisis se ha cancelado. Puedes iniciar una nueva ejecución desde el repositorio.</p></div><% end %>
 </section>
 

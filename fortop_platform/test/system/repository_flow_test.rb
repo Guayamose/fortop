@@ -63,6 +63,34 @@ class RepositoryFlowTest < ApplicationSystemTestCase
     end
   end
 
+  test "failed publication can be retried from its result screen and resume live progress" do
+    with_browser_github do
+      visit new_session_path
+      click_button "Continuar con GitHub"
+      assert_selector "h1", text: "Repositorios"
+      user = User.find_by!(github_id: 92001)
+      repository = user.repositories.create!(github_id: 42001, installation_id: 88001, full_name: "browser-builder/website", html_url: "https://github.com/browser-builder/website")
+      scan = repository.scans.create!(status: "failed", progress: 88, error_message: "GitHub no responde.", finished_at: Time.current,
+        publication_changes: '{"files":{},"read_paths":[]}', validation_results: [ { "name" => "scope", "passed" => true } ])
+      visit repository_scan_path(repository, scan)
+      assert_button "Reintentar publicación"
+      assert_text "sin repetir la IA"
+      assert_enqueued_with(job: ScanJob, args: [ scan.id ]) do
+        assert_no_difference "Scan.count" do
+          click_button "Reintentar publicación"
+          assert_text "En cola"
+        end
+      end
+      assert scan.reload.queued?
+      assert_no_horizontal_overflow
+      scan.update!(status: "completed", progress: 100, publication_changes: nil, summary: "Publicación recuperada.", finished_at: Time.current)
+      assert_text "Análisis completado", wait: 10
+      assert_text "Publicación recuperada."
+      assert_no_button "Reintentar publicación"
+      assert_selector "[data-scan-progress-active-value='false']"
+    end
+  end
+
   private
 
   def assert_no_horizontal_overflow

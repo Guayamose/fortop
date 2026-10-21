@@ -33,6 +33,76 @@ class ScansControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to repository_scan_path(@repository, scan)
   end
 
+  test "a failed publication can be enqueued again without creating another scan" do
+    scan = saved_publication
+    get repository_scan_path(@repository, scan)
+    assert_select "button", text: "Reintentar publicación"
+    refute_includes response.body, "private saved source"
+    assert_select "button", text: "Reintentar análisis", count: 0
+
+    assert_enqueued_with(job: ScanJob, args: [ scan.id ]) do
+      assert_no_difference "Scan.count" do
+        post retry_publication_repository_scan_path(@repository, scan)
+      end
+    end
+    assert_redirected_to repository_scan_path(@repository, scan)
+    assert scan.reload.queued?
+    assert_nil scan.error_message
+    assert_nil scan.finished_at
+    assert scan.publication_changes.present?
+    assert_equal 88, scan.progress
+
+    assert_no_enqueued_jobs do
+      post retry_publication_repository_scan_path(@repository, scan)
+    end
+  end
+
+  test "publication cannot be retried when a different scan is active" do
+    scan = saved_publication
+    @repository.scans.create!
+    assert_no_enqueued_jobs do
+      post retry_publication_repository_scan_path(@repository, scan)
+    end
+    assert scan.reload.failed?
+    assert_redirected_to repository_scan_path(@repository, scan)
+  end
+
+  test "old failures without saved changes offer a new analysis instead of promising AI-free recovery" do
+    scan = @repository.scans.create!(status: "failed", error_message: "GitHub no responde.")
+    get repository_scan_path(@repository, scan)
+    assert_select "button", text: "Reintentar análisis"
+    assert_select "button", text: "Reintentar publicación", count: 0
+    assert_includes response.body, "nuevo análisis con IA"
+    assert_no_enqueued_jobs do
+      post retry_publication_repository_scan_path(@repository, scan)
+    end
+    assert scan.reload.failed?
+  end
+
+  test "retry enqueue failure leaves the checkpoint available for another click" do
+    scan = saved_publication
+    ScanJob.stub(:perform_later, ->(*) { raise ActiveJob::EnqueueError, "private queue detail" }) do
+      post retry_publication_repository_scan_path(@repository, scan)
+    end
+    assert scan.reload.publication_retryable?
+    assert scan.finished_at
+    assert_includes scan.error_message, "encolar la publicación"
+    refute_includes scan.error_message, "private"
+  end
+
+  test "publication retry enforces scan and repository ownership" do
+    another = User.create!(github_id: 90003, login: "someone", github_token: "secret")
+    theirs = connected_repository(another, github_id: 203, name: "someone/site")
+    scan = theirs.scans.create!(status: "failed", publication_changes: "{}", validation_results: [ { "passed" => true } ])
+    assert_no_enqueued_jobs do
+      post retry_publication_repository_scan_path(theirs, scan)
+      assert_response :not_found
+      post retry_publication_repository_scan_path(@repository, scan)
+      assert_response :not_found
+    end
+    assert scan.reload.failed?
+  end
+
   test "enqueue error produces a visible failed run which can be retried" do
     ScanJob.stub(:perform_later, ->(*) { raise ActiveJob::EnqueueError, "private queue detail" }) do
       post repository_scans_path(@repository)
@@ -116,5 +186,12 @@ class ScansControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href^='https://evil.example']", count: 0
     assert_includes response.body, "&lt;script&gt;"
     assert_select ".finding-body img", count: 0
+  end
+
+  private
+
+  def saved_publication
+    @repository.scans.create!(status: "failed", progress: 88, error_message: "GitHub no responde.", finished_at: Time.current,
+      publication_changes: '{"index.html":"private saved source"}', validation_results: [ { "name" => "scope", "passed" => true } ])
   end
 end

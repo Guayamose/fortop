@@ -10,9 +10,34 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_21_000200) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_21_000400) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "brand_briefs", force: :cascade do |t|
+    t.bigint "brand_id", null: false
+    t.integer "version", null: false
+    t.text "content", null: false
+    t.jsonb "context", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["brand_id", "version"], name: "index_brand_briefs_on_brand_id_and_version", unique: true
+    t.index ["brand_id"], name: "index_brand_briefs_on_brand_id"
+  end
+
+  create_table "brands", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "name", null: false
+    t.string "website", null: false
+    t.text "brief", null: false
+    t.jsonb "markets", default: [], null: false
+    t.jsonb "aliases", default: [], null: false
+    t.text "known_competitors"
+    t.jsonb "context_overrides", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_brands_on_user_id"
+  end
 
   create_table "findings", force: :cascade do |t|
     t.bigint "scan_id", null: false
@@ -105,8 +130,124 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_21_000200) do
     t.index ["github_id"], name: "index_users_on_github_id", unique: true
   end
 
+  create_table "visibility_actions", force: :cascade do |t|
+    t.bigint "visibility_study_id", null: false
+    t.bigint "repository_id"
+    t.bigint "scan_id"
+    t.string "fingerprint", null: false
+    t.string "title", null: false
+    t.text "description", null: false
+    t.string "kind", default: "editorial", null: false
+    t.string "priority", default: "medium", null: false
+    t.string "effort", default: "medium", null: false
+    t.string "status", default: "planned", null: false
+    t.jsonb "observation_ids", default: [], null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["repository_id"], name: "index_visibility_actions_on_repository_id"
+    t.index ["scan_id"], name: "index_visibility_actions_on_scan_id"
+    t.index ["visibility_study_id", "fingerprint"], name: "unique_visibility_action", unique: true
+    t.index ["visibility_study_id"], name: "index_visibility_actions_on_visibility_study_id"
+  end
+
+  create_table "visibility_calls", force: :cascade do |t|
+    t.bigint "visibility_study_id", null: false
+    t.string "task_key", null: false
+    t.integer "attempt", default: 1, null: false
+    t.string "status", default: "running", null: false
+    t.string "model", null: false
+    t.string "model_version"
+    t.boolean "grounded", default: false, null: false
+    t.text "response_text"
+    t.jsonb "citations", default: [], null: false
+    t.jsonb "search_queries", default: [], null: false
+    t.text "search_entry_point"
+    t.jsonb "usage", default: {}, null: false
+    t.decimal "cost_usd", precision: 12, scale: 6, default: "0.0", null: false
+    t.text "error_message"
+    t.boolean "retryable", default: false, null: false
+    t.datetime "observed_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.text "input_prompt"
+    t.text "system_instruction"
+    t.jsonb "request_settings", default: {}, null: false
+    t.index ["visibility_study_id", "task_key", "attempt"], name: "unique_visibility_call_attempt", unique: true
+    t.index ["visibility_study_id"], name: "index_visibility_calls_on_visibility_study_id"
+  end
+
+  create_table "visibility_events", force: :cascade do |t|
+    t.bigint "visibility_study_id", null: false
+    t.string "kind", default: "status", null: false
+    t.text "message", null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["visibility_study_id"], name: "index_visibility_events_on_visibility_study_id"
+  end
+
+  create_table "visibility_observations", force: :cascade do |t|
+    t.bigint "visibility_study_id", null: false
+    t.string "question_key", null: false
+    t.integer "repetition", null: false
+    t.string "status", default: "queued", null: false
+    t.text "answer"
+    t.string "model_version"
+    t.jsonb "citations", default: [], null: false
+    t.jsonb "analysis", default: {}, null: false
+    t.text "error_message"
+    t.datetime "observed_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["visibility_study_id", "question_key", "repetition"], name: "unique_visibility_observation", unique: true
+    t.index ["visibility_study_id"], name: "index_visibility_observations_on_visibility_study_id"
+  end
+
+  create_table "visibility_studies", force: :cascade do |t|
+    t.bigint "brand_id", null: false
+    t.bigint "brand_brief_id", null: false
+    t.string "status", default: "queued", null: false
+    t.string "stage", default: "interpreting", null: false
+    t.string "control_action"
+    t.string "pause_reason"
+    t.integer "progress", default: 0, null: false
+    t.jsonb "settings", default: {}, null: false
+    t.jsonb "profile", default: {}, null: false
+    t.jsonb "competitors", default: [], null: false
+    t.jsonb "entities", default: [], null: false
+    t.jsonb "panel", default: [], null: false
+    t.string "panel_fingerprint"
+    t.text "research"
+    t.jsonb "research_sources", default: [], null: false
+    t.jsonb "report", default: {}, null: false
+    t.decimal "budget_usd", precision: 10, scale: 4, default: "3.0", null: false
+    t.decimal "spent_usd", precision: 12, scale: 6, default: "0.0", null: false
+    t.integer "request_count", default: 0, null: false
+    t.integer "token_count", default: 0, null: false
+    t.integer "search_count", default: 0, null: false
+    t.text "error_message"
+    t.datetime "started_at"
+    t.datetime "finished_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["brand_brief_id"], name: "index_visibility_studies_on_brand_brief_id"
+    t.index ["brand_id"], name: "index_visibility_studies_on_brand_id"
+    t.index ["brand_id"], name: "one_active_visibility_study", unique: true, where: "((status)::text = ANY ((ARRAY['queued'::character varying, 'interpreting'::character varying, 'researching'::character varying, 'planning'::character varying, 'measuring'::character varying, 'diagnosing'::character varying, 'paused'::character varying])::text[]))"
+    t.check_constraint "progress >= 0 AND progress <= 100 AND budget_usd > 0::numeric AND spent_usd >= 0::numeric", name: "visibility_study_bounds"
+  end
+
+  add_foreign_key "brand_briefs", "brands"
+  add_foreign_key "brands", "users"
   add_foreign_key "findings", "scans"
   add_foreign_key "repositories", "users"
   add_foreign_key "scan_events", "scans"
   add_foreign_key "scans", "repositories"
+  add_foreign_key "visibility_actions", "repositories", on_delete: :nullify
+  add_foreign_key "visibility_actions", "scans", on_delete: :nullify
+  add_foreign_key "visibility_actions", "visibility_studies"
+  add_foreign_key "visibility_calls", "visibility_studies"
+  add_foreign_key "visibility_events", "visibility_studies"
+  add_foreign_key "visibility_observations", "visibility_studies"
+  add_foreign_key "visibility_studies", "brand_briefs"
+  add_foreign_key "visibility_studies", "brands"
 end

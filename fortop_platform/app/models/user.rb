@@ -3,6 +3,7 @@ class User < ApplicationRecord
   encrypts :github_refresh_token
 
   has_many :repositories, dependent: :destroy
+  has_many :brands, dependent: :destroy
 
   validates :github_id, presence: true, uniqueness: true
   validates :login, :github_token, presence: true

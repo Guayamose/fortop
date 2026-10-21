@@ -7,3 +7,6 @@ Rails.application.config.filter_parameters += [
   :passw, :email, :secret, :token, :_key, :crypt, :salt, :certificate, :otp, :ssn, :cvv, :cvc,
   :code, :state, :code_verifier, :manifest
 ]
+
+# Brand briefs and provider responses can contain commercially sensitive text.
+Rails.application.config.filter_parameters += [ :brief, :known_competitors, :aliases_text ]

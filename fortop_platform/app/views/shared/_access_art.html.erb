@@ -1,4 +1,4 @@
-<section class="access-art" aria-label="Fortop" data-controller="particles" data-particles-source-value="<%= image_path('brand/ascenso.svg') %>">
+<section class="access-art" aria-label="Fortop" data-controller="particles" data-action="pointermove->particles#trackPointer pointerleave->particles#clearPointer pointercancel->particles#clearPointer" data-particles-source-value="<%= image_path('brand/ascenso.svg') %>">
   <span class="art-label">FORTOP / PRESENCIA EN MOVIMIENTO</span>
   <button type="button" class="art-toggle" data-action="particles#toggle" data-particles-target="toggle" aria-label="Pausar animación" aria-pressed="false"><%= app_icon(:pause) %></button>
   <canvas class="art-canvas" data-particles-target="canvas" aria-hidden="true"></canvas>

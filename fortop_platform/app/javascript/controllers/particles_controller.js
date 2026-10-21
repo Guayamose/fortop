@@ -9,10 +9,15 @@ export default class extends Controller {
     this.canvasContext = this.canvasTarget.getContext("2d")
     if (!this.canvasContext) return
     this.points = []
+    this.stars = []
+    this.pointer = { x: 0, y: 0, active: false }
     this.time = 0
     this.paused = window.matchMedia("(prefers-reduced-motion: reduce)").matches
     this.tick = this.tick.bind(this)
-    this.visibility = () => this.schedule()
+    this.visibility = () => {
+      this.clearPointer()
+      this.schedule()
+    }
     document.addEventListener("visibilitychange", this.visibility)
     this.observer = new ResizeObserver(() => this.resize())
     this.observer.observe(this.element)
@@ -38,11 +43,14 @@ export default class extends Controller {
     for (let y = 0; y < 240; y += 3) {
       for (let x = 0; x < 272; x += 3) {
         if (pixels[(y * 272 + x) * 4 + 3] > 120) {
-          this.points.push({ x: (x - 136) / 136, y: (y - 120) / 136, z: (random() - .5) * .2, phase: random() * Math.PI * 2, brightness: .35 + random() * .65 })
+          this.points.push({ x: (x - 136) / 136, y: (y - 120) / 136, z: (random() - .5) * .2,
+            phase: random() * Math.PI * 2, brightness: .35 + random() * .65,
+            offsetX: 0, offsetY: 0, ease: .04 + random() * .055 })
         }
       }
     }
-    this.stars = Array.from({ length: 190 }, () => ({ x: random(), y: random(), phase: random() * Math.PI * 2, size: .3 + random() * 1.1 }))
+    this.stars = Array.from({ length: 190 }, () => ({ x: random(), y: random(), phase: random() * Math.PI * 2,
+      size: .3 + random() * 1.1, offsetX: 0, offsetY: 0, ease: .04 }))
   }
 
   resize() {
@@ -52,10 +60,44 @@ export default class extends Controller {
     this.canvasTarget.width = this.width * ratio
     this.canvasTarget.height = this.height * ratio
     this.canvasContext.setTransform(ratio, 0, 0, ratio, 0, 0)
+    this.clearPointer()
+    this.points.forEach(point => { point.offsetX = 0; point.offsetY = 0 })
+    this.stars.forEach(star => { star.offsetX = 0; star.offsetY = 0 })
     this.draw()
   }
 
-  draw() {
+  trackPointer(event) {
+    if (this.paused || event.pointerType === "touch" || !this.pointer) return
+    const rect = this.element.getBoundingClientRect()
+    this.pointer.x = event.clientX - rect.left
+    this.pointer.y = event.clientY - rect.top
+    this.pointer.active = true
+  }
+
+  clearPointer() {
+    if (this.pointer) this.pointer.active = false
+  }
+
+  // Oryon Flow's local repulsion: move away within 95px, then ease home.
+  // Use elapsed frame time so the response feels the same at 60Hz and 144Hz.
+  displace(point, x, y, step, strength = 1) {
+    let targetX = 0, targetY = 0
+    if (this.pointer.active) {
+      const dx = x + point.offsetX - this.pointer.x
+      const dy = y + point.offsetY - this.pointer.y
+      const distanceSquared = dx * dx + dy * dy
+      if (distanceSquared < 9000) {
+        const force = (1 - distanceSquared / 9000) * 36 * strength / Math.sqrt(distanceSquared + 1)
+        targetX = dx * force
+        targetY = dy * force
+      }
+    }
+    const response = 1 - Math.pow(1 - point.ease, step)
+    point.offsetX += (targetX - point.offsetX) * response
+    point.offsetY += (targetY - point.offsetY) * response
+  }
+
+  draw(step = 0) {
     const ctx = this.canvasContext
     const width = this.width || 0
     const height = this.height || 0
@@ -66,39 +108,33 @@ export default class extends Controller {
     const cy = height * .43
     const turn = Math.sin(t * .22) * .18
     const breathe = 1 + Math.sin(t * .6) * .018
-    ;(this.stars || []).forEach(star => {
+    this.stars.forEach(star => {
+      const x = star.x * width
+      const y = (star.y * height * .7 + t * 2) % (height * .7)
+      this.displace(star, x, y, step, .4)
       const alpha = .08 + (Math.sin(t * .5 + star.phase) + 1) * .08
       ctx.fillStyle = `rgba(62,157,237,${alpha})`
-      ctx.fillRect(star.x * width, (star.y * height * .7 + t * 2) % (height * .7), star.size, star.size)
+      ctx.fillRect(x + star.offsetX, y + star.offsetY, star.size, star.size)
     })
     this.points.forEach(point => {
       const drift = Math.sin(t * .8 + point.phase) * 1.3
-      const x = (point.x * Math.cos(turn) + point.z * Math.sin(turn)) * scale * breathe
-      const y = point.y * scale * breathe
+      const x = cx + (point.x * Math.cos(turn) + point.z * Math.sin(turn)) * scale * breathe + drift
+      const y = cy + point.y * scale * breathe + drift * .4
+      this.displace(point, x, y, step)
       const alpha = Math.min(1, point.brightness * (.95 + Math.sin(t * .7 + point.phase) * .15))
       const size = point.brightness > .8 ? 2 : 1.3
       ctx.fillStyle = `rgba(${point.brightness > .76 ? "175,220,255" : "38,152,242"},${alpha})`
-      ctx.fillRect(cx + x + drift, cy + y + drift * .4, size, size)
+      ctx.fillRect(x + point.offsetX, y + point.offsetY, size, size)
     })
-    ctx.save()
-    ctx.translate(cx, cy + scale * .8)
-    ctx.rotate(-.14)
-    ctx.strokeStyle = "rgba(20,120,213,.1)"
-    ctx.lineWidth = .7
-    ;[1.22, 1.5, 1.85].forEach(r => {
-      ctx.beginPath()
-      ctx.ellipse(0, 0, scale * r, scale * r * .32, 0, 0, Math.PI * 2)
-      ctx.stroke()
-    })
-    ctx.restore()
   }
 
   tick(timestamp) {
     this.frame = null
     if (this.paused || document.hidden) return
-    if (this.previous) this.time += Math.min((timestamp - this.previous) / 1000, .05)
+    const elapsed = this.previous == null ? 0 : Math.min((timestamp - this.previous) / 1000, .05)
+    this.time += elapsed
     this.previous = timestamp
-    this.draw()
+    this.draw(elapsed * 60)
     this.frame = requestAnimationFrame(this.tick)
   }
 
@@ -110,6 +146,7 @@ export default class extends Controller {
 
   toggle() {
     this.paused = !this.paused
+    this.clearPointer()
     this.updateToggle()
     this.schedule()
   }

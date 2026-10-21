@@ -36,6 +36,10 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
         delete logout_path, params: { authenticity_token: form_token(logout_path) }
         assert_redirected_to new_session_path
         assert_nil session[:user_id]
+        follow_redirect!
+        assert_response :success
+        assert_select ".access-main > .flash", count: 0
+        assert_select ".access-shell", count: 1
       end
     end
   end
@@ -55,7 +59,8 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
 
         follow_redirect!
         assert_response :success
-        assert_select ".flash-alert", text: /El formulario de acceso ha caducado/
+        assert_select ".access-main > .flash", count: 0
+        assert_select ".access-login [role=alert]", text: /El formulario de acceso ha caducado/
         assert_equal "no-store", response.headers["Cache-Control"]
 
         post session_path, params: { authenticity_token: form_token(session_path) }

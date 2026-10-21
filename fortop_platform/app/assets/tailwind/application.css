@@ -586,6 +586,7 @@ main:focus { outline: none; }
 .access-card h1 { margin: 18px 0 20px; font-size: clamp(40px, 4vw, 56px); font-weight: 450; line-height: 1.02; letter-spacing: -.04em; }
 .access-description { max-width: 370px; color: var(--text-secondary); font-size: 16px; line-height: 1.65; }
 .access-login { margin-top: 32px; }
+.access-login .access-login-error { color: var(--risk); }
 .form-note { margin-top: 12px; color: var(--muted); font-size: 11px; text-align: center; line-height: 1.7; }
 .access-steps { display: grid; gap: 0; margin-top: 34px; border-top: 1px solid var(--line); }
 .access-steps > div { display: flex; align-items: center; gap: 15px; padding: 16px 0; border-bottom: 1px solid var(--line); }

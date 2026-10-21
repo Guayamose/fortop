@@ -23,6 +23,8 @@ class RepositoryFlowTest < ApplicationSystemTestCase
         click_button "Continuar con GitHub"
         assert_current_path new_session_path
         assert_text "El formulario de acceso ha caducado."
+        assert_no_selector ".access-main > .flash"
+        assert_selector ".access-login [role=alert]", text: "El formulario de acceso ha caducado."
         assert_no_text "GitHub conectado"
       end
 

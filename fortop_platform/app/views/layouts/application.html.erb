@@ -41,7 +41,7 @@
         </main>
       </div>
     <% else %>
-      <main id="main-content" class="access-main" tabindex="-1"><%= render "shared/flash" %><%= yield %></main>
+      <main id="main-content" class="access-main" tabindex="-1"><%= render "shared/flash" unless controller_name == "sessions" && action_name == "new" %><%= yield %></main>
     <% end %>
   </body>
 </html>

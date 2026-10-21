@@ -188,6 +188,7 @@ class RepositoryFlowTest < ApplicationSystemTestCase
         assert_selector ".finding-source-line .finding-line-number", text: "5"
         assert_selector ".diff-deletion", text: 'content=""'
         assert_selector ".diff-addition", text: "Fortop analiza y propone mejoras de SEO"
+        assert_selector ".diff-addition .syntax-highlight .nt", text: "<meta"
         assert_link "Ver origen", href: "https://github.com/browser-builder/website/blob/#{'a' * 40}/app/views/layouts/application.html.erb#L5"
         assert_link "Revisar en el PR", href: scan.pull_request_url
       end

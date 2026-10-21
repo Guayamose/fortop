@@ -25,7 +25,7 @@ module FindingsHelper
   end
 
   def highlighted_evidence(finding)
-    LineFormatter.new.lines(finding_lexer(finding.evidence, finding.file_path).new.lex(finding.evidence.to_s))
+    highlighted_source_lines(finding.evidence, finding.file_path)
   end
 
   def finding_changes(finding)
@@ -34,9 +34,9 @@ module FindingsHelper
     end
   end
 
-  def finding_diff_rows(patch)
+  def finding_diff_rows(patch, path:)
     old_line = new_line = nil
-    patch.to_s.lines.first(DIFF_PREVIEW_LINES).filter_map do |raw|
+    rows = patch.to_s.lines.first(DIFF_PREVIEW_LINES).filter_map do |raw|
       text = raw.chomp
       if (header = text.match(/\A@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@/))
         old_line, new_line = header.captures.map(&:to_i)
@@ -52,6 +52,22 @@ module FindingsHelper
         { kind: "note", text: text, marker: "", old: nil, new: nil }
       end
     end
+    rows.slice_before { |row| row[:kind] == "hunk" }.each do |hunk|
+      original = hunk.select { |row| %w[context deletion].include?(row[:kind]) }
+      proposed = hunk.select { |row| %w[context addition].include?(row[:kind]) }
+      before = highlighted_source_lines(original.map { |row| row[:text] }.join("\n"), path)
+      after = highlighted_source_lines(proposed.map { |row| row[:text] }.join("\n"), path)
+      hunk.each do |row|
+        case row[:kind]
+        when "deletion" then row[:html] = before.shift
+        when "addition" then row[:html] = after.shift
+        when "context"
+          before.shift
+          row[:html] = after.shift
+        end
+      end
+    end
+    rows
   end
 
   def finding_source_url(finding)
@@ -60,5 +76,11 @@ module FindingsHelper
     return unless sha.to_s.match?(/\A[0-9a-f]{40,64}\z/) && path.present?
     encoded = path.split("/").map { |part| ERB::Util.url_encode(part) }.join("/")
     "#{finding.scan.repository.html_url}/blob/#{sha}/#{encoded}#L#{finding.line_number || 1}"
+  end
+
+  private
+
+  def highlighted_source_lines(source, path)
+    LineFormatter.new.lines(finding_lexer(source, path).new.lex(source.to_s))
   end
 end

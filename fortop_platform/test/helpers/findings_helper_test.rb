@@ -24,11 +24,28 @@ class FindingsHelperTest < ActionView::TestCase
 
   test "diff rows distinguish additions deletions and source line numbers" do
     patch = "--- a/page.html\n+++ b/page.html\n@@ -5,2 +5,3 @@\n <head>\n-<title>Old</title>\n+<title>New</title>\n+<meta>\n"
-    rows = finding_diff_rows(patch)
+    rows = finding_diff_rows(patch, path: "page.html")
     assert_equal %w[hunk context deletion addition addition], rows.map { |row| row[:kind] }
     assert_equal [ 5, 6, nil, nil ], rows.drop(1).map { |row| row[:old] }
     assert_equal [ 5, nil, 6, 7 ], rows.drop(1).map { |row| row[:new] }
     assert_equal "<meta>", rows.last[:text]
+    assert_includes rows.last[:html], 'class="nt"'
+  end
+
+  test "diff highlights original and proposed source independently across multiline comments" do
+    patch = "@@ -1,3 +1,3 @@\n /* first\n-old */\n+new */\n const title = 'Fortop';\n"
+    rows = finding_diff_rows(patch, path: "page.js")
+    assert_includes rows.find { |row| row[:kind] == "deletion" }[:html], 'class="cm"'
+    assert_includes rows.find { |row| row[:kind] == "addition" }[:html], 'class="cm"'
+    assert_includes rows.last[:html], 'class="kd"'
+    assert_equal "const title = 'Fortop';", Nokogiri::HTML.fragment(rows.last[:html]).text
+  end
+
+  test "highlighted diff never executes repository markup" do
+    rows = finding_diff_rows("@@ -1 +1 @@\n-<script>old()</script>\n+<img src=x onerror=alert(1)>\n", path: "page.html")
+    fragment = Nokogiri::HTML.fragment(rows.filter_map { |row| row[:html] }.join)
+    assert_empty fragment.css("script, img")
+    assert_includes fragment.text, "<img src=x onerror=alert(1)>"
   end
 
   test "only shows actual patches linked to this finding even when other findings share a path" do

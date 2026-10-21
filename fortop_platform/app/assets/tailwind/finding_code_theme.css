@@ -1,0 +1,117 @@
+/* GitHub Dark token palette, generated from Rouge 4.7.0. */
+.finding-code-frame .syntax-highlight table td { padding: 5px; }
+.finding-code-frame .syntax-highlight table pre { margin: 0; }
+.finding-code-frame .syntax-highlight, .finding-code-frame .syntax-highlight .w {
+  color: #c9d1d9;
+  background-color: #161b22;
+}
+.finding-code-frame .syntax-highlight .k, .finding-code-frame .syntax-highlight .kd, .finding-code-frame .syntax-highlight .kn, .finding-code-frame .syntax-highlight .kp, .finding-code-frame .syntax-highlight .kr, .finding-code-frame .syntax-highlight .kt, .finding-code-frame .syntax-highlight .kv {
+  color: #ff7b72;
+}
+.finding-code-frame .syntax-highlight .gr {
+  color: #f0f6fc;
+}
+.finding-code-frame .syntax-highlight .gd {
+  color: #ffdcd7;
+  background-color: #67060c;
+}
+.finding-code-frame .syntax-highlight .nb {
+  color: #ffa657;
+}
+.finding-code-frame .syntax-highlight .nc {
+  color: #ffa657;
+}
+.finding-code-frame .syntax-highlight .no {
+  color: #ffa657;
+}
+.finding-code-frame .syntax-highlight .nn {
+  color: #ffa657;
+}
+.finding-code-frame .syntax-highlight .sr {
+  color: #7ee787;
+}
+.finding-code-frame .syntax-highlight .na {
+  color: #7ee787;
+}
+.finding-code-frame .syntax-highlight .nt {
+  color: #7ee787;
+}
+.finding-code-frame .syntax-highlight .gi {
+  color: #aff5b4;
+  background-color: #033a16;
+}
+.finding-code-frame .syntax-highlight .ges {
+  font-weight: bold;
+  font-style: italic;
+}
+.finding-code-frame .syntax-highlight .kc {
+  color: #79c0ff;
+}
+.finding-code-frame .syntax-highlight .l, .finding-code-frame .syntax-highlight .ld, .finding-code-frame .syntax-highlight .m, .finding-code-frame .syntax-highlight .mb, .finding-code-frame .syntax-highlight .mf, .finding-code-frame .syntax-highlight .mh, .finding-code-frame .syntax-highlight .mi, .finding-code-frame .syntax-highlight .il, .finding-code-frame .syntax-highlight .mo, .finding-code-frame .syntax-highlight .mx {
+  color: #79c0ff;
+}
+.finding-code-frame .syntax-highlight .sb {
+  color: #79c0ff;
+}
+.finding-code-frame .syntax-highlight .bp {
+  color: #79c0ff;
+}
+.finding-code-frame .syntax-highlight .ne {
+  color: #79c0ff;
+}
+.finding-code-frame .syntax-highlight .nl {
+  color: #79c0ff;
+}
+.finding-code-frame .syntax-highlight .py {
+  color: #79c0ff;
+}
+.finding-code-frame .syntax-highlight .nv, .finding-code-frame .syntax-highlight .vc, .finding-code-frame .syntax-highlight .vg, .finding-code-frame .syntax-highlight .vi, .finding-code-frame .syntax-highlight .vm {
+  color: #79c0ff;
+}
+.finding-code-frame .syntax-highlight .o, .finding-code-frame .syntax-highlight .ow {
+  color: #79c0ff;
+}
+.finding-code-frame .syntax-highlight .gh {
+  color: #1f6feb;
+  font-weight: bold;
+}
+.finding-code-frame .syntax-highlight .gu {
+  color: #1f6feb;
+  font-weight: bold;
+}
+.finding-code-frame .syntax-highlight .s, .finding-code-frame .syntax-highlight .sa, .finding-code-frame .syntax-highlight .sc, .finding-code-frame .syntax-highlight .dl, .finding-code-frame .syntax-highlight .sd, .finding-code-frame .syntax-highlight .s2, .finding-code-frame .syntax-highlight .se, .finding-code-frame .syntax-highlight .sh, .finding-code-frame .syntax-highlight .sx, .finding-code-frame .syntax-highlight .s1, .finding-code-frame .syntax-highlight .ss {
+  color: #a5d6ff;
+}
+.finding-code-frame .syntax-highlight .nd {
+  color: #d2a8ff;
+}
+.finding-code-frame .syntax-highlight .nf, .finding-code-frame .syntax-highlight .fm {
+  color: #d2a8ff;
+}
+.finding-code-frame .syntax-highlight .err {
+  color: #f0f6fc;
+  background-color: #8e1519;
+}
+.finding-code-frame .syntax-highlight .c, .finding-code-frame .syntax-highlight .ch, .finding-code-frame .syntax-highlight .cd, .finding-code-frame .syntax-highlight .cm, .finding-code-frame .syntax-highlight .cp, .finding-code-frame .syntax-highlight .cpf, .finding-code-frame .syntax-highlight .c1, .finding-code-frame .syntax-highlight .cs {
+  color: #8b949e;
+}
+.finding-code-frame .syntax-highlight .gl {
+  color: #8b949e;
+}
+.finding-code-frame .syntax-highlight .gt {
+  color: #8b949e;
+}
+.finding-code-frame .syntax-highlight .ni {
+  color: #c9d1d9;
+}
+.finding-code-frame .syntax-highlight .si {
+  color: #c9d1d9;
+}
+.finding-code-frame .syntax-highlight .ge {
+  color: #c9d1d9;
+  font-style: italic;
+}
+.finding-code-frame .syntax-highlight .gs {
+  color: #c9d1d9;
+  font-weight: bold;
+}

@@ -1,3 +1,5 @@
+@import "./finding_code_theme.css";
+
 .finding-review + .finding-review { border-top: 1px solid var(--line); }
 .finding-review-summary { display: flex; align-items: center; gap: 14px; padding: 19px 0; list-style: none; }
 .finding-review-summary::-webkit-details-marker { display: none; }
@@ -22,42 +24,40 @@
 .finding-section-heading > span { color: var(--muted); font-size: 10px; }
 .finding-section-heading code { font: 10px var(--font-mono); }
 .finding-section-heading .text-link { font-size: 11px; }
-.finding-code-frame { min-width: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
-.finding-code-frame > header { display: flex; justify-content: space-between; align-items: center; gap: 14px; min-height: 39px; padding: 9px 13px; border-bottom: 1px solid var(--line); background: #f8f9fb; color: var(--muted); font-size: 10px; }
+.finding-code-frame { min-width: 0; overflow: hidden; border: 1px solid #30363d; border-radius: 9px; background: #0d1117; color-scheme: dark; }
+.finding-code-frame > header { display: flex; justify-content: space-between; align-items: center; gap: 14px; min-height: 44px; padding: 11px 16px; border-bottom: 1px solid #30363d; background: #161b22; color: #9da7b5; font-size: 11px; }
 .finding-code-frame > header > span { display: inline-flex; align-items: center; gap: 9px; min-width: 0; overflow-wrap: anywhere; }
-.finding-code-frame > header > span:first-child { font-family: var(--font-mono); }
+.finding-code-frame > header > span:first-child { color: #c9d1d9; font-family: var(--font-mono); }
 .finding-code-frame > header > span:last-child { flex: 0 0 auto; }
 .finding-code-frame > header .icon { width: 13px; height: 13px; flex: 0 0 auto; }
-.finding-code-frame .text-link { font-size: 10px; white-space: nowrap; }
-.finding-code-scroll { max-height: 390px; overflow: auto; scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
-.finding-source { min-width: 100%; width: max-content; margin: 0; padding: 12px 0; color: #303946; background: #fff; font: 11px/1.9 var(--font-mono); tab-size: 2; }
-.finding-source-line { display: grid; grid-template-columns: 48px minmax(0, 1fr); min-height: 21px; }
-.finding-line-number { padding: 0 12px; color: #9aa3af; text-align: right; user-select: none; }
-.finding-source-text { padding-right: 18px; white-space: pre; }
+.finding-code-frame .text-link { color: #79c0ff; font-size: 11px; white-space: nowrap; }
+.finding-code-scroll { max-height: 430px; overflow: auto; scrollbar-width: thin; scrollbar-color: #484f58 #0d1117; }
+.finding-source { min-width: 100%; width: max-content; margin: 0; padding: 17px 0; color: #c9d1d9; background: #0d1117; font: 13px/1.9 var(--font-mono); font-variant-ligatures: none; tab-size: 2; }
+.finding-source-line { display: grid; grid-template-columns: 54px minmax(0, 1fr); min-height: 25px; }
+.finding-line-number { padding: 0 14px; color: #7d8590; font-size: 11px; text-align: right; user-select: none; }
+.finding-source-text { padding-right: 24px; white-space: pre; }
 .finding-diff { margin-top: 14px; }
 .finding-diff .finding-source { padding: 0; }
-.finding-diff-line { display: grid; grid-template-columns: 43px 43px 20px minmax(0, 1fr); min-height: 22px; }
-.finding-diff .finding-line-number { padding: 0 8px; border-right: 1px solid #e4e8ed70; }
-.finding-diff-marker { user-select: none; text-align: center; }
-.diff-addition { background: #eaf6ee; color: #1b5633; }
-.diff-addition .finding-line-number { background: #ddf0e3; color: #648b70; }
-.diff-deletion { background: #fff0ef; color: #943c35; }
-.diff-deletion .finding-line-number { background: #fce4e1; color: #b07f77; }
-.diff-hunk { color: #59728d; background: #eef4fa; }
-.diff-note { color: var(--muted); font-style: italic; }
-.finding-diff-counts > span:first-child { color: var(--ok); }
-.finding-diff-counts > span:last-child { color: #b65a50; }
+.finding-diff-line { display: grid; grid-template-columns: 52px 52px 24px minmax(0, 1fr); min-height: 25px; }
+.finding-diff .finding-line-number { padding: 0 10px; border-right: 1px solid #30363d60; }
+.finding-diff-marker { color: #7d8590; user-select: none; text-align: center; }
+.diff-addition { background: #12261e; }
+.diff-addition .finding-line-number { background: #163328; color: #85b79b; }
+.diff-addition .finding-diff-marker { color: #7ee787; }
+.diff-deletion { background: #30191d; }
+.diff-deletion .finding-line-number { background: #422126; color: #d89b9b; }
+.diff-deletion .finding-diff-marker { color: #ff7b72; }
+.diff-hunk { color: #8badd2; background: #121f30; }
+.diff-note { color: #8b949e; font-style: italic; }
+.finding-diff-counts > span:first-child { color: #7ee787; }
+.finding-diff-counts > span:last-child { color: #ff7b72; }
 .finding-note { margin-top: 10px; color: var(--muted); font-size: 11px; line-height: 1.7; }
 .finding-verification { margin-top: 25px; }
 .finding-review-links { margin-top: 23px; }
 .finding-review-links .text-link { font-size: 11px; }
-.syntax-highlight :is(.c,.c1,.cm,.cp,.cs) { color: #7c8594; font-style: italic; }
-.syntax-highlight :is(.k,.kc,.kd,.kn,.kp,.kr,.kt,.ow) { color: #9254a2; }
-.syntax-highlight :is(.s,.s1,.s2,.sb,.sc,.sd,.se,.sh,.si,.sr,.ss,.sx) { color: #246a3d; }
-.syntax-highlight :is(.nt,.nf,.nc,.ne) { color: #2464a4; }
-.syntax-highlight :is(.na,.nb,.nv,.vi,.vg,.vc) { color: #a46621; }
-.syntax-highlight :is(.m,.mf,.mh,.mi,.mo,.il) { color: #246c91; }
-.syntax-highlight .err { color: #a54034; }
+.finding-code-frame .syntax-highlight, .finding-code-frame .syntax-highlight .w { background: transparent; }
+.finding-code-frame .syntax-highlight .err { background: transparent; }
+.finding-diff .diff-hunk .syntax-highlight, .finding-diff .diff-note .syntax-highlight { color: inherit; }
 @media (max-width: 680px) {
   .finding-review-summary { flex-wrap: wrap; gap: 9px; padding: 17px 0; }
   .finding-review-title { flex-basis: calc(100% - 48px); }
@@ -67,10 +67,10 @@
   .finding-review-toggle { margin-left: auto; }
   .finding-review-body { padding-left: 0; }
   .finding-explanation { grid-template-columns: minmax(0, 1fr); gap: 20px; }
-  .finding-code-frame > header { flex-wrap: wrap; gap: 7px; padding: 9px 10px; }
+  .finding-code-frame > header { flex-wrap: wrap; gap: 8px; padding: 11px 12px; }
   .finding-code-frame > header > span:last-child { margin-left: auto; }
-  .finding-source { font-size: 10px; }
-  .finding-source-line { grid-template-columns: 35px minmax(0, 1fr); }
-  .finding-diff-line { grid-template-columns: 31px 31px 17px minmax(0, 1fr); }
+  .finding-source { font-size: 12px; }
+  .finding-source-line { grid-template-columns: 42px minmax(0, 1fr); }
+  .finding-diff-line { grid-template-columns: 36px 36px 20px minmax(0, 1fr); }
   .finding-line-number, .finding-diff .finding-line-number { padding-inline: 6px; }
 }

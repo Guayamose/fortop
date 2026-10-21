@@ -1,0 +1,19 @@
+* text=auto
+*.rb text eol=lf
+*.rake text eol=lf
+*.erb text eol=lf
+*.js text eol=lf
+*.css text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.md text eol=lf
+*.svg text eol=lf
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.pdf binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.zip binary

@@ -1,0 +1,20 @@
+# Local credentials and environment overrides; examples stay versioned.
+**/.env
+**/.env.*
+!**/.env.example
+**/*.pem
+**/*.key
+**/config/credentials/*.key
+
+# Editor state, local dependencies and generated working files.
+**/.ruby-lsp/
+**/.bundle/
+**/node_modules/
+/.vscode/
+/.idea/
+/.DS_Store
+**/.DS_Store
+/tmp/
+
+# Packaged copies of versioned deliverables can be regenerated.
+/fortop-deliverables/fortop-entregables.zip

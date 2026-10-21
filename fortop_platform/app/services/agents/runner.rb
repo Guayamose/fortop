@@ -1,0 +1,49 @@
+module Agents
+  class Runner
+    Result = Data.define(:summary, :steps, :tool_calls)
+
+    def initialize(provider:, tools:, system:, observer: ->(*) { }, max_turns: ENV.fetch("AGENT_MAX_TURNS", 12).to_i, max_tool_calls: ENV.fetch("AGENT_MAX_TOOL_CALLS", 40).to_i, timeout: 600)
+      @provider, @tools, @system, @observer = provider, tools, system, observer
+      @max_turns, @max_tool_calls, @timeout = max_turns.clamp(1, 24), max_tool_calls.clamp(1, 80), timeout.clamp(1, 900)
+    end
+
+    def call(prompt:)
+      history = [ { "role" => "user", "parts" => [ { "text" => prompt } ] } ]
+      deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + @timeout
+      tool_count = 0
+      @max_turns.times do |turn|
+        raise BudgetExceeded, "El agente ha agotado el tiempo de ejecución." if Process.clock_gettime(Process::CLOCK_MONOTONIC) >= deadline
+
+        content = @provider.generate(system: @system, contents: history, declarations: @tools.declarations)
+        history << content.deep_dup
+        calls = content.fetch("parts", []).filter_map { |part| part["functionCall"] }
+        if calls.empty?
+          summary = content.fetch("parts", []).reject { |part| part["thought"] }.filter_map { |part| part["text"] }.join("\n")
+          raise Error, "El agente terminó sin un resumen." if summary.blank?
+          return Result.new(summary: summary.truncate(12_000), steps: turn + 1, tool_calls: tool_count)
+        end
+
+        raise BudgetExceeded, "El agente ha agotado su presupuesto de herramientas." if tool_count + calls.length > @max_tool_calls
+        responses = calls.map do |function|
+          name = function.fetch("name")
+          arguments = function.fetch("args", {})
+          raise ToolError, "Los argumentos de la herramienta no son válidos." unless arguments.is_a?(Hash)
+
+          tool_count += 1
+          @observer.call(name, arguments, turn + 1)
+          result = begin
+            @tools.call(name, arguments)
+          rescue ToolError => error
+            # Feed a rejected operation back to the agent so it can choose another action.
+            { "error" => error.message }
+          end
+          response = { "name" => name, "response" => { "result" => result } }
+          response["id"] = function["id"] if function["id"]
+          { "functionResponse" => response }
+        end
+        history << { "role" => "user", "parts" => responses }
+      end
+      raise BudgetExceeded, "El agente ha agotado el número máximo de turnos."
+    end
+  end
+end

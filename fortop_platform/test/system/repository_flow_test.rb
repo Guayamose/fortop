@@ -4,7 +4,32 @@ class RepositoryFlowTest < ApplicationSystemTestCase
   include ActiveJob::TestHelper
 
   setup do
+    @previous_forgery_protection = ApplicationController.allow_forgery_protection
+    ApplicationController.allow_forgery_protection = true
     page.current_window.resize_to(1440, 1000)
+  end
+
+  teardown do
+    ApplicationController.allow_forgery_protection = @previous_forgery_protection
+  end
+
+  test "an expired login form recovers and allows a fresh GitHub sign in" do
+    with_browser_github do
+      visit new_session_path
+      assert_button "Continuar con GitHub"
+      page.driver.browser.manage.delete_cookie(Rails.application.config.session_options.fetch(:key))
+
+      assert_no_difference "User.count" do
+        click_button "Continuar con GitHub"
+        assert_current_path new_session_path
+        assert_text "El formulario de acceso ha caducado."
+        assert_no_text "GitHub conectado"
+      end
+
+      click_button "Continuar con GitHub"
+      assert_selector "h1", text: "Repositorios"
+      assert_text "GitHub conectado"
+    end
   end
 
   test "GitHub sign in connects a repository starts agents and receives completion through live polling" do

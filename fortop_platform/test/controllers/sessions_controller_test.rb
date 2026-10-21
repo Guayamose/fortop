@@ -7,22 +7,92 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "GitHub authorization validates PKCE callback, encrypts credentials and signs out" do
-    with_fake_github do
-      post session_path
-      assert_response :see_other
-      assert_match %r{\Ahttps://github.com/login/oauth/authorize}, response.location
-      get callback_session_path, params: { code: "valid-code", state: @state }
-      assert_redirected_to repositories_path
-      user = User.find_by!(github_id: 555)
-      assert_equal user.id, session[:user_id]
-      assert_equal "ghu_test", user.github_token
-      assert_equal "ghr_test", user.github_refresh_token
-      stored = User.connection.select_value("SELECT github_token FROM users WHERE id = #{user.id.to_i}")
-      refute_equal "ghu_test", stored
-      refute_includes stored, "ghu_test"
-      delete logout_path
-      assert_redirected_to new_session_path
-      assert_nil session[:user_id]
+    with_csrf_protection do
+      with_fake_github do
+        get new_session_path
+        assert_response :success
+        assert_equal "no-store", response.headers["Cache-Control"]
+        assert_select 'meta[name="turbo-cache-control"][content="no-cache"]'
+        assert_select 'form[action="/auth/github"][data-turbo="false"]'
+        post session_path, params: { authenticity_token: form_token(session_path) }
+        assert_response :see_other
+        assert_match %r{\Ahttps://github.com/login/oauth/authorize}, response.location
+        get callback_session_path, params: { code: "valid-code", state: @state }
+        assert_redirected_to repositories_path
+        user = User.find_by!(github_id: 555)
+        assert_equal user.id, session[:user_id]
+        assert_equal "ghu_test", user.github_token
+        assert_equal "ghr_test", user.github_refresh_token
+        stored = User.connection.select_value("SELECT github_token FROM users WHERE id = #{user.id.to_i}")
+        refute_equal "ghu_test", stored
+        refute_includes stored, "ghu_test"
+
+        # Invalid tokens must still reject other session actions without signing out.
+        delete logout_path
+        assert_response :unprocessable_content
+        assert_equal user.id, session[:user_id]
+
+        get repositories_path
+        delete logout_path, params: { authenticity_token: form_token(logout_path) }
+        assert_redirected_to new_session_path
+        assert_nil session[:user_id]
+      end
+    end
+  end
+
+  test "a login form from a lost session recovers with a fresh form before authorizing GitHub" do
+    with_csrf_protection do
+      with_fake_github do
+        get new_session_path
+        expired_token = form_token(session_path)
+        reset!
+
+        post session_path, params: { authenticity_token: expired_token }
+        assert_response :see_other
+        assert_redirected_to new_session_path
+        assert_nil session[:github_oauth]
+        assert_nil @state
+
+        follow_redirect!
+        assert_response :success
+        assert_select ".flash-alert", text: /El formulario de acceso ha caducado/
+        assert_equal "no-store", response.headers["Cache-Control"]
+
+        post session_path, params: { authenticity_token: form_token(session_path) }
+        assert_response :see_other
+        assert_match %r{\Ahttps://github.com/login/oauth/authorize}, response.location
+        assert_equal @state, session[:github_oauth]["state"]
+      end
+    end
+  end
+
+  test "missing and invalid login tokens never start GitHub authorization" do
+    with_csrf_protection do
+      with_fake_github do
+        [ nil, "invalid-token" ].each do |token|
+          post session_path, params: { authenticity_token: token }
+          assert_response :see_other
+          assert_redirected_to new_session_path
+          assert_equal "no-store", response.headers["Cache-Control"]
+          assert_nil session[:github_oauth]
+          assert_nil session[:user_id]
+          assert_nil @state
+        end
+      end
+    end
+  end
+
+  test "a valid login token cannot authorize a request from another origin" do
+    with_csrf_protection do
+      with_fake_github do
+        get new_session_path
+        post session_path, params: { authenticity_token: form_token(session_path) },
+          headers: { "Origin" => "https://untrusted.example" }
+        assert_response :see_other
+        assert_redirected_to new_session_path
+        assert_nil session[:github_oauth]
+        assert_nil @state
+      end
     end
   end
 
@@ -64,6 +134,18 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
 
   private
 
+  def form_token(action)
+    css_select("form[action='#{action}'] input[name='authenticity_token']").first["value"]
+  end
+
+  def with_csrf_protection
+    previous = ApplicationController.allow_forgery_protection
+    ApplicationController.allow_forgery_protection = true
+    yield
+  ensure
+    ApplicationController.allow_forgery_protection = previous
+  end
+
   def with_fake_github
     oauth = Object.new
     test = self
@@ -79,8 +161,10 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     end
     client = Object.new
     client.define_singleton_method(:user) { { "id" => 555, "login" => "test-visitor", "name" => "Visitor" } }
-    Github::OAuth.stub(:new, oauth) do
-      Github::Client.stub(:new, client) { yield }
+    Github::App.stub(:configured?, true) do
+      Github::OAuth.stub(:new, oauth) do
+        Github::Client.stub(:new, client) { yield }
+      end
     end
   end
 end

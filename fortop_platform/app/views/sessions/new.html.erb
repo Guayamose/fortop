@@ -1,4 +1,5 @@
 <% content_for :title, "Acceder · Fortop" %>
+<% content_for :head do %><meta name="turbo-cache-control" content="no-cache"><% end %>
 <div class="access-shell">
   <section class="access-side">
     <header class="access-top">
@@ -11,7 +12,7 @@
       <p class="access-description">Encuentra qué mejorar. Deja que tus agentes preparen los cambios. Revisa cada propuesta en GitHub.</p>
       <div class="access-login">
         <% if Github::App.configured? %>
-          <%= button_to session_path, class: "button button-primary button-full", data: { turbo: false } do %><%= app_icon(:github) %> Continuar con GitHub <%= app_icon(:arrow) %><% end %>
+          <%= button_to session_path, class: "button button-primary button-full", form: { data: { turbo: false } } do %><%= app_icon(:github) %> Continuar con GitHub <%= app_icon(:arrow) %><% end %>
           <p class="form-note">Conecta tu cuenta para entrar en tu espacio de trabajo.</p>
         <% elsif Rails.env.development? && request.local? %>
           <%= link_to github_setup_path, class: "button button-primary button-full" do %><%= app_icon(:github) %> Conectar Fortop con GitHub <%= app_icon(:arrow) %><% end %>

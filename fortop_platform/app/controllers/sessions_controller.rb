@@ -2,6 +2,8 @@ require "securerandom"
 
 class SessionsController < ApplicationController
   skip_before_action :require_authentication, only: %i[new create callback], raise: false
+  before_action :no_store
+  rescue_from ActionController::InvalidAuthenticityToken, with: :recover_expired_login
 
   def new
     redirect_to repositories_path if current_user
@@ -46,6 +48,14 @@ class SessionsController < ApplicationController
   end
 
   private
+
+  def recover_expired_login(error)
+    raise error unless action_name == "create"
+
+    no_store
+    redirect_to new_session_path, status: :see_other,
+      alert: "El formulario de acceso ha caducado. Vuelve a pulsar «Continuar con GitHub»."
+  end
 
   def valid_handshake?(handshake)
     return false unless handshake.is_a?(Hash) && handshake["expires_at"].to_i > Time.current.to_i

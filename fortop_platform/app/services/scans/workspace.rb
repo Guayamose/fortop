@@ -34,6 +34,7 @@ module Scans
       @directory = Dir.mktmpdir("fortop-scan-")
       @originals, @changes, @read_paths, @finding_ids = Set.new, {}, Set.new, {}
       @blocked_paths = Set.new
+      @diff_cache = {}
       @total_bytes = 0
     end
 
@@ -146,6 +147,7 @@ module Scans
         discard(path)
       else
         @changes[path] = content
+        @diff_cache.delete(path)
         @finding_ids[path] = (@finding_ids.fetch(path, []) + finding_ids.map(&:to_i)).uniq
         materialize(path, content)
       end
@@ -161,6 +163,7 @@ module Scans
     def discard(path)
       check_path!(path)
       @changes.delete(path)
+      @diff_cache.delete(path)
       @finding_ids.delete(path)
       if @originals.include?(path)
         materialize(path, original(path))
@@ -182,12 +185,8 @@ module Scans
 
     def changed_files
       @changes.map do |path, content|
-        before = original(path).to_s.lines
-        after = content.lines
-        # Counts are deterministic and bounded without invoking git or repository code.
-        before_counts, after_counts = before.tally, after.tally
-        common = before_counts.sum { |line, count| [ count, after_counts.fetch(line, 0) ].min }
-        { "path" => path, "additions" => after.length - common, "deletions" => before.length - common, "finding_ids" => finding_ids(path) }
+        delta = @diff_cache[path] ||= CodeDiff.call(before: original(path), after: content, path: path)
+        { "path" => path, "finding_ids" => finding_ids(path) }.merge(delta)
       end
     end
 
@@ -218,6 +217,7 @@ module Scans
         raise Agents::ToolError, "El cambio guardado no procede de un archivo inspeccionado." if @entries.key?(path) && !@read_paths.include?(path)
         raise Agents::ToolError, "El cambio guardado no es válido." unless content.is_a?(String) && content.valid_encoding? && content.bytesize <= MAX_FILE_BYTES && !content.include?("\0") && !secret_content?(content)
         @changes[path] = content
+        @diff_cache.delete(path)
         @finding_ids[path] = snapshot.fetch("finding_ids").fetch(path, [])
         materialize(path, content)
       end

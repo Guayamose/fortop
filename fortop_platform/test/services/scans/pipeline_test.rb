@@ -105,6 +105,10 @@ class Scans::PipelineTest < ActiveSupport::TestCase
     assert_equal "fixed", @scan.findings.first.status
     assert @scan.validation_results.all? { |check| check["passed"] }
     assert_equal "index.html", @scan.changed_files.first["path"]
+    assert_includes @scan.changed_files.first["diff"], '+<meta name="description"'
+    assert_equal finding_arguments["impact"], @scan.findings.first.impact
+    assert_equal finding_arguments["verification"], @scan.findings.first.verification
+    assert_nil @scan.publication_changes
     assert_equal 8, @scan.metadata.dig("usage", "requests")
     assert @scan.scan_events.where(kind: "tool").exists?
   end
@@ -429,6 +433,8 @@ class Scans::PipelineTest < ActiveSupport::TestCase
     workspace.read("index.html")
     assert_raises(Agents::ToolError) { tools.call("report_finding", arguments.merge("evidence" => "fabricated proof")) }
     assert_raises(Agents::ToolError) { tools.call("report_finding", arguments.merge("line_number" => 99)) }
+    assert_raises(Agents::ToolError) { tools.call("report_finding", arguments.except("impact")) }
+    assert_raises(Agents::ToolError) { tools.call("report_finding", arguments.merge("verification" => "")) }
     assert_empty @scan.findings
   ensure
     workspace&.close
@@ -618,7 +624,7 @@ class Scans::PipelineTest < ActiveSupport::TestCase
   end
 
   def finding_arguments
-    { "title" => "Falta descripción de la página", "description" => "El head observado contiene title pero no una descripción.", "category" => "metadata", "severity" => "medium", "file_path" => "index.html", "line_number" => 3, "evidence" => "<title>Fortop</title>", "recommendation" => "Añadir una descripción fiel al contenido existente.", "automatable" => true }
+    { "title" => "Falta descripción de la página", "description" => "El head observado contiene title pero no una descripción.", "impact" => "Los buscadores pueden generar un fragmento menos representativo del contenido.", "verification" => "Comprueba que el HTML renderizado contiene una única meta description con texto real.", "category" => "metadata", "severity" => "medium", "file_path" => "index.html", "line_number" => 3, "evidence" => "<title>Fortop</title>", "recommendation" => "Añadir una descripción fiel al contenido existente.", "automatable" => true }
   end
 
   def tool(name, args)

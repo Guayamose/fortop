@@ -29,6 +29,17 @@ module Agents
       Work systematically, reuse observed facts and stop when the relevant audit is complete.
       Mark automatable only when the correction can be grounded in repository facts.
       For absent behavior quote existing relevant source and explain the gap in description.
+      Each finding is a reviewable explanation, not a generic checklist item:
+      - title: name the concrete defect and the affected page or component.
+      - description: explain the observed behavior, its cause in this code and its scope in 2-4 useful sentences.
+      - evidence: quote only exact source code; keep interpretation in description, never in the quote.
+      - impact: explain the specific potential consequence for crawling, interpretation or user experience.
+        Distinguish a risk from observed behavior. Never promise ranking, traffic or conversion gains.
+      - recommendation: describe the smallest project-specific correction using only verified repository facts.
+        Do not propose placeholder copy, example URLs or an invented brand description.
+      - verification: give concrete checks and expected results a reviewer can perform after the correction.
+        These are suggested checks, not claims that you executed them.
+      Avoid repeating the same sentence across these fields. Write clear Spanish without marketing filler.
       Read at least one relevant source file. You may report no findings when warranted.
       Finish with a short audit summary after all tools have returned; do not merely propose a plan.
     PROMPT

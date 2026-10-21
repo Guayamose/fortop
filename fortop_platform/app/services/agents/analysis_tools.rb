@@ -4,8 +4,8 @@ module Agents
       super + [ function("report_finding", "Persist one actionable SEO/GEO finding backed by an exact quote from a file you have read. Report gaps as missing behavior observed in existing relevant source, not invented files. Avoid duplicates and unsupported claims about actual AI rankings.", {
         title: string, description: string, category: { type: "STRING", enum: %w[indexability metadata structured_data content accessibility performance internationalization] },
         severity: { type: "STRING", enum: %w[high medium low] }, file_path: string, line_number: integer,
-        evidence: string, recommendation: string, automatable: { type: "BOOLEAN" }
-      }, required: %w[title description category severity file_path line_number evidence recommendation automatable]) ]
+        evidence: string, impact: string, recommendation: string, verification: string, automatable: { type: "BOOLEAN" }
+      }, required: %w[title description category severity file_path line_number evidence impact recommendation verification automatable]) ]
     end
 
     def call(name, arguments)
@@ -22,8 +22,10 @@ module Agents
       actual_line = original[0...original.index(evidence)].count("\n") + 1
       raise ToolError, "La línea debe indicar dónde empieza la evidencia exacta (línea #{actual_line})." unless line == actual_line
 
-      attrs = arguments.slice("title", "description", "category", "severity", "recommendation").transform_values { |value| value.to_s.strip.truncate(4000) }
-      raise ToolError, "El título o la descripción están vacíos." if attrs["title"].blank? || attrs["description"].blank? || attrs["recommendation"].blank?
+      attrs = arguments.slice("title", "description", "category", "severity", "impact", "recommendation", "verification").transform_values { |value| value.to_s.strip.truncate(4000) }
+      if %w[title description impact recommendation verification].any? { |field| attrs[field].blank? }
+        raise ToolError, "Completa el título, el diagnóstico, el impacto, la recomendación y las comprobaciones del hallazgo."
+      end
       raise ToolError, "Categoría o gravedad no válida." unless %w[indexability metadata structured_data content accessibility performance internationalization].include?(attrs["category"]) && %w[high medium low].include?(attrs["severity"])
       attrs["title"] = attrs["title"].truncate(180)
       fingerprint = Digest::SHA256.hexdigest([ attrs["category"], path, attrs["title"].downcase.strip ].join(":"))

@@ -52,22 +52,29 @@ class RepositoryFlowTest < ApplicationSystemTestCase
       save_review_screenshot("repository-picker-desktop")
       click_button "Conectar", exact: true
       assert_selector "h1", text: "website"
-      assert_text "El primer análisis está por llegar."
+      assert_text "Listo para analizar."
       save_review_screenshot("repository-profile-desktop")
+      repository = User.find_by!(github_id: 92001).repositories.find_by!(github_id: 42001)
 
       assert_enqueued_with(job: ScanJob) do
-        click_button "Iniciar análisis y remediación"
-        assert_selector "h1", text: /Análisis #/
+        click_button "Iniciar análisis"
+        assert_selector ".repository-scan-state h3", text: "En cola"
       end
+      assert_current_path repository_path(repository)
+      assert_selector "h1", text: "website"
       assert_text "En cola"
-      assert_no_selector ".scan-state-symbol.is-complete"
-      scan = User.find_by!(github_id: 92001).repositories.find_by!(github_id: 42001).scans.last
+      assert_button "Desconectar repositorio", disabled: true
+      assert_no_selector ".repository-scan-state.is-complete"
+      scan = repository.scans.last
       assert scan.queued?
+      find(".repository-scan-details > summary", text: "Actividad reciente de los agentes").click
 
       scan.update!(status: "analyzing", progress: 38, started_at: Time.current)
       scan.record_event!("El agente de análisis está revisando las plantillas.", kind: "tool")
       assert_selector "[role=progressbar][aria-valuenow='38']", wait: 10
       assert_text "El agente de análisis está revisando las plantillas."
+      assert_selector ".repository-scan-details[open] > summary", text: "Actividad reciente de los agentes"
+      find(".repository-scan-details > summary", text: "Actividad reciente de los agentes").click
       save_review_screenshot("scan-running-desktop")
 
       scan.update!(status: "completed", progress: 100, summary: "El agente ha revisado la estructura y documentado una oportunidad de mejora.", finished_at: Time.current)
@@ -78,25 +85,41 @@ class RepositoryFlowTest < ApplicationSystemTestCase
       # No navigation or reload: Stimulus fetches the real JSON endpoint and
       # replaces the progress with the terminal summary rendered by Rails.
       assert_text "Análisis completado", wait: 10
-      assert_selector ".scan-state-symbol.is-complete"
-      assert_selector "[role=progressbar][aria-valuenow='100']"
+      assert_selector ".repository-scan-state.is-complete"
+      assert_current_path repository_path(repository)
       assert_text "El agente ha revisado la estructura y documentado una oportunidad de mejora."
       assert_text "No se ha creado un pull request."
-      assert_text "Revisión manual"
       assert_selector "[data-scan-progress-active-value='false']"
+      assert_button "Nuevo análisis"
+      assert_button "Desconectar repositorio", disabled: false
+      assert_no_selector ".repository-history"
       assert_no_horizontal_overflow
       save_review_screenshot("scan-completed-desktop")
+      find(".repository-scan-details > summary", text: "Ver hallazgos y recomendaciones").click
+      assert_text "Revisión manual"
       find(".finding-card summary").click
       assert_link "Ver issue en GitHub", href: "https://github.com/browser-builder/website/issues/11"
 
       page.current_window.resize_to(390, 844)
-      assert_selector "h1", text: /Análisis #/
+      assert_selector "h1", text: "website"
       assert_no_horizontal_overflow
       save_review_screenshot("scan-completed-mobile")
-      click_link "browser-builder/website", exact: true
-      assert_selector "h1", text: "website"
-      assert_text "Historial de análisis"
       assert_no_horizontal_overflow
+
+      assert_enqueued_with(job: ScanJob) do
+        click_button "Nuevo análisis"
+        assert_selector ".repository-scan-state h3", text: "En cola"
+      end
+      new_scan = repository.scans.recent.first
+      assert_text "Historial de análisis"
+      assert_current_path repository_path(repository)
+      find(".history-row", text: "Análisis ##{scan.id}").click
+      assert_selector ".repository-scan-state h3", text: "Análisis completado"
+      assert_current_path repository_path(repository, scan_id: scan.id)
+      assert_no_button "Nuevo análisis"
+      click_link "Ver análisis en curso"
+      assert_selector ".repository-scan-state h3", text: "En cola"
+      assert_current_path repository_path(repository, scan_id: new_scan.id)
     end
   end
 
@@ -110,6 +133,7 @@ class RepositoryFlowTest < ApplicationSystemTestCase
       scan = repository.scans.create!(status: "failed", progress: 88, error_message: "GitHub no responde.", finished_at: Time.current,
         publication_changes: '{"files":{},"read_paths":[]}', validation_results: [ { "name" => "scope", "passed" => true } ])
       visit repository_scan_path(repository, scan)
+      assert_current_path repository_path(repository, scan_id: scan.id)
       assert_button "Reintentar publicación"
       assert_text "sin repetir la IA"
       save_review_screenshot("scan-retry-desktop")
@@ -120,12 +144,16 @@ class RepositoryFlowTest < ApplicationSystemTestCase
         end
       end
       assert scan.reload.queued?
+      assert_current_path repository_path(repository)
       assert_no_horizontal_overflow
-      scan.update!(status: "completed", progress: 100, publication_changes: nil, summary: "Publicación recuperada.", finished_at: Time.current)
+      scan.update!(status: "completed", progress: 100, publication_changes: nil, summary: "Publicación recuperada.", finished_at: Time.current,
+        pull_request_url: "https://github.com/browser-builder/website/pull/42", pull_request_number: 42)
       assert_text "Análisis completado", wait: 10
       assert_text "Publicación recuperada."
       assert_no_button "Reintentar publicación"
       assert_selector "[data-scan-progress-active-value='false']"
+      assert_link "Ver pull request", href: scan.pull_request_url
+      save_review_screenshot("repository-proposal-desktop")
     end
   end
 

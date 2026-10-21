@@ -192,27 +192,97 @@ main:focus { outline: none; }
 .picker-empty { display: flex; align-items: center; flex-direction: column; gap: 12px; padding: 55px 20px; color: var(--muted); font-size: 13px; }
 .picker-help { margin-top: 17px; color: var(--muted); font-size: 12px; }
 .picker-help .text-link { margin-left: 3px; font-size: 12px; }
-.repository-heading { display: flex; align-items: center; gap: 16px; }
-.repository-heading .eyebrow { margin-bottom: 5px; letter-spacing: .02em; }
-.repository-heading h1 { font-size: 34px; overflow-wrap: anywhere; }
-.repository-heading > .button { margin-left: auto; }
-.profile-description { max-width: 740px; margin-top: 20px; color: var(--muted); font-size: 14px; }
-.repository-profile-meta { display: flex; flex-wrap: wrap; gap: 24px; margin: 19px 0 32px; color: var(--muted); font-size: 12px; }
-.repository-profile-meta > span { display: flex; align-items: center; gap: 6px; }
-.repository-profile-meta .icon { width: 14px; height: 14px; }
-.run-panel { display: grid; grid-template-columns: 1.15fr 1fr; overflow: hidden; margin-bottom: 43px; }
-.run-panel-copy { padding: 34px 36px; }
-.run-panel-copy h2 { margin-top: 13px; font-size: 34px; font-weight: 450; line-height: 1.1; letter-spacing: -.03em; }
-.run-panel-copy p { max-width: 385px; margin: 18px 0 26px; color: var(--muted); font-size: 13px; line-height: 1.8; }
-.run-panel-copy .button { font-size: 12px; padding: 0 18px; }
-.run-panel-note { display: block; margin-top: 13px; color: var(--muted); font-size: 10px; }
-.run-flow { display: flex; flex-direction: column; justify-content: center; gap: 0; padding: 15px 34px; color: #fff; background: #141314; background-image: radial-gradient(ellipse at 110% 110%, #1478d525, transparent 70%); }
-.run-flow > div { display: flex; align-items: center; gap: 15px; padding: 26px 0; }
-.run-flow > div + div { border-top: 1px solid #ffffff15; }
-.run-flow > div > span { color: #737985; font: 11px var(--font-mono); }
-.run-flow h3 { color: #f3f5f9; font-family: var(--font-sans); font-size: 14px; font-weight: 450; }
-.run-flow p { margin-top: 5px; color: #a8b0bc; font-size: 11px; }
-.run-flow > div > .icon { margin-left: auto; color: #5aa9ef; width: 19px; height: 19px; }
+.repository-page .flash { align-items: center; padding: 0; margin-bottom: 20px; border: 0; border-radius: 0; background: transparent; font-size: 11px; }
+.repository-page .flash .icon { width: 14px; height: 14px; margin-top: 0; }
+.repository-profile .back-link { margin-bottom: 19px; font-size: 11px; }
+.repository-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; padding-bottom: 25px; margin-bottom: 24px; border-bottom: 1px solid var(--line); }
+.repository-heading > div { min-width: 0; }
+.repository-heading h1 { font-size: 30px; font-weight: 450; line-height: 1.2; letter-spacing: -.03em; overflow-wrap: anywhere; }
+.repository-heading .repository-owner { color: #8a909b; font-weight: 350; }
+.repository-github-link { flex: 0 0 auto; margin-top: 8px; font-size: 11px; }
+.repository-github-link .icon { width: 14px; height: 14px; }
+.repository-profile-meta { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 10px; color: var(--muted); font-size: 11px; }
+.repository-profile-meta > span { display: inline-flex; align-items: center; gap: 5px; }
+.repository-profile-meta .icon { width: 12px; height: 12px; }
+.repository-analysis { padding: 0; }
+.repository-analysis-heading { display: flex; align-items: center; justify-content: space-between; gap: 18px; min-height: 39px; padding-bottom: 17px; border-bottom: 1px solid var(--line); }
+.repository-analysis-heading > div { min-width: 0; }
+.repository-analysis-heading h2 { font-size: 18px; font-weight: 450; letter-spacing: -.02em; }
+.repository-analysis-heading > form { flex: 0 0 auto; }
+.repository-analysis-heading .button { min-height: 35px; padding: 0 16px; font-size: 11px; }
+.repository-analysis-heading .button .icon { width: 13px; height: 13px; }
+.repository-running-label { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: 10px; white-space: nowrap; }
+.repository-running-label .status-dot { width: 5px; height: 5px; color: var(--pine); }
+.repository-selected-scan { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; margin-top: 14px; color: var(--muted); font-size: 10px; }
+.repository-selected-scan .inline-divider { margin: 0 7px; }
+.repository-selected-scan .text-link { font-size: 10px; }
+.repository-analysis-empty { padding: 31px 0 32px; }
+.repository-analysis-empty h3 { font-size: 21px; font-weight: 400; letter-spacing: -.025em; }
+.repository-analysis-empty p { margin-top: 9px; color: var(--text-secondary); font-size: 13px; }
+.repository-analysis-empty > span { display: block; margin-top: 8px; color: var(--muted); font-size: 11px; }
+.repository-scan-state { padding: 24px 0 8px; }
+.repository-scan-state-heading { display: flex; align-items: center; gap: 12px; min-height: 33px; }
+.repository-scan-state-heading > div { flex: 1; min-width: 0; }
+.repository-scan-state-heading h3 { font-size: 21px; font-weight: 400; letter-spacing: -.025em; }
+.repository-scan-state-heading p { margin-top: 5px; color: var(--muted); font-size: 11px; }
+.repository-state-icon { display: inline-flex; flex: 0 0 auto; color: var(--muted); }
+.repository-state-icon .icon { width: 21px; height: 21px; stroke-width: 1.6; }
+.repository-scan-state.is-complete .repository-state-icon { color: var(--ok); }
+.repository-scan-state.is-error .repository-state-icon { color: #b07a22; }
+.repository-scan-signal { display: inline-flex; align-items: flex-end; justify-content: space-between; gap: 3px; width: 23px; height: 25px; flex: 0 0 auto; }
+.repository-scan-signal i { width: 3px; background: var(--pine); transform-origin: bottom; animation: repository-signal 1.8s ease-in-out infinite; }
+.repository-scan-signal i:nth-child(1) { height: 9px; }
+.repository-scan-signal i:nth-child(2) { height: 15px; animation-delay: .15s; }
+.repository-scan-signal i:nth-child(3) { height: 20px; animation-delay: .3s; }
+.repository-scan-signal i:nth-child(4) { height: 25px; animation-delay: .45s; }
+.repository-progress-value { display: inline-flex; align-items: baseline; gap: 3px; margin-left: auto; padding-left: 16px; font-family: var(--font-mono); }
+.repository-progress-value strong { font-size: 29px; font-weight: 400; letter-spacing: -.06em; }
+.repository-progress-value > span { color: var(--muted); font-size: 11px; }
+.repository-progress-line { height: 2px; margin-top: 23px; overflow: hidden; background: var(--line); }
+.repository-progress-line > span { display: block; height: 100%; background: var(--pine); transition: width .8s ease; }
+.repository-progress-phases { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; list-style: none; margin: 13px 0 0; padding: 0; }
+.repository-progress-phases li { display: flex; align-items: center; gap: 7px; color: #9298a3; font-size: 10px; }
+.repository-progress-phases li > span { color: #a4aab5; font: 9px var(--font-mono); }
+.repository-progress-phases .is-done { color: var(--text-secondary); }
+.repository-progress-phases .is-current, .repository-progress-phases .is-current > span { color: var(--pine); }
+.repository-live-activity { margin-top: 20px; color: var(--muted); font-size: 11px; overflow-wrap: anywhere; }
+.repository-scan-error { max-width: 850px; margin-top: 18px; color: #98631b; font-size: 12px; line-height: 1.7; overflow-wrap: anywhere; }
+.repository-scan-summary { max-width: 900px; margin-top: 17px; color: var(--text-secondary); font-size: 14px; line-height: 1.75; }
+.repository-scan-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; max-width: 800px; margin: 24px 0 0; }
+.repository-scan-metrics dt { color: var(--muted); font-size: 10px; }
+.repository-scan-metrics dd { margin: 7px 0 0; color: var(--shadow); font: 25px/1.2 var(--font-display); }
+.repository-proposal { display: flex; align-items: center; flex-wrap: wrap; gap: 14px 24px; margin-top: 23px; }
+.repository-proposal > span, .repository-no-changes { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 11px; }
+.repository-proposal > span .icon, .repository-no-changes .icon { width: 14px; height: 14px; }
+.repository-proposal .text-link { font-size: 11px; }
+.repository-no-changes { margin-top: 19px; }
+.repository-scan-details { margin-top: 16px; border-top: 1px solid var(--line); }
+.repository-scan-details > summary { display: flex; align-items: center; gap: 8px; padding: 14px 0 0; list-style: none; font-size: 11px; }
+.repository-scan-details > summary::-webkit-details-marker { display: none; }
+.repository-scan-details > summary > .icon { width: 12px; height: 12px; margin-left: auto; color: var(--muted); transition: transform .2s; }
+.repository-scan-details[open] > summary > .icon { transform: rotate(180deg); }
+.repository-scan-details > summary > span { color: var(--muted); font: 10px var(--font-mono); }
+.repository-findings { margin-top: 12px; }
+.repository-findings .finding-card { border-radius: 0; }
+.repository-findings .finding-card + .finding-card { border-top: 1px solid var(--line); }
+.repository-findings .finding-card > summary { padding: 14px 0; }
+.repository-findings .finding-body { padding: 16px 0; }
+.repository-activity { list-style: none; margin: 14px 0 0; padding: 0; }
+.repository-activity li { display: grid; grid-template-columns: 68px minmax(0, 1fr); gap: 15px; padding: 10px 0; border-bottom: 1px solid var(--line); color: var(--text-secondary); font-size: 11px; overflow-wrap: anywhere; }
+.repository-activity time { color: var(--muted); font: 10px/1.7 var(--font-mono); }
+.repository-checks { margin-top: 15px; }
+.repository-checks > div, .repository-checks > p { display: flex; align-items: center; gap: 9px; padding: 9px 0; color: var(--text-secondary); font-size: 11px; overflow-wrap: anywhere; }
+.repository-checks > div .icon, .repository-checks > p .icon { width: 14px; height: 14px; }
+.repository-checks small, .repository-checks > p > span { flex: 0 0 auto; margin-left: auto; color: var(--muted); font-size: 10px; }
+.repository-checks code { min-width: 0; overflow-wrap: anywhere; }
+.repository-history { margin-top: 31px; }
+.repository-history .section-heading { margin-bottom: 17px; }
+.repository-history .section-heading h2 { font-size: 18px; }
+.repository-history .history-row { padding: 14px 0; }
+.repository-history .history-row[aria-current=true] strong, .repository-history .history-row[aria-current=true] > .icon { color: var(--pine); }
+.repository-profile .disconnect-row { margin-top: 26px; padding-top: 14px; border-top: 1px solid var(--line); }
+@keyframes repository-signal { 0%, 100% { transform: scaleY(.5); opacity: .45; } 50% { transform: scaleY(1); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .repository-scan-signal i { animation: none; } .repository-progress-line > span { transition: none; } }
 .section-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 15px; margin-bottom: 20px; }
 .section-heading h2 { margin-top: 7px; font-size: 24px; font-weight: 450; letter-spacing: -.025em; }
 .section-heading > span { color: var(--muted); font-size: 12px; }
@@ -400,11 +470,6 @@ main:focus { outline: none; }
   .workspace-account, .topbar-divider { display: none; }
   .main-nav { margin-left: 10px; }
   .nav-item { font-size: 12px; }
-  .run-panel-copy { padding: 28px; }
-  .run-panel-copy h2 { font-size: 30px; }
-  .run-flow { padding-left: 25px; padding-right: 25px; }
-  .run-panel-copy .button { font-size: 11px; padding: 0 13px; gap: 7px; }
-  .run-panel-copy .button > .icon:last-child { display: none; }
   .scan-details-grid { grid-template-columns: minmax(0, 1fr); }
   .scan-side-panels { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .scan-context { grid-column: 1 / -1; }
@@ -470,16 +535,37 @@ main:focus { outline: none; }
   .repository-heading .large { width: 41px; height: 41px; border-radius: 12px; }
   .profile-description { font-size: 13px; }
   .repository-profile-meta { gap: 17px; font-size: 11px; margin-bottom: 27px; }
-  .run-panel { grid-template-columns: minmax(0, 1fr); margin-bottom: 34px; }
-  .run-panel-copy { padding: 27px 24px; }
-  .run-panel-copy h2 { font-size: 33px; }
-  .run-panel-copy p { max-width: none; font-size: 12px; }
-  .run-panel-copy .button { font-size: 11px; }
-  .run-panel-copy .button .icon:first-child { width: 16px; height: 16px; }
-  .run-flow { padding: 1px 24px; }
-  .run-flow > div { padding: 22px 0; }
-  .run-flow h3 { font-size: 13px; }
-  .run-flow p { font-size: 11px; }
+  .repository-profile .back-link { margin-bottom: 17px; }
+  .repository-heading { gap: 15px; margin-bottom: 20px; padding-bottom: 20px; }
+  .repository-heading h1 { font-size: 25px; }
+  .repository-github-link { margin-top: 4px; font-size: 10px; }
+  .repository-github-link > .icon:first-child { display: none; }
+  .repository-profile-meta { margin: 9px 0 0; gap: 12px; font-size: 10px; }
+  .repository-analysis-heading { flex-wrap: wrap; gap: 12px; padding-bottom: 14px; }
+  .repository-analysis-heading h2 { font-size: 17px; }
+  .repository-analysis-heading .button { min-height: 35px; padding: 0 13px; font-size: 10px; }
+  .repository-analysis-empty { padding: 26px 0; }
+  .repository-analysis-empty h3 { font-size: 20px; }
+  .repository-analysis-empty p { max-width: 350px; font-size: 12px; }
+  .repository-analysis-empty > span { max-width: 330px; font-size: 10px; line-height: 1.8; }
+  .repository-selected-scan { font-size: 9px; }
+  .repository-selected-scan .inline-divider { margin: 0 4px; }
+  .repository-scan-state { padding-top: 23px; }
+  .repository-scan-state-heading { gap: 10px; }
+  .repository-scan-state-heading h3 { font-size: 19px; line-height: 1.2; }
+  .repository-progress-value { padding-left: 8px; }
+  .repository-progress-value strong { font-size: 25px; }
+  .repository-progress-phases { gap: 6px; }
+  .repository-progress-phases li { align-items: flex-start; flex-direction: column; gap: 4px; font-size: 9px; }
+  .repository-progress-phases li > span { font-size: 8px; }
+  .repository-live-activity { margin-top: 18px; font-size: 10px; }
+  .repository-scan-summary, .repository-scan-error { font-size: 12px; }
+  .repository-scan-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 15px; }
+  .repository-scan-metrics dt { font-size: 10px; }
+  .repository-scan-metrics dd { font-size: 24px; }
+  .repository-scan-details > summary { font-size: 11px; }
+  .repository-activity li { grid-template-columns: 57px minmax(0, 1fr); gap: 10px; font-size: 10px; }
+  .repository-activity time { font-size: 9px; }
   .section-heading h2 { font-size: 22px; }
   .section-heading > span { font-size: 10px; }
   .history-empty { align-items: flex-start; gap: 13px; }

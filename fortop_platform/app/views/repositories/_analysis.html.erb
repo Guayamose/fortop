@@ -1,0 +1,83 @@
+<div class="repository-scan-state <%= scan.completed? ? 'is-complete' : scan.failed? ? 'is-error' : '' %>">
+  <div class="repository-scan-state-heading">
+    <% if scan.active? %><span class="repository-scan-signal" aria-hidden="true"><i></i><i></i><i></i><i></i></span><% else %><span class="repository-state-icon"><%= app_icon(scan.completed? ? :check : scan.cancelled? ? :pause : :alert) %></span><% end %>
+    <div>
+      <% stage_labels = { "queued" => "En cola", "discovering" => "Preparando el repositorio", "analyzing" => "Analizando el código", "remediating" => "Preparando las mejoras", "validating" => "Verificando los cambios", "publishing" => "Publicando en GitHub" } %>
+      <h3><%= scan.completed? ? 'Análisis completado' : scan.failed? ? 'Análisis interrumpido' : scan.cancelled? ? 'Análisis cancelado' : stage_labels.fetch(scan.status) %></h3>
+      <% if scan.cancelled? %><p>Puedes iniciar un nuevo análisis cuando quieras.</p><% end %>
+    </div>
+    <% if scan.active? %><span class="repository-progress-value"><strong><%= scan.progress %></strong><span>%</span></span><% end %>
+  </div>
+
+  <% if scan.active? %>
+    <div class="repository-progress-line" role="progressbar" aria-label="Progreso del análisis" aria-valuenow="<%= scan.progress %>" aria-valuemin="0" aria-valuemax="100"><span style="width: <%= scan.progress %>%"></span></div>
+    <% phases = [["discovering", "Explorar"], ["analyzing", "Analizar"], ["remediating", "Remediar"], ["validating", "Verificar"], ["publishing", "Publicar"]]; phase_index = phases.index { |phase| phase.first == scan.status } || -1 %>
+    <ol class="repository-progress-phases" aria-label="Fases del análisis">
+      <% phases.each_with_index do |(status, label), index| %>
+        <%= tag.li class: index < phase_index ? 'is-done' : index == phase_index ? 'is-current' : nil, aria: { current: status == scan.status ? 'step' : nil } do %><span><%= format('%02d', index + 1) %></span><%= label %><% end %>
+      <% end %>
+    </ol>
+    <p class="repository-live-activity" role="status"><%= scan.scan_events.order(created_at: :desc, id: :desc).first&.message || "Preparando el análisis del repositorio." %></p>
+  <% end %>
+
+  <% if scan.failed? %>
+    <div class="repository-scan-error" role="alert"><%= scan.error_message.presence || 'No se ha podido completar el análisis.' %></div>
+    <% if scan.publication_retryable? %><p class="quiet-note">Las correcciones se conservan. Reintenta la publicación sin repetir la IA.</p><% else %><p class="quiet-note">Al reintentar se iniciará un nuevo análisis con IA.</p><% end %>
+  <% end %>
+
+  <% if scan.completed? || scan.failed? %>
+    <% if scan.summary.present? %><p class="repository-scan-summary"><%= scan.summary %></p><% end %>
+    <% if scan.completed? || @finding_counts.fetch(scan.id, 0).positive? || scan.changed_files.any? || scan.pull_request_url.present? %>
+    <dl class="repository-scan-metrics">
+      <div><dt>Mejoras detectadas</dt><dd><%= @finding_counts.fetch(scan.id, 0) %></dd></div>
+      <div><dt>Archivos con cambios</dt><dd><%= scan.changed_files.size %></dd></div>
+      <div><dt>Issues en GitHub</dt><dd><%= scan.findings.where.not(issue_url: [nil, ""]).count %></dd></div>
+      <div><dt>Pull request</dt><dd><%= scan.pull_request_url.present? ? '1' : '0' %></dd></div>
+    </dl>
+    <% end %>
+    <% if scan.pull_request_url.present? %>
+      <div class="repository-proposal"><span><%= app_icon(:pull_request) %> Correcciones listas para revisar.</span><%= external_link(safe_join(["Ver pull request", app_icon(:external)]), scan.pull_request_url, class: "text-link") %></div>
+    <% elsif scan.completed? %>
+      <p class="repository-no-changes"><%= app_icon(:code) %> No se ha creado un pull request.</p>
+    <% end %>
+  <% end %>
+</div>
+
+<% if scan.findings.any? && !scan.active? %>
+  <details class="repository-scan-details">
+    <summary>Ver hallazgos y recomendaciones <span><%= @finding_counts.fetch(scan.id, 0) %></span><%= app_icon(:chevron_down) %></summary>
+    <div class="repository-findings">
+      <% scan.findings.order(:id).each do |finding| %>
+        <details class="finding-card">
+          <summary><span class="severity-mark severity-<%= finding.severity %>"></span><div class="finding-heading"><strong><%= finding.title %></strong><span><%= finding_status_label(finding.status) %></span></div><span class="badge badge-neutral"><%= severity_label(finding.severity) %></span><span class="details-toggle">+</span></summary>
+          <div class="finding-body">
+            <p><%= finding.description %></p>
+            <% if finding.file_path.present? %><p><code><%= finding.file_path %><%= ":#{finding.line_number}" if finding.line_number.present? %></code></p><% end %>
+            <% if finding.evidence.present? %><h4>Evidencia</h4><pre><%= finding.evidence %></pre><% end %>
+            <% if finding.recommendation.present? %><h4>Recomendación</h4><p><%= finding.recommendation %></p><% end %>
+            <% if finding.issue_url.present? %><%= external_link(safe_join(["Ver issue en GitHub", app_icon(:external)]), finding.issue_url, class: "text-link") %><% end %>
+          </div>
+        </details>
+      <% end %>
+    </div>
+  </details>
+<% end %>
+
+<details class="repository-scan-details">
+  <summary>Actividad reciente de los agentes <%= app_icon(:chevron_down) %></summary>
+  <ol class="repository-activity">
+    <% scan.scan_events.order(created_at: :desc, id: :desc).limit(20).each do |event| %>
+      <li><time datetime="<%= event.created_at.iso8601 %>"><%= event.created_at.in_time_zone('Europe/Madrid').strftime('%H:%M:%S') %></time><span><%= event.message %></span></li>
+    <% end %>
+  </ol>
+</details>
+
+<% if scan.validation_results.any? || scan.changed_files.any? %>
+  <details class="repository-scan-details">
+    <summary>Comprobaciones y archivos <%= app_icon(:chevron_down) %></summary>
+    <div class="repository-checks">
+      <% scan.validation_results.each do |check| %><div><%= app_icon(check['passed'] ? :check : :alert) %><span><%= check['name'] %></span><small><%= check['passed'] ? 'Correcto' : 'Revisar' %></small></div><% end %>
+      <% scan.changed_files.each do |file| %><p><%= app_icon(:code) %><code><%= file['path'] %></code><span>+<%= file['additions'] || 0 %> / −<%= file['deletions'] || 0 %></span></p><% end %>
+    </div>
+  </details>
+<% end %>

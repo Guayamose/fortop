@@ -14,7 +14,7 @@
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
-  <body class="<%= current_user ? 'workspace-body' : 'access-body' %>">
+  <body class="<%= [current_user ? 'workspace-body' : 'access-body', content_for(:body_class)].compact.join(' ') %>">
     <a href="#main-content" class="skip-link">Saltar al contenido</a>
     <% if current_user %>
       <header class="topbar"><div class="topbar-inner">

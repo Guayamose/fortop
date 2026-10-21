@@ -48,6 +48,21 @@ class RepositoriesController < ApplicationController
     @repository.scans.active.each(&:expire_if_stale!)
     @scans = @repository.scans.recent
     @latest_scan = @scans.first
+    @active_scan = @scans.find(&:active?)
+    if params[:scan_id].present?
+      raise ActiveRecord::RecordNotFound unless params[:scan_id].is_a?(String) && params[:scan_id].match?(/\A[1-9]\d*\z/)
+      @selected_scan = @scans.find(params[:scan_id])
+    else
+      @selected_scan = @active_scan || @latest_scan
+    end
+    @finding_counts = Finding.where(scan_id: @scans.map(&:id)).group(:scan_id).count
+
+    respond_to do |format|
+      format.html
+      format.json do
+        render json: { html: render_to_string(partial: "repositories/workspace", formats: [ :html ]), active: @active_scan.present? }
+      end
+    end
   end
 
   def destroy

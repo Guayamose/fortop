@@ -114,4 +114,73 @@ class RepositoriesControllerTest < ActionDispatch::IntegrationTest
     end
     assert_redirected_to repositories_path
   end
+
+  test "repository profile offers one workspace before the first analysis" do
+    repository = connected_repository(@user)
+    get repository_path(repository)
+    assert_response :success
+    assert_select "h1 .repository-title-name", repository.display_name
+    assert_select ".repository-analysis", count: 1
+    assert_select ".run-panel, .run-flow", count: 0
+    assert_select "form[action=?]", repository_scans_path(repository) do
+      assert_select "input[name=return_to][value=repository]"
+      assert_select "button", text: "Iniciar análisis"
+    end
+    assert_select "[data-scan-progress-active-value=false]"
+    assert_select ".repository-scan-metrics", count: 0
+  end
+
+  test "profile JSON updates progress and results without rendering private state" do
+    repository = connected_repository(@user)
+    scan = repository.scans.create!(status: "analyzing", progress: 35, metadata: { "internal" => "hidden-secret" })
+    scan.record_event!("Revisando las plantillas HTML.", kind: "tool")
+    get repository_path(repository, format: :json), params: { scan_id: scan.id }
+    assert_response :success
+    assert_equal true, response.parsed_body["active"]
+    assert_includes response.parsed_body["html"], 'aria-valuenow="35"'
+    assert_includes response.parsed_body["html"], "Revisando las plantillas HTML."
+    refute_includes response.body, "hidden-secret"
+    refute_includes response.body, @user.github_token
+
+    scan.update!(status: "completed", progress: 100, summary: "Se ha revisado el código del sitio.", finished_at: Time.current)
+    get repository_path(repository, format: :json), params: { scan_id: scan.id }
+    assert_equal false, response.parsed_body["active"]
+    assert_includes response.parsed_body["html"], "Análisis completado"
+    assert_includes response.parsed_body["html"], "Se ha revisado el código del sitio."
+    assert_includes response.parsed_body["html"], "Nuevo análisis"
+  end
+
+  test "an older publication retry remains selectable while a newer completed analysis exists" do
+    repository = connected_repository(@user)
+    older = repository.scans.create!(status: "failed", created_at: 2.hours.ago)
+    newer = repository.scans.create!(status: "completed", progress: 100)
+    older.update!(status: "queued")
+    get repository_path(repository)
+    assert_select "[data-scan-progress-url-value=?]", repository_path(repository, scan_id: older.id, format: :json)
+    assert_select ".repository-selected-scan", text: /Análisis ##{older.id}/
+    assert_select "a[href=?]", repository_path(repository, scan_id: newer.id), text: "Volver al último análisis"
+    assert_select "button", text: "Nuevo análisis", count: 0
+    assert_select "button[disabled]", text: "Desconectar repositorio"
+
+    get repository_path(repository), params: { scan_id: newer.id }
+    assert_select ".repository-selected-scan", text: /Análisis ##{newer.id}/
+    assert_select "a[href=?]", repository_path(repository, scan_id: older.id), text: /Ver análisis en curso/
+
+    older.update!(status: "completed", progress: 100, summary: "Publicación recuperada.")
+    get repository_path(repository, format: :json), params: { scan_id: older.id }
+    assert_equal false, response.parsed_body["active"]
+    assert_includes response.parsed_body["html"], "Publicación recuperada."
+  end
+
+  test "profile history cannot select a scan belonging to a different repository" do
+    repository = connected_repository(@user)
+    another = connected_repository(@user, github_id: 333, name: "fortop-builder/another")
+    scan = another.scans.create!(status: "completed")
+    get repository_path(repository), params: { scan_id: scan.id }
+    assert_response :not_found
+    get repository_path(repository, format: :json), params: { scan_id: scan.id }
+    assert_response :not_found
+    get repository_path(repository, format: :json), params: { scan_id: [ scan.id ] }
+    assert_response :not_found
+  end
 end

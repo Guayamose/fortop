@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
+import { Turbo } from "@hotwired/turbo-rails"
 
 export default class extends Controller {
   static targets = ["content", "error"]
@@ -41,7 +42,9 @@ export default class extends Controller {
       const result = await response.json()
       if (this.stopped) return
       const openFindings = Array.from(this.contentTarget.querySelectorAll("details[open]")).map((element) => element.querySelector("summary")?.textContent)
-      this.contentTarget.innerHTML = result.html
+      const template = document.createElement("template")
+      template.innerHTML = result.html
+      Turbo.morphChildren(this.contentTarget, template.content)
       this.contentTarget.querySelectorAll("details").forEach((element) => {
         if (openFindings.includes(element.querySelector("summary")?.textContent)) element.open = true
       })

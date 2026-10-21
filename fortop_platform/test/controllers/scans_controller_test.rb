@@ -13,14 +13,20 @@ class ScansControllerTest < ActionDispatch::IntegrationTest
   test "start persists scan and activity before enqueueing actual background work" do
     assert_enqueued_with job: ScanJob do
       assert_difference "@repository.scans.count", 1 do
-        post repository_scans_path(@repository)
+        post repository_scans_path(@repository), params: { return_to: "repository" }
       end
     end
     scan = @repository.scans.last
     assert scan.queued?
     assert_equal 0, scan.progress
     assert scan.scan_events.exists?
-    assert_redirected_to repository_scan_path(@repository, scan)
+    assert_redirected_to repository_path(@repository)
+    assert_no_enqueued_jobs do
+      assert_no_difference "Scan.count" do
+        post repository_scans_path(@repository), params: { return_to: "repository" }
+      end
+    end
+    assert_redirected_to repository_path(@repository)
   end
 
   test "repeated clicks reuse an active scan instead of launching multiple agents" do
@@ -36,16 +42,18 @@ class ScansControllerTest < ActionDispatch::IntegrationTest
   test "a failed publication can be enqueued again without creating another scan" do
     scan = saved_publication
     get repository_scan_path(@repository, scan)
+    assert_redirected_to repository_path(@repository, scan_id: scan.id)
+    follow_redirect!
     assert_select "button", text: "Reintentar publicación"
     refute_includes response.body, "private saved source"
     assert_select "button", text: "Reintentar análisis", count: 0
 
     assert_enqueued_with(job: ScanJob, args: [ scan.id ]) do
       assert_no_difference "Scan.count" do
-        post retry_publication_repository_scan_path(@repository, scan)
+        post retry_publication_repository_scan_path(@repository, scan), params: { return_to: "repository" }
       end
     end
-    assert_redirected_to repository_scan_path(@repository, scan)
+    assert_redirected_to repository_path(@repository)
     assert scan.reload.queued?
     assert_nil scan.error_message
     assert_nil scan.finished_at
@@ -70,6 +78,7 @@ class ScansControllerTest < ActionDispatch::IntegrationTest
   test "old failures without saved changes offer a new analysis instead of promising AI-free recovery" do
     scan = @repository.scans.create!(status: "failed", error_message: "GitHub no responde.")
     get repository_scan_path(@repository, scan)
+    follow_redirect!
     assert_select "button", text: "Reintentar análisis"
     assert_select "button", text: "Reintentar publicación", count: 0
     assert_includes response.body, "nuevo análisis con IA"
@@ -112,8 +121,9 @@ class ScansControllerTest < ActionDispatch::IntegrationTest
     assert scan.finished_at
     assert_redirected_to repository_scan_path(@repository, scan)
     get response.location
+    follow_redirect!
     assert_response :success
-    assert_select ".scan-error", text: /No se ha podido iniciar el análisis/
+    assert_select ".repository-scan-error", text: /No se ha podido iniciar el análisis/
     assert_select ".is-complete", count: 0
     refute_includes response.body, "private queue detail"
   end
@@ -156,25 +166,27 @@ class ScansControllerTest < ActionDispatch::IntegrationTest
       validation_results: [ { "name" => "Sintaxis", "passed" => true, "details" => "Correcto" } ])
     scan.findings.create!(title: "Descripción ausente", description: "Falta la descripción del sitio.", severity: "medium", category: "metadata", evidence: "No hay meta description.", status: "fixed", issue_url: "https://github.com/fortop-builder/site/issues/6")
     get repository_scan_path(@repository, scan)
+    follow_redirect!
     assert_response :success
     assert_select ".is-complete", count: 1
     assert_select "a[href=?]", scan.pull_request_url, count: 1
     assert_select "a[href=?]", "https://github.com/fortop-builder/site/issues/6", count: 1
-    assert_select ".finding-state", "Corrección propuesta"
-    assert_select ".validation-result", "Correcto"
+    assert_select ".finding-heading span", "Corrección propuesta"
+    assert_select ".repository-checks small", "Correcto"
     assert_select "[data-scan-progress-active-value=false]"
   end
 
   test "no changes and failed publication are represented accurately" do
     scan = @repository.scans.create!(status: "completed", progress: 100)
     get repository_scan_path(@repository, scan)
-    assert_select ".no-changes-note", text: /No se ha creado un pull request/
+    follow_redirect!
+    assert_select ".repository-no-changes", text: /No se ha creado un pull request/
     scan.update!(status: "failed", progress: 90, error_message: "Publicación incompleta.", pull_request_url: "https://github.com/fortop-builder/site/pull/2")
     get repository_scan_path(@repository, scan)
+    follow_redirect!
     assert_select ".is-complete", count: 0
-    assert_select ".scan-error", text: /Publicación incompleta/
-    assert_select ".phase-list .is-done", count: 4
-    assert_select ".phase-list .is-blocked", count: 1
+    assert_select ".repository-scan-error", text: /Publicación incompleta/
+    assert_select ".repository-scan-state.is-error h3", "Análisis interrumpido"
     assert_select "a[href=?]", scan.pull_request_url, count: 1
   end
 
@@ -182,6 +194,7 @@ class ScansControllerTest < ActionDispatch::IntegrationTest
     scan = @repository.scans.create!(status: "completed", progress: 100, pull_request_url: "javascript:alert(1)")
     scan.findings.create!(title: "<script>alert(1)</script>", description: "<img src=x onerror=alert(1)>", severity: "low", category: "metadata", evidence: "<iframe src=evil>", issue_url: "https://evil.example/steal")
     get repository_scan_path(@repository, scan)
+    follow_redirect!
     assert_response :success
     assert_select "script:not([type=importmap]):not([type=module])", count: 0
     assert_select "a[href^='javascript:']", count: 0

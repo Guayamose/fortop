@@ -1,0 +1,56 @@
+<section class="repository-analysis" id="repository-analysis" aria-labelledby="repository-analysis-title">
+  <header class="repository-analysis-heading">
+    <div>
+      <h2 id="repository-analysis-title">Análisis y remediación</h2>
+    </div>
+    <% if @active_scan %>
+      <% if @selected_scan&.id == @active_scan.id %>
+        <span class="repository-running-label"><span class="status-dot"></span> En directo</span>
+      <% else %>
+        <%= link_to repository_path(@repository, scan_id: @active_scan.id), class: "button button-primary button-small" do %>Ver análisis en curso <%= app_icon(:arrow) %><% end %>
+      <% end %>
+    <% elsif @selected_scan&.publication_retryable? %>
+      <%= button_to "Reintentar publicación", retry_publication_repository_scan_path(@repository, @selected_scan), params: { return_to: "repository" }, class: "button button-primary", data: { turbo_submits_with: "Solicitando reintento…" } %>
+    <% else %>
+      <%= button_to repository_scans_path(@repository), params: { return_to: "repository" }, class: "button button-primary", data: { turbo_submits_with: "Preparando agentes…" } do %>
+        <%= app_icon(:play) %><%= @selected_scan&.failed? ? "Reintentar análisis" : @latest_scan ? "Nuevo análisis" : "Iniciar análisis" %>
+      <% end %>
+    <% end %>
+  </header>
+
+  <% if @selected_scan %>
+    <div class="repository-selected-scan">
+      <span>Análisis #<%= @selected_scan.id %><span class="inline-divider">·</span><%= human_timestamp(@selected_scan.created_at) %><% if @selected_scan.started_at %><span class="inline-divider">·</span><%= elapsed_time(@selected_scan) %><% end %></span>
+      <% if @selected_scan.id != @latest_scan.id %><%= link_to "Volver al último análisis", repository_path(@repository, scan_id: @latest_scan.id), class: "text-link" %><% end %>
+    </div>
+    <%= render "repositories/analysis", scan: @selected_scan %>
+  <% else %>
+    <div class="repository-analysis-empty">
+      <h3>Listo para analizar.</h3>
+      <p>Los agentes revisarán tu código y prepararán las mejoras en GitHub.</p>
+      <span>Tú revisas y apruebas los cambios. El progreso y los resultados aparecen aquí.</span>
+    </div>
+  <% end %>
+</section>
+
+<% if @scans.size > 1 %>
+  <section class="repository-history" aria-labelledby="repository-history-title">
+    <div class="section-heading"><h2 id="repository-history-title">Historial de análisis</h2><span><%= pluralize(@scans.size, "análisis", "análisis") %></span></div>
+    <div class="history-table">
+      <div class="history-header" aria-hidden="true"><span>ANÁLISIS</span><span>ESTADO</span><span>MEJORAS</span><span></span></div>
+      <% @scans.each do |scan| %>
+        <%= link_to repository_path(@repository, scan_id: scan.id, anchor: "repository-analysis"), class: "history-row", aria: { current: @selected_scan&.id == scan.id ? "true" : nil } do %>
+          <div><strong>Análisis #<%= scan.id %></strong><span><%= human_timestamp(scan.created_at) %></span></div>
+          <%= status_badge(scan) %>
+          <span class="history-count"><%= @finding_counts.fetch(scan.id, 0) %></span>
+          <%= app_icon(:arrow) %>
+        <% end %>
+      <% end %>
+    </div>
+  </section>
+<% end %>
+
+<div class="disconnect-row">
+  <span>Conectado el <%= @repository.connected_at.in_time_zone('Europe/Madrid').strftime('%d/%m/%Y') %></span>
+  <%= button_to "Desconectar repositorio", repository_path(@repository), method: :delete, class: "text-link muted-link", disabled: @active_scan.present?, data: { turbo_confirm: "¿Desconectar #{@repository.full_name}? Se eliminará su historial en Fortop." } %>
+</div>

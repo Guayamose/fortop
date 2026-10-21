@@ -10,6 +10,7 @@ progreso y revisa los issues y pull requests propuestos.
 | [`fortop_github_app/`](fortop_github_app/README.md) | Registro y configuración de la GitHub App; sus callbacks viven en Rails. |
 | `fortop_brand_kit/` | Maestros, variantes, manual y fuentes de la marca. |
 | `fortop-deliverables/` | Canvas, plan de negocio visual, arquitectura y diagramas C4 en SVG, PNG y PDF. |
+| [`tools/deliverables/`](tools/deliverables/README.md) | Generadores portables de las láminas y de sus archivos conjuntos. |
 
 Para arrancar y configurar credenciales, consulta la
 [guía de la plataforma](fortop_platform/README.md). Los comandos Rails se ejecutan

@@ -44,7 +44,9 @@ export default class extends Controller {
       const openFindings = Array.from(this.contentTarget.querySelectorAll("details[open]")).map((element) => element.querySelector("summary")?.textContent)
       const template = document.createElement("template")
       template.innerHTML = result.html
+      this.dispatch("before-render", { detail: { content: this.contentTarget } })
       Turbo.morphChildren(this.contentTarget, template.content)
+      this.dispatch("after-render", { detail: { content: this.contentTarget } })
       this.contentTarget.querySelectorAll("details").forEach((element) => {
         if (openFindings.includes(element.querySelector("summary")?.textContent)) element.open = true
       })

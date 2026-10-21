@@ -148,7 +148,7 @@ class RepositoryFlowTest < ApplicationSystemTestCase
       scan.record_event!("Buscando metadatos adicionales.", kind: "tool")
       assert_selector ".repository-console li", text: "Buscando metadatos adicionales.", visible: :all, wait: 10
       assert_equal 0, page.evaluate_script("document.querySelector('[role=log]').scrollTop")
-      click_button "Ir a las últimas acciones ↓"
+      find("button[aria-label='Ir a las últimas acciones']").click
       assert page.evaluate_script("document.querySelector('[role=log]').scrollTop > 0")
 
       click_button "Pausar"
@@ -184,6 +184,102 @@ class RepositoryFlowTest < ApplicationSystemTestCase
       assert_button "Desconectar repositorio", disabled: false
       assert_no_button "Continuar"
       assert_selector "[data-scan-progress-active-value='false']"
+    end
+  end
+
+  test "agent workspace filters searches expands and copies real activity across live updates" do
+    with_browser_github do
+      visit new_session_path
+      click_button "Continuar con GitHub"
+      assert_selector "h1", text: "Repositorios"
+      user = User.find_by!(github_id: 92001)
+      repository = user.repositories.create!(github_id: 42001, installation_id: 88001, full_name: "browser-builder/website", html_url: "https://github.com/browser-builder/website")
+      scan = repository.scans.create!(status: "remediating", progress: 45, started_at: 1.minute.ago)
+      scan.record_event!("Instantánea del repositorio preparada.")
+      scan.record_event!("Análisis: explorando archivos.", kind: "tool", metadata: { agent: "analysis", tool: "list_files", turn: 1 })
+      scan.record_event!("Análisis: leyendo código (app/layout.tsx).", kind: "tool", metadata: { agent: "analysis", tool: "read_file", path: "app/layout.tsx", turn: 2 })
+      scan.record_event!("Análisis: contrastando referencias.", kind: "tool", metadata: { agent: "analysis", tool: "search", turn: 3 })
+      finding = scan.findings.create!(title: "Descripción de la página ausente", description: "Falta una descripción específica.", category: "metadata", severity: "medium", evidence: "<head><title>Website</title></head>", automatable: true)
+      scan.record_event!("Hallazgo: descripción de la página ausente.", kind: "finding", metadata: { finding_id: finding.id, severity: "medium" })
+      scan.record_event!("Análisis: leyendo código (public/robots.txt).", kind: "tool", metadata: { agent: "analysis", tool: "read_file", path: "public/robots.txt", turn: 4 })
+      scan.record_event!("Remediación: preparando una corrección (app/layout.tsx).", kind: "tool", metadata: { agent: "remediation", tool: "replace_text", path: "app/layout.tsx", turn: 1 })
+      visit repository_path(repository)
+      within ".repository-console" do
+        assert_text "Agente de análisis"
+        assert_text "Agente de remediación"
+        assert_selector ".console-file-tsx"
+        assert_selector ".console-current-copy strong", text: "Dando forma a las mejoras"
+        assert_selector "[data-console-event]", count: 7
+        assert_no_horizontal_overflow
+      end
+      save_console_screenshot("agent-workspace-desktop")
+
+      within ".repository-console" do
+        click_button "Hallazgos", exact: true
+        assert_selector "[data-console-event]", count: 1
+        assert_text "descripción de la página ausente"
+        assert_no_selector "[data-category=code]"
+        click_button "GitHub", exact: true
+        assert_text "No hay acciones que coincidan."
+        click_button "Limpiar filtros"
+        click_button "Código", exact: true
+        find("input[aria-label='Buscar actividad']").set("layout.tsx")
+        assert_selector "[data-console-event]", count: 2
+        find("button[aria-label='Ampliar consola']").click
+        assert_selector "button[aria-label='Reducir consola']"
+      end
+
+      scan.record_event!("Remediación: verificando app/layout.tsx.", kind: "tool", metadata: { agent: "remediation", tool: "validate_changes", path: "app/layout.tsx", turn: 2 })
+      within ".repository-console" do
+        assert_selector "[data-console-event]", count: 3, wait: 10
+        assert_equal "layout.tsx", find("input[aria-label='Buscar actividad']").value
+        assert_selector "button[data-filter=code][aria-pressed=true]"
+        assert_selector "button[aria-label='Reducir consola']"
+        assert_selector ".console-event.is-arriving", text: "Verificando app/layout.tsx."
+
+        # Exercise the clipboard action without changing the system clipboard.
+        page.execute_script("window.consoleCopiedActivity = null; Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async (text) => { window.consoleCopiedActivity = text } } })")
+        find("button[aria-label='Copiar actividad']").click
+        assert_text "Actividad copiada"
+        copied = page.evaluate_script("window.consoleCopiedActivity")
+        assert_includes copied, "app/layout.tsx"
+        refute_includes copied, "public/robots.txt"
+        refute_includes copied, "descripción de la página ausente"
+
+        find("input[aria-label='Buscar actividad']").set("")
+        click_button "Todo", exact: false
+        find("button[aria-label='Reducir consola']").click
+      end
+      checks = [ { "name" => "scope", "passed" => true }, { "name" => "syntax:app/layout.tsx", "passed" => true } ]
+      scan.update!(status: "publishing", progress: 88, changed_files: [ { "path" => "app/layout.tsx", "additions" => 3, "deletions" => 1 } ], validation_results: checks)
+      scan.record_event!("Verificación final: 2 de 2 comprobaciones correctas.", kind: "validation", metadata: { checks: checks })
+      scan.record_event!("Issue registrado: descripción de la página ausente.", kind: "publication", metadata: { issue_url: "https://github.com/browser-builder/website/issues/21" })
+      within ".repository-console" do
+        assert_selector ".console-current-copy strong", text: "Llevando el trabajo a GitHub", wait: 10
+        assert_selector ".console-file-diff", text: "+3"
+        assert_selector ".console-check-result.is-success", text: "2/2 comprobaciones"
+        click_button "GitHub", exact: true
+        assert_selector "[data-console-event]", count: 1
+        assert_link "Ver en GitHub", href: "https://github.com/browser-builder/website/issues/21"
+        click_button "Todo", exact: false
+      end
+      save_console_screenshot("agent-workspace-publishing-desktop")
+      page.current_window.resize_to(390, 844)
+      assert_no_horizontal_overflow
+      save_console_screenshot("agent-workspace-mobile")
+      refute_equal "none", page.evaluate_script("getComputedStyle(document.querySelector('.console-art-spark')).animationName")
+      page.driver.browser.execute_cdp("Emulation.setEmulatedMedia", features: [ { name: "prefers-reduced-motion", value: "reduce" } ])
+      assert_equal "none", page.evaluate_script("getComputedStyle(document.querySelector('.console-art-spark')).animationName")
+      page.driver.browser.execute_cdp("Emulation.setEmulatedMedia", features: [])
+      scan.update!(status: "paused")
+      assert_selector ".repository-console[data-console-state=paused]", wait: 10
+      assert_selector ".console-current-copy strong", text: "Lo dejamos justo aquí"
+      assert_no_selector ".console-thinking-dots"
+      assert_no_horizontal_overflow
+
+      assert_equal "none", page.evaluate_script("getComputedStyle(document.querySelector('.console-art-spark')).animationName")
+    ensure
+      page.driver.browser.execute_cdp("Emulation.setEmulatedMedia", features: [])
     end
   end
 
@@ -279,6 +375,16 @@ class RepositoryFlowTest < ApplicationSystemTestCase
     FileUtils.mkdir_p(directory)
     page.execute_script("window.scrollTo(0, 0)")
     page.save_screenshot(directory.join("#{name}.png"))
+  end
+
+  def save_console_screenshot(name)
+    return unless ENV["SYSTEM_SCREENSHOTS"] == "1"
+
+    directory = Rails.root.join("tmp/screenshots")
+    FileUtils.mkdir_p(directory)
+    console = find(".repository-console")
+    page.execute_script("window.scrollTo({ top: window.scrollY + arguments[0].getBoundingClientRect().top - 80, behavior: 'instant' })", console)
+    console.native.save_screenshot(directory.join("#{name}.png"))
   end
 
   def with_browser_github

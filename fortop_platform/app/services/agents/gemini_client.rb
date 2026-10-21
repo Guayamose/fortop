@@ -7,34 +7,37 @@ module Agents
 
     attr_reader :model, :usage
 
-    def initialize(api_key: ENV["GOOGLE_AI_STUDIO_API_KEY"].presence || ENV["GEMINI_API_KEY"], model: ENV.fetch("GEMINI_MODEL", "gemini-3.1-flash-lite"), transport: nil, sleeper: ->(seconds) { sleep(seconds) }, max_output_tokens: ENV.fetch("AGENT_MAX_OUTPUT_TOKENS", 4096), max_total_tokens: ENV.fetch("AGENT_MAX_TOTAL_TOKENS", 120_000))
+    def initialize(api_key: ENV["GOOGLE_AI_STUDIO_API_KEY"].presence || ENV["GEMINI_API_KEY"], model: ENV.fetch("GEMINI_MODEL", "gemini-3.1-flash-lite"), transport: nil, sleeper: ->(seconds) { sleep(seconds) }, max_output_tokens: ENV.fetch("AGENT_MAX_OUTPUT_TOKENS", 16_384), max_total_tokens: ENV.fetch("AGENT_MAX_TOTAL_TOKENS", 1_000_000))
       raise ConfigurationError, "Falta configurar GOOGLE_AI_STUDIO_API_KEY o GEMINI_API_KEY." if api_key.blank?
       raise ConfigurationError, "GEMINI_MODEL no es válido." unless model.match?(/\Agemini-[a-zA-Z0-9.\-]+\z/)
 
       @api_key, @model, @transport, @sleeper = api_key, model, transport, sleeper
       @usage = { "requests" => 0, "input_tokens" => 0, "output_tokens" => 0, "total_tokens" => 0 }
-      @max_output_tokens = Integer(max_output_tokens).clamp(256, 8192)
-      @max_total_tokens = Integer(max_total_tokens).clamp(5000, 500_000)
+      @max_output_tokens = Integer(max_output_tokens)
+      @max_total_tokens = Integer(max_total_tokens)
+      raise ArgumentError if @max_output_tokens <= 0 || @max_total_tokens.negative?
       @previous_total_tokens = 0
     rescue ArgumentError, TypeError
-      raise ConfigurationError, "Los límites de tokens del agente deben ser números enteros."
+      raise ConfigurationError, "La salida debe ser un entero positivo y el presupuesto un entero no negativo (0 sin límite)."
     end
 
     def account_for_previous_usage(usage)
-      @previous_total_tokens = usage.fetch("total_tokens", 0).to_i.clamp(0, 500_000)
+      @previous_total_tokens = [ usage.fetch("total_tokens", 0).to_i, 0 ].max
     end
 
     def generate(system:, contents:, declarations:)
       body = {
         systemInstruction: { parts: [ { text: system } ] },
         contents: contents,
-        tools: [ { functionDeclarations: declarations } ],
-        toolConfig: { functionCallingConfig: { mode: "AUTO" } },
         generationConfig: { temperature: 0.2, maxOutputTokens: @max_output_tokens }
       }
+      if declarations.present?
+        body[:tools] = [ { functionDeclarations: declarations } ]
+        body[:toolConfig] = { functionCallingConfig: { mode: "AUTO" } }
+      end
       # Conservative preflight bounds growing history before spending another request.
       estimated_input = (JSON.generate(body).bytesize / 3.0).ceil
-      if @previous_total_tokens + @usage["total_tokens"] + estimated_input + @max_output_tokens > @max_total_tokens
+      if @max_total_tokens.positive? && @previous_total_tokens + @usage["total_tokens"] + estimated_input + @max_output_tokens > @max_total_tokens
         raise BudgetExceeded, "El análisis ha alcanzado el presupuesto total de tokens configurado."
       end
       attempts = 0
@@ -68,7 +71,7 @@ module Agents
       @usage["input_tokens"] += token_usage.fetch("promptTokenCount", estimated_input)
       @usage["output_tokens"] += token_usage.fetch("candidatesTokenCount", 0) + token_usage.fetch("thoughtsTokenCount", 0)
       @usage["total_tokens"] += token_usage.fetch("totalTokenCount", estimated_input + @max_output_tokens)
-      raise BudgetExceeded, "El análisis ha alcanzado el presupuesto total de tokens configurado." if @previous_total_tokens + @usage["total_tokens"] > @max_total_tokens
+      raise BudgetExceeded, "El análisis ha alcanzado el presupuesto total de tokens configurado." if @max_total_tokens.positive? && @previous_total_tokens + @usage["total_tokens"] > @max_total_tokens
       candidate = data.fetch("candidates", []).first
       unless candidate && candidate.dig("content", "parts").present?
         raise Error, "Gemini no ha devuelto una respuesta utilizable. Revisa los filtros o la cuota del proveedor."

@@ -2,11 +2,13 @@ require "test_helper"
 
 class Agents::RunnerTest < ActiveSupport::TestCase
   class Provider
-    attr_reader :history
+    attr_reader :history, :requests
     def initialize(responses)
       @responses = responses
+      @requests = []
     end
     def generate(**args)
+      @requests << args.deep_dup
       @history = args[:contents].deep_dup
       @responses.shift || raise("Unexpected model call")
     end
@@ -60,6 +62,53 @@ class Agents::RunnerTest < ActiveSupport::TestCase
   test "rejects empty completion" do
     provider = Provider.new([ final("") ])
     assert_raises(Agents::Error) { Agents::Runner.new(provider: provider, tools: Tools.new, system: "system").call(prompt: "audit") }
+  end
+
+  test "finishes work exceeding the former turn and tool ceilings" do
+    turn = { "role" => "model", "parts" => 3.times.map { |index| { "functionCall" => { "name" => "read_file", "args" => { "path" => "page-#{index}.html" } } } } }
+    [ { max_turns: 0, max_tool_calls: 0 }, { max_turns: 40, max_tool_calls: 120 } ].each do |limits|
+      provider = Provider.new(Array.new(35) { turn.deep_dup } + [ final("Auditoría completa.") ])
+      tools = Tools.new
+      result = Agents::Runner.new(provider: provider, tools: tools, system: "system", timeout: 0, context_max_bytes: 0, **limits).call(prompt: "large audit")
+      assert_equal 36, result.steps
+      assert_equal 105, result.tool_calls
+      assert_equal 105, tools.called.size
+    end
+  end
+
+  test "honors an explicit tool budget before executing an oversized batch" do
+    turn = { "role" => "model", "parts" => [ call("one.html")["parts"].first, call("two.html")["parts"].first ] }
+    tools = Tools.new
+    assert_raises(Agents::BudgetExceeded) do
+      Agents::Runner.new(provider: Provider.new([ turn ]), tools: tools, system: "system", max_tool_calls: 1).call(prompt: "audit")
+    end
+    assert_empty tools.called
+  end
+
+  test "summarizes old context while preserving recent signed tool pairs" do
+    old, recent_one, recent_two = [ "old.html", "recent-one.html", "recent-two.html" ].map { |path| call(path) }
+    recent_one["parts"].first["thoughtSignature"] = "signed-recent-one"
+    recent_two["parts"].first["thoughtSignature"] = "signed-recent-two"
+    provider = Provider.new([ old, recent_one, recent_two, final("Hallazgo 42 aceptado; continuar desde offset 200."), final("Hecho.") ])
+    result = Agents::Runner.new(provider: provider, tools: Tools.new, system: "system", context_max_bytes: 1).call(prompt: "audit the monorepo")
+
+    assert_equal 4, result.steps
+    assert_equal 5, provider.requests.size
+    assert_empty provider.requests[3][:declarations]
+    assert_includes provider.history.first.dig("parts", 0, "text"), "Hallazgo 42 aceptado"
+    assert_includes provider.history.first.dig("parts", 0, "text"), "audit the monorepo"
+    assert_equal recent_one, provider.history[1]
+    assert_equal recent_two, provider.history[3]
+    assert provider.history[2].dig("parts", 0, "functionResponse")
+    assert provider.history[4].dig("parts", 0, "functionResponse")
+  end
+
+  test "does not silently clamp or accept invalid runtime settings" do
+    [ { max_turns: -1 }, { max_tool_calls: "invalid" }, { timeout: -5 } ].each do |limits|
+      assert_raises(Agents::ConfigurationError) do
+        Agents::Runner.new(provider: Provider.new([]), tools: Tools.new, system: "system", **limits)
+      end
+    end
   end
 
   private

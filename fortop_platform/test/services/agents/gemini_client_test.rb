@@ -29,7 +29,7 @@ class Agents::GeminiClientTest < ActiveSupport::TestCase
   end
 
   test "refuses requests that would exceed configured total token budget" do
-    client = Agents::GeminiClient.new(api_key: "test-key", transport: ->(*) { flunk "Should not make a paid request" })
+    client = Agents::GeminiClient.new(api_key: "test-key", max_total_tokens: 120_000, transport: ->(*) { flunk "Should not make a paid request" })
     assert_raises(Agents::BudgetExceeded) { client.generate(system: "x" * 2_000_000, contents: [], declarations: []) }
   end
 
@@ -53,6 +53,38 @@ class Agents::GeminiClientTest < ActiveSupport::TestCase
     client.account_for_previous_usage("total_tokens" => 59_500)
     assert_raises(Agents::BudgetExceeded) { client.generate(system: "audit", contents: [], declarations: []) }
     assert_equal 0, client.usage["requests"]
+  end
+
+  test "honors token budgets and previous usage above the former hidden ceiling" do
+    requests = []
+    client = Agents::GeminiClient.new(api_key: "test-key", max_total_tokens: 1_000_000, max_output_tokens: 32_768,
+      transport: ->(_uri, request) { requests << request; response })
+    client.account_for_previous_usage("total_tokens" => 700_000)
+    client.generate(system: "audit", contents: [], declarations: [])
+    assert_equal 32_768, JSON.parse(requests.first.body).dig("generationConfig", "maxOutputTokens")
+    assert_equal 1, requests.size
+
+    client.account_for_previous_usage("total_tokens" => 999_999)
+    assert_raises(Agents::BudgetExceeded) { client.generate(system: "audit", contents: [], declarations: []) }
+    assert_equal 1, requests.size
+  end
+
+  test "zero token budget explicitly allows uncapped usage and summaries omit tool configuration" do
+    requests = []
+    client = Agents::GeminiClient.new(api_key: "test-key", max_total_tokens: 0,
+      transport: ->(_uri, request) { requests << request; response })
+    client.account_for_previous_usage("total_tokens" => 10_000_000)
+    client.generate(system: "handoff", contents: [], declarations: [])
+    body = JSON.parse(requests.first.body)
+    refute body.key?("tools")
+    refute body.key?("toolConfig")
+    assert_equal 15, client.usage["total_tokens"]
+  end
+
+  test "rejects invalid token limits rather than silently clamping them" do
+    [ { max_total_tokens: -1 }, { max_output_tokens: 0 }, { max_output_tokens: "invalid" } ].each do |limits|
+      assert_raises(Agents::ConfigurationError) { Agents::GeminiClient.new(api_key: "test-key", **limits) }
+    end
   end
 
   private

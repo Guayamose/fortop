@@ -1,0 +1,23 @@
+<% lanes = @metrics.lanes %>
+<% if lanes.any? %>
+  <div class="visibility-discovery" aria-label="Visibilidad por tipo de búsqueda">
+    <div class="visibility-discovery-heading">
+      <h3>Tres formas distintas de encontrarte.</h3>
+      <p>El contexto importa. Preguntar por tu marca no equivale a descubrirla.</p>
+    </div>
+    <div class="visibility-discovery-lanes">
+      <% lanes.each do |lane| %>
+        <article>
+          <span><%= VisibilityHelper::LANE_LABELS[lane['lane']] %></span>
+          <strong><%= visibility_percent(lane[lane['lane'] == 'brand' ? 'recognition' : 'presence']) %></strong>
+          <p><%= lane[lane['lane'] == 'brand' ? 'recognized' : 'present'] %> de <%= lane['valid'] %> respuestas válidas <%= lane['lane'] == 'brand' ? 'aportan información concreta sobre ti' : 'mencionan tu marca' %>.</p>
+          <small><%= { 'category' => 'Búsquedas de proveedores de tu categoría.', 'qualified' => 'Opciones para necesidades, clientes y ámbito de servicio de tu brief.', 'brand' => 'Reconocimiento al mencionar tu nombre. No mide descubrimiento.' }[lane['lane']] %></small>
+        </article>
+      <% end %>
+    </div>
+    <p class="visibility-footnote"><%= @metrics.summary['provider_answers'] %> respuestas del filtro actual nombran proveedores concretos; <%= @metrics.summary['no_provider_answers'] %> dan consejos o no encuentran opciones. Estas últimas siguen contando en la muestra: no inflamos la presencia al quitarlas.</p>
+    <% if @metrics.summary['valid'].positive? && @metrics.summary['present'].zero? %>
+      <p class="visibility-notice">Tu marca no se ha identificado en estas respuestas. Revisa si aparecen alternativas de tu zona o especialidad y qué ocurre al preguntar por ti. Este resultado no demuestra que tu negocio no exista ni mide todo el mercado.</p>
+    <% end %>
+  </div>
+<% end %>

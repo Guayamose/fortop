@@ -3,14 +3,14 @@ class PlatformSetting < ApplicationRecord
   # deployment environment; neither arbitrary ENV keys nor secrets are accepted.
   DEFINITIONS = {
     "NEW_WORK_ENABLED" => { label: "Permitir nuevas ejecuciones", default: "true", choices: %w[true false], group: :access },
-    "GEMINI_MODEL" => { label: "Modelo de repositorios", default: "gemini-3.1-flash-lite", model: true, group: :repositories },
+    "GEMINI_MODEL" => { label: "Modelo de repositorios", default: "gemini-3.5-flash-lite", model: true, group: :repositories },
     "AGENT_MAX_TOTAL_TOKENS" => { label: "Tokens por análisis · 0 sin límite", default: "1000000", range: 0..100_000_000, group: :repositories },
     "AGENT_MAX_OUTPUT_TOKENS" => { label: "Tokens de salida por petición", default: "16384", range: 256..65_536, group: :repositories },
     "AGENT_MAX_TURNS" => { label: "Turnos · 0 sin límite", default: "0", range: 0..100_000, group: :repositories },
     "AGENT_MAX_TOOL_CALLS" => { label: "Herramientas · 0 sin límite", default: "0", range: 0..1_000_000, group: :repositories },
     "AGENT_TIMEOUT_SECONDS" => { label: "Duración en segundos · 0 sin límite", default: "0", range: 0..604_800, group: :repositories },
     "AGENT_CONTEXT_MAX_BYTES" => { label: "Contexto antes de resumir · bytes", default: "120000", range: 4_000..10_000_000, group: :repositories },
-    "VISIBILITY_GEMINI_MODEL" => { label: "Modelo de visibilidad", default: "gemini-3.1-flash-lite", choices: Visibility::Settings::PRICING.keys, group: :visibility },
+    "VISIBILITY_GEMINI_MODEL" => { label: "Modelo de visibilidad", default: "gemini-3.5-flash-lite", choices: Visibility::Settings::PRICING.keys, group: :visibility },
     "VISIBILITY_DAILY_BUDGET_USD" => { label: "Presupuesto diario por usuario · USD", default: "10", decimal: true, range: BigDecimal("0.01")..BigDecimal("1000"), group: :visibility },
     "VISIBILITY_MAX_REQUESTS" => { label: "Peticiones por estudio", default: "1500", range: 1..100_000, group: :visibility },
     "VISIBILITY_MAX_TOKENS" => { label: "Tokens por estudio", default: "2000000", range: 1..100_000_000, group: :visibility }

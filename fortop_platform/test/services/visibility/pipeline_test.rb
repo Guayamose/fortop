@@ -55,7 +55,7 @@ class VisibilityPipelineTest < ActiveSupport::TestCase
   end
 
   test "budget pause commits before another request and an increased budget resumes cached work" do
-    study = visibility_study(budget_usd: 0.01)
+    study = visibility_study(budget_usd: 0.02)
     client = FakeVisibilityClient.new
     pipeline = Visibility::Pipeline.new(study, client: client)
     pipeline.step
@@ -67,6 +67,35 @@ class VisibilityPipelineTest < ActiveSupport::TestCase
     Visibility::Studies.control!(study, "resume", budget_usd: 3)
     complete_visibility(study, client: client)
     assert_equal 1, study.visibility_calls.where(task_key: "interpret").count
+  end
+
+  test "informational questions fail independent review before buying any measured answers" do
+    study = visibility_study
+    client = FakeVisibilityClient.new
+    client.informational_panel = true
+    5.times { Visibility::Pipeline.new(study.reload, client: client).step }
+    assert study.reload.failed?
+    assert_match(/instrucciones para facturar/, study.error_message)
+    assert_equal 2, study.visibility_calls.where("task_key LIKE 'panel-audit:%'").count
+    assert_empty study.visibility_observations
+    assert_empty study.visibility_calls.where("task_key LIKE 'answer:%'")
+  end
+
+  test "category qualified discovery and prompted recognition keep separate denominators" do
+    study = complete_visibility(visibility_study)
+    assert_equal({ "category" => 1, "qualified" => 4, "brand" => 1 }, study.panel.group_by { |question| question["lane"] }.transform_values(&:size))
+    category_key = study.panel.find { |question| question["lane"] == "category" }.fetch("key")
+    study.visibility_observations.where(question_key: category_key).each do |observation|
+      observation.update!(analysis: { "brand_status" => "absent", "brand_reason" => "Solo da consejos genéricos.", "answer_kind" => "guidance", "mentions" => [] })
+    end
+    metrics = Visibility::Metrics.new(study)
+    lanes = metrics.lanes.index_by { |lane| lane["lane"] }
+    assert_equal 0.0, lanes["category"]["presence"]
+    assert_equal 100.0, lanes["qualified"]["presence"]
+    assert_equal 100.0, lanes["brand"]["presence"]
+    assert_equal 80.0, metrics.summary["presence"], "Generic answers stay in the denominator"
+    assert_equal 2, metrics.summary["no_provider_answers"]
+    assert_equal 8, metrics.summary["provider_answers"]
   end
 
   test "transient failures retry up to three times and manual recovery preserves the ledger" do
@@ -95,11 +124,11 @@ class VisibilityPipelineTest < ActiveSupport::TestCase
     client.invalid_panel = true
     5.times { Visibility::Pipeline.new(study.reload, client: client).step }
     assert study.reload.failed?
-    assert_equal 1, study.visibility_calls.where("task_key LIKE 'plan:%'").count
+    assert_equal 2, study.visibility_calls.where("task_key LIKE 'plan:%'").count
     Visibility::Studies.control!(study, "retry")
     client.invalid_panel = false
     complete_visibility(study, client: client)
-    assert_equal 2, study.visibility_calls.where("task_key LIKE 'plan:%'").count
+    assert_equal 3, study.visibility_calls.where("task_key LIKE 'plan:%'").count
   end
 
   test "same panel collects new answers and comparable history is persistent" do

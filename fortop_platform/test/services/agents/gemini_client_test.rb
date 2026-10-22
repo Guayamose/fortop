@@ -17,6 +17,7 @@ class Agents::GeminiClientTest < ActiveSupport::TestCase
     assert_equal 10, client.usage["input_tokens"]
     assert_equal 5, client.usage["output_tokens"]
     assert_equal "test-key", requests.first["x-goog-api-key"]
+    assert_equal "MINIMAL", JSON.parse(requests.first.body).dig("generationConfig", "thinkingConfig", "thinkingLevel")
     assert_not_includes requests.first.uri.to_s, "test-key"
   end
 

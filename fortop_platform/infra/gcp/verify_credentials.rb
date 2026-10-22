@@ -26,7 +26,7 @@ parent = JSON.parse(response.body).fetch("parent")
 raise "Google key project mismatch: #{parent}" unless [ "projects/575118050486/locations/global", "projects/fortop-ai-gkecke/locations/global" ].include?(parent)
 puts "Google key belongs to fortop-ai-gkecke"
 
-uri = URI("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite")
+uri = URI("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite")
 request = Net::HTTP::Get.new(uri)
 request["x-goog-api-key"] = api_key
 response = Net::HTTP.start(uri.host, uri.port, use_ssl: true, open_timeout: 10, read_timeout: 20) { |http| http.request(request) }

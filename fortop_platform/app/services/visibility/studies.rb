@@ -14,7 +14,7 @@ module Visibility
         settings["question_count"] = previous.settings["question_count"] if previous
         settings["panel_source_id"] = previous.id if previous
         panel_size = previous ? previous.panel.size : settings["question_count"] * brand.markets.size
-        minimum_requests = 4 + brand.markets.size * 2 + panel_size * settings["repetitions"] * 2
+        minimum_requests = 4 + brand.markets.size * 3 + panel_size * settings["repetitions"] * 2
         if minimum_requests > settings["max_requests"]
           raise Error, "Este alcance necesita al menos #{minimum_requests} solicitudes y supera el límite configurado. Reduce preguntas, mercados o repeticiones."
         end

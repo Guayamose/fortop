@@ -8,7 +8,7 @@ class AdminOverviewTest < ActiveSupport::TestCase
     brand = visibility_brand
     study = visibility_study(brand: brand)
     study.update!(spent_usd: "0.25", request_count: 2, token_count: 300)
-    study.visibility_calls.create!(task_key: "reserved", model: "gemini-3.1-flash-lite", status: "uncertain", cost_usd: "0.25")
+    study.visibility_calls.create!(task_key: "reserved", model: "gemini-3.5-flash-lite", status: "uncertain", cost_usd: "0.25")
     brand.user.brand_imports.create!(spent_usd: "0.05", request_count: 1, usage: { "total_tokens" => 90 })
     repository = brand.user.repositories.create!(github_id: 73, full_name: "builder/site", html_url: "https://github.com/builder/site", default_branch: "main")
     repository.scans.create!(status: "completed", metadata: { "usage" => { "total_tokens" => 400, "requests" => 3 } })

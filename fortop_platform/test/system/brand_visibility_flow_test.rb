@@ -36,8 +36,15 @@ class BrandVisibilityFlowTest < ApplicationSystemTestCase
       assert_selector "#overview", wait: 10
       assert_text "Quién ocupa las respuestas."
       assert_selector ".visibility-question", count: 5
+      assert_selector ".visibility-discovery-lanes article", count: 3
       assert_no_horizontal_overflow
       screenshot("visibility-report-desktop")
+      page.execute_script("document.querySelector('.visibility-discovery').scrollIntoView({behavior: 'instant', block: 'center'})")
+      screenshot("visibility-discovery-desktop", scroll: false)
+      select "Para tu cliente y tu zona", from: "lane"
+      assert_selector ".visibility-question", count: 4
+      select "Todos", from: "lane"
+      assert_selector ".visibility-question", count: 5
       find("#questions .visibility-question summary", match: :first).click
       within all(".visibility-question").first do
         click_link "Ver respuesta", match: :first
@@ -68,6 +75,8 @@ class BrandVisibilityFlowTest < ApplicationSystemTestCase
       page.current_window.resize_to(390, 844)
       assert_no_horizontal_overflow
       screenshot("visibility-report-mobile")
+      page.execute_script("document.querySelector('.visibility-discovery').scrollIntoView({behavior: 'instant', block: 'start'})")
+      screenshot("visibility-discovery-mobile", scroll: false)
       find("a[href='#markets']").click
       page.execute_script("document.getElementById('markets').scrollIntoView({behavior: 'instant'})")
       assert_no_horizontal_overflow

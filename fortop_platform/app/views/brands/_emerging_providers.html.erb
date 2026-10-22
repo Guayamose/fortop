@@ -1,0 +1,11 @@
+<% providers = @metrics.emerging_providers %>
+<% if providers.any? %>
+  <h3 class="visibility-subheading">Otras opciones que han aparecido.</h3>
+  <p class="visibility-footnote">Proveedores identificados en las respuestas aunque no estuvieran en la investigación inicial. Su aparición no demuestra competencia directa ni confirma sus capacidades.</p>
+  <% providers.first(12).each do |provider| %>
+    <article class="visibility-observed-provider">
+      <div><strong><%= provider['name'] %></strong><span><%= provider['count'] %> respuestas</span></div>
+      <div class="visibility-evidence-links"><% provider['observation_ids'].first(3).each do |id| %><%= evidence_link(id, "Respuesta ##{id}") %><% end %></div>
+    </article>
+  <% end %>
+<% end %>

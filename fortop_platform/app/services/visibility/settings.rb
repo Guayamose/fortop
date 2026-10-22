@@ -1,6 +1,6 @@
 module Visibility
   module Settings
-    METHOD_VERSION = "fortop-visibility-v1".freeze
+    METHOD_VERSION = "fortop-visibility-v2".freeze
     PRICING = {
       "gemini-3.1-flash-lite" => { "input" => 0.25, "output" => 1.50, "search" => 0.014, "search_unit" => "query" },
       "gemini-3.5-flash-lite" => { "input" => 0.30, "output" => 2.50, "search" => 0.014, "search_unit" => "query" },
@@ -20,7 +20,7 @@ module Visibility
       { "question_count" => count, "repetitions" => repeats, "model" => model, "engine" => "Gemini API · búsqueda habilitada",
         "method_version" => METHOD_VERSION, "temperature" => 0.7, "max_output_tokens" => 4096,
         "max_requests" => limits[0], "max_tokens" => limits[1],
-        "rates" => rates, "pricing_checked_at" => "2026-10-21", "pricing_source" => "https://ai.google.dev/gemini-api/docs/pricing",
+        "rates" => rates, "pricing_checked_at" => "2026-10-22", "pricing_source" => "https://ai.google.dev/gemini-api/docs/pricing",
         "geography" => "Contexto de mercado e idioma en la pregunta; sin geolocalización del usuario." }
     rescue ArgumentError, TypeError
       raise Error, "La configuración del estudio no es válida."

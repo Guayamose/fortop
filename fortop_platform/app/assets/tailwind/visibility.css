@@ -73,3 +73,17 @@
   .topbar .topbar-logo { width:90px; }
   .topbar .main-nav { gap:12px; }
 }
+/* Separate discovery contexts without mixing prompted recognition into discovery. */
+.visibility-discovery { margin: 2rem 0; border-top: 1px solid #e7ebf1; padding-top: 1.5rem; }
+.visibility-discovery-heading h3 { font-size: 1.05rem; font-weight: 600; }
+.visibility-discovery-heading p { margin-top: .4rem; color: #718096; font-size: .88rem; }
+.visibility-discovery-lanes { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 2rem; margin: 1.5rem 0; }
+.visibility-discovery-lanes article { min-width: 0; }
+.visibility-discovery-lanes article > span { display: block; font-size: .8rem; color: #65748b; }
+.visibility-discovery-lanes strong { display: block; font-size: 2rem; letter-spacing: -.05em; margin: .35rem 0; font-weight: 500; }
+.visibility-discovery-lanes p { font-size: .85rem; line-height: 1.5; }
+.visibility-discovery-lanes small { display: block; margin-top: .5rem; font-size: .75rem; color: #718096; line-height: 1.6; }
+.visibility-observed-provider { padding: 1rem 0; border-bottom: 1px solid #edf0f4; }
+.visibility-observed-provider > div:first-child { display: flex; justify-content: space-between; gap: 1rem; font-size: .88rem; }
+.visibility-observed-provider > div:first-child span { color: #718096; white-space: nowrap; }
+@media (max-width: 640px) { .visibility-discovery-lanes { grid-template-columns: 1fr; gap: 1.25rem; } .visibility-discovery-lanes article { padding-bottom: 1rem; border-bottom: 1px solid #edf0f4; } }

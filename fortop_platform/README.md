@@ -154,7 +154,7 @@ necesita configurar Vertex AI ni credenciales de servicio de Google Cloud.
 Configuración para repositorios grandes:
 
 ```dotenv
-GEMINI_MODEL=gemini-3.1-flash-lite
+GEMINI_MODEL=gemini-3.5-flash-lite
 AGENT_MAX_TURNS=0
 AGENT_MAX_TOOL_CALLS=0
 AGENT_TIMEOUT_SECONDS=0
@@ -345,6 +345,32 @@ y evaluación con citas
 literales y diagnóstico con acciones. Las preguntas sin marca se envían sin brief,
 competidores ni respuesta esperada. Las preguntas con marca se separan del indicador
 principal. Las preguntas propuestas no representan demanda de búsqueda observada.
+
+El método v2 distingue búsquedas de categoría, búsquedas ajustadas al cliente y
+ámbito de servicio, y reconocimiento al preguntar por la marca. Interpreta si el
+negocio es local, regional o en línea; no inventa ubicaciones ni presupuestos.
+Las preguntas sin marca deben buscar proveedores concretos, pasar una auditoría
+independiente de intención, encaje y neutralidad y conservar su justificación.
+Una revisión fallida permite una corrección automática antes de medir respuestas.
+Los porcentajes de cada tipo tienen denominadores separados; las respuestas que
+solo dan consejos siguen contando, y se muestra cuántas no nombran proveedores.
+
+La extracción usa el modelo para resolver identidades y clasificar mención,
+comparación, recomendación o desaconsejar. Conserva citas literales y el motivo de
+identificación; admite alias, variantes y atributos en frases siguientes dentro
+del mismo contexto. Una coincidencia de nombre o una fuente citada por sí sola
+no establece identidad. La comprobación por patrones se limita a detectar marcas
+filtradas en las preguntas, no decide la visibilidad. Las evidencias rechazadas
+o contradictorias quedan como identidad ambigua, nunca como ausencia. Las
+opciones nuevas que aparezcan en respuestas se muestran aparte; las referencias
+sectoriales quedan fuera del ranking de competidores. La identidad pública
+investigada se distingue del reconocimiento en respuestas.
+
+Los nuevos trabajos utilizan `gemini-3.5-flash-lite` con pensamiento mínimo en
+repositorios, documentos y visibilidad. Las tarifas estándar de texto verificadas
+el 22/10/2026 son USD 0,30 de entrada y USD 2,50 de salida por millón de tokens,
+más búsqueda cuando corresponda. Los estudios conservan el modelo y las tarifas
+con los que se iniciaron; un método o modelo distinto requiere un panel nuevo.
 
 El informe web se conserva en PostgreSQL: presencia, recomendaciones, citación de
 la web propia, consistencia entre repeticiones, comparativa competitiva, matriz de

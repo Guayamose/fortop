@@ -1,6 +1,7 @@
 module VisibilityHelper
   INTENT_LABELS = { "discovery" => "Descubrimiento", "consideration" => "Consideración", "decision" => "Decisión" }.freeze
   ACTION_LABELS = { "planned" => "Pendiente", "in_progress" => "En curso", "done" => "Completada", "dismissed" => "Descartada" }.freeze
+  LANE_LABELS = { "category" => "En tu categoría", "qualified" => "Para tu cliente y tu zona", "brand" => "Al preguntar por ti" }.freeze
 
   def visibility_percent(value)
     value.nil? ? "—" : "#{number_with_precision(value, precision: 1, strip_insignificant_zeros: true)}%"

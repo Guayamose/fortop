@@ -4,10 +4,10 @@ module Visibility
 
     def initialize(study, filters: {})
       @study = study
-      @filters = filters.stringify_keys.slice("market", "language", "intent", "topic", "scope", "source")
+      @filters = filters.stringify_keys.slice("market", "language", "intent", "topic", "scope", "source", "lane")
       @filters["scope"] = "unbranded" unless %w[unbranded branded all].include?(@filters["scope"])
       @questions = study.panel.select do |question|
-        %w[market language intent topic].all? { |key| @filters[key].blank? || question[key] == @filters[key] } &&
+        %w[market language intent topic lane].all? { |key| @filters[key].blank? || question[key] == @filters[key] } &&
           (@filters["scope"] == "all" || (@filters["scope"] == "branded") == question["branded"])
       end
       @question_map = @questions.index_by { |question| question["key"] }
@@ -18,7 +18,13 @@ module Visibility
     end
 
     def valid
-      @valid ||= observations.select { |observation| observation.status == "completed" && observation.analysis.fetch("mentions", []).none? { |mention| mention["certainty"] == "uncertain" } }
+      @valid ||= observations.select { |observation| observation.status == "completed" && !ambiguous?(observation) }
+    end
+
+    def ambiguous?(observation, entity_key = "brand")
+      (entity_key == "brand" && observation.analysis["brand_status"] == "ambiguous") ||
+        observation.analysis.fetch("uncertain_entities", []).include?(entity_key) ||
+        observation.analysis.fetch("mentions", []).any? { |mention| mention["entity_key"] == entity_key && mention["certainty"] == "uncertain" }
     end
 
     def mentions(observation, entity_key = "brand")
@@ -43,22 +49,51 @@ module Visibility
         stable = repeated.count { |group| group.map { |observation| mentions(observation).any? }.uniq.size == 1 }
         rounds = valid.group_by(&:repetition).values.filter_map { |group| pct(group.count { |observation| mentions(observation).any? }, group.size) }
         { "valid" => valid.size, "expected" => questions.size * study.settings.fetch("repetitions", 2), "failed" => observations.count { |observation| observation.status == "failed" },
-          "ambiguous" => observations.count { |observation| observation.status == "completed" && observation.analysis.fetch("mentions", []).any? { |mention| mention["certainty"] == "uncertain" } },
+          "ambiguous" => observations.count { |observation| observation.status == "completed" && ambiguous?(observation) },
           "present" => present, "presence" => pct(present, valid.size), "recommended" => recommended, "recommendation" => pct(recommended, valid.size),
           "cited" => cited, "citation_denominator" => resolved.size, "citation" => pct(cited, resolved.size), "stability" => pct(stable, repeated.size),
           "repeated_questions" => repeated.size, "round_range" => rounds.any? ? [ rounds.min, rounds.max ] : nil,
-          "coverage" => pct(valid.size, questions.size * study.settings.fetch("repetitions", 2)) }
+          "coverage" => pct(valid.size, questions.size * study.settings.fetch("repetitions", 2)),
+          "provider_answers" => valid.count { |observation| observation.analysis["answer_kind"] == "providers" },
+          "recognized" => valid.count { |observation| observation.analysis["brand_recognition"] == "identified" },
+          "recognition" => pct(valid.count { |observation| observation.analysis["brand_recognition"] == "identified" }, valid.size),
+          "no_provider_answers" => valid.count { |observation| %w[guidance insufficient_information].include?(observation.analysis["answer_kind"]) },
+          "searched_answers" => valid.count { |observation| observation.citations.any? { |source| source["cited"] } } }
       end
     end
 
     def ranking
-      counts = study.entities.to_h { |entity| [ entity["key"], valid.count { |observation| mentions(observation, entity["key"]).any? } ] }
+      entities = study.entities.reject { |entity| entity["kind"] == "reference" }
+      eligible = entities.to_h { |entity| [ entity["key"], observations.select { |observation| observation.status == "completed" && !ambiguous?(observation, entity["key"]) } ] }
+      counts = entities.to_h { |entity| [ entity["key"], eligible.fetch(entity["key"]).count { |observation| mentions(observation, entity["key"]).any? } ] }
       total = counts.values.sum
-      study.entities.map do |entity|
+      entities.map do |entity|
         count = counts.fetch(entity["key"])
-        entity.merge("count" => count, "presence" => pct(count, valid.size), "share" => pct(count, total),
-          "recommendation" => pct(valid.count { |observation| mentions(observation, entity["key"]).any? { |item| item["recommended"] } }, valid.size))
+        sample = eligible.fetch(entity["key"])
+        entity.merge("count" => count, "valid" => sample.size, "presence" => pct(count, sample.size), "share" => pct(count, total),
+          "recommendation" => pct(sample.count { |observation| mentions(observation, entity["key"]).any? { |item| item["recommended"] } }, sample.size))
       end.sort_by { |entity| [ -entity["count"], entity["name"].to_s ] }
+    end
+
+    def lanes
+      %w[category qualified brand].filter_map do |lane|
+        next unless study.panel.any? { |question| question["lane"] == lane }
+        metrics = self.class.new(study, filters: filters.merge("scope" => "all", "lane" => lane))
+        metrics.summary.merge("lane" => lane)
+      end
+    end
+
+    def emerging_providers
+      data = {}
+      valid.each do |observation|
+        observation.analysis.fetch("mentions", []).select { |item| item["discovered"] && item["certainty"] == "confirmed" }.each do |mention|
+          key = mention["entity_key"]
+          data[key] ||= mention.slice("name", "website").merge("count" => 0, "observation_ids" => [])
+          data[key]["count"] += 1
+          data[key]["observation_ids"] << observation.id
+        end
+      end
+      data.values.sort_by { |item| [ -item["count"], item["name"] ] }
     end
 
     def breakdown(key)
@@ -85,7 +120,7 @@ module Visibility
         group = valid.select { |observation| observation.question_key == question["key"] }
         present = group.count { |observation| mentions(observation).any? }
         question.merge("valid" => group.size, "present" => present, "presence" => pct(present, group.size),
-          "competitors" => study.entities.reject { |entity| entity["key"] == "brand" }.select { |entity| group.any? { |observation| mentions(observation, entity["key"]).any? } }.pluck("name"),
+          "competitors" => group.flat_map { |observation| observation.analysis.fetch("mentions", []).select { |item| item["entity_key"] != "brand" && item["certainty"] == "confirmed" }.filter_map { |item| item["name"] || study.entities.find { |entity| entity["key"] == item["entity_key"] }&.dig("name") } }.uniq,
           "observations" => observations.select { |observation| observation.question_key == question["key"] })
       end
     end

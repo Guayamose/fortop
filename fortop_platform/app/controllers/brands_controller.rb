@@ -43,7 +43,7 @@ class BrandsController < ApplicationController
         @study = @brand.visibility_studies.find(next_id)
       end
     end
-    @filters = params.permit(:market, :language, :intent, :topic, :scope, :source).to_h
+    @filters = params.permit(:market, :language, :intent, :topic, :scope, :source, :lane).to_h
     @metrics = Visibility::Metrics.new(@study, filters: @filters) if @study
     @source_domains = @study ? @study.visibility_observations.where(status: "completed").pluck(:citations).flatten.select { |source| source["cited"] && source["domain"].present? }.pluck("domain").uniq.sort : []
     @repositories = current_user.repositories.order(:full_name)

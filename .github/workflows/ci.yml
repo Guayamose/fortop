@@ -113,7 +113,14 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Install system dependencies
-        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libpq-dev libvips poppler-utils
+        timeout-minutes: 5
+        run: |
+          # The Azure mirror can stall; use Ubuntu's primary HTTPS archive.
+          if [ -f /etc/apt/apt-mirrors.txt ]; then
+            sudo sed -i 's|http://azure.archive.ubuntu.com/ubuntu|https://archive.ubuntu.com/ubuntu|g' /etc/apt/apt-mirrors.txt
+          fi
+          sudo apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20 update
+          sudo apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20 install --no-install-recommends -y libpq-dev libvips poppler-utils
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
@@ -150,7 +157,14 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Install system dependencies
-        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libpq-dev libvips poppler-utils
+        timeout-minutes: 5
+        run: |
+          # The Azure mirror can stall; use Ubuntu's primary HTTPS archive.
+          if [ -f /etc/apt/apt-mirrors.txt ]; then
+            sudo sed -i 's|http://azure.archive.ubuntu.com/ubuntu|https://archive.ubuntu.com/ubuntu|g' /etc/apt/apt-mirrors.txt
+          fi
+          sudo apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20 update
+          sudo apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20 install --no-install-recommends -y libpq-dev libvips poppler-utils
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1

@@ -20,7 +20,7 @@
       <header class="topbar"><div class="topbar-inner">
         <%= link_to root_path, class: "brand-link", aria: { label: "Fortop, inicio" } do %><%= image_tag "brand/fortop-dark.svg", alt: "FORTOP", class: "topbar-logo", width: 146, height: 38 %><%= image_tag "brand/ascenso.svg", alt: "", class: "topbar-mark", width: 29, height: 26 %><% end %>
         <span class="topbar-divider" aria-hidden="true"></span>
-        <span class="workspace-account"><span class="workspace-initial"><%= current_user.login.first.upcase %></span><span><%= current_user.login %></span></span>
+        <span class="workspace-account"><span>@<%= current_user.login %></span></span>
         <nav class="main-nav" aria-label="Navegación principal">
           <%= link_to root_path, class: "nav-item #{'is-active' if controller_name == 'home'}", aria: { current: ("page" if controller_name == "home") } do %>Inicio<% end %>
           <% repository_section = %w[repositories scans].include?(controller_name) %>

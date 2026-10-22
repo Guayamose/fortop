@@ -82,7 +82,6 @@ main:focus { outline: none; }
 .topbar-divider { width: 1px; height: 22px; background: var(--line-strong); }
 .workspace-account { display: inline-flex; align-items: center; gap: 9px; min-width: 0; font-size: 12px; white-space: nowrap; }
 .workspace-account > span:last-child { overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
-.workspace-initial { display: grid; place-items: center; width: 25px; height: 25px; border-radius: 8px; background: var(--surface-high); font-size: 10px; font-weight: 600; }
 .main-nav { display: flex; align-self: stretch; align-items: stretch; gap: 24px; margin-left: 15px; }
 .nav-item { position: relative; display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; white-space: nowrap; }
 .nav-item.is-active { color: var(--shadow); font-weight: 500; }

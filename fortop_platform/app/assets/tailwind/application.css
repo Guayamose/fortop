@@ -80,7 +80,7 @@ main:focus { outline: none; }
 .topbar-logo { width: 136px; height: auto; }
 .topbar-mark { display: none; }
 .topbar-divider { width: 1px; height: 22px; background: var(--line-strong); }
-.workspace-account { display: inline-flex; align-items: center; gap: 9px; min-width: 0; font-size: 12px; white-space: nowrap; }
+.workspace-account { display: inline-flex; align-items: center; gap: 9px; min-width: 0; font-size: 12px; font-weight: 700; white-space: nowrap; }
 .workspace-account > span:last-child { overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
 .main-nav { display: flex; align-self: stretch; align-items: stretch; gap: 24px; margin-left: 15px; }
 .nav-item { position: relative; display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; white-space: nowrap; }

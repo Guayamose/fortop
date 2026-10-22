@@ -76,8 +76,24 @@ ciclo de vida de 14 días. Las claves de descifrado permanecen en Secret Manager
 se necesitan para restaurar los datos cifrados. Una única VM implica que una
 caída del servidor afecta temporalmente a web, workers y base de datos.
 
+La cuenta de servicio de la VM puede crear y leer objetos únicamente en ese
+bucket; no puede borrarlos ni sobrescribir copias existentes. Para crear una
+copia manual, ejecuta en la VM `sudo systemctl start fortop-backup.service`.
+`sudo journalctl -u fortop-backup.service` muestra el resultado y la marca UTC
+que identifica el archivo `gs://fortop-ai-gkecke-backups/<marca>/fortop.tar`.
+
+Para comprobar una copia descargada del bucket, pasa `infra/gcp/verify_backup.sh`
+por stdin a `sudo bash -s -- <URL gs:// de la copia>` mediante `gcloud compute ssh`
+con `--tunnel-through-iap`. El script restaura cada base en una base temporal,
+comprueba sus tablas y valida el archivo de documentos. Elimina los datos de
+prueba al terminar y no reemplaza las bases de producción. La comprobación
+`infra/gcp/check_production.rb`, ejecutada con `bin/rails runner` en el worker,
+verifica las conexiones, almacenamiento, aislamiento de JavaScript y entrega
+de una tarea sin llamadas de IA ni escrituras en GitHub.
+
 En la [configuración de la GitHub App](https://github.com/settings/apps/fortop-app)
-registra el callback OAuth `/auth/github/callback` y el Setup URL
+actualiza el Homepage URL con el origen público y registra el callback OAuth
+`/auth/github/callback` y el Setup URL
 `/github/installations/callback` con el origen público. Se puede conservar
 el callback de localhost para desarrollo. `/setup/github` sigue cerrado en
 producción. El acceso de usuarios permanece sujeto a la whitelist de Fortop.

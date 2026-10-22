@@ -15,9 +15,13 @@ Para arrancar y configurar credenciales, consulta la
 [guía de la plataforma](fortop_platform/README.md). Los comandos Rails se ejecutan
 desde `fortop_platform/`; los comandos Git, desde esta raíz o sus subdirectorios.
 
-Los verticales de repositorios y visibilidad de marca están disponibles en desarrollo
-local. La visibilidad se mide mediante Gemini API con búsqueda habilitada, con informes
-persistentes, fuentes y acciones vinculadas a respuestas reales. Las plantillas de
-despliegue no representan un entorno de producción activo.
+Los verticales de repositorios y visibilidad de marca están desplegados en
+[Fortop](https://fortop.34-76-10-0.sslip.io), dentro del proyecto de Google Cloud
+`fortop-ai-gkecke`. El acceso requiere GitHub y autorización del administrador.
+La configuración de la GitHub App debe incluir esta dirección pública para
+completar el inicio de sesión. La visibilidad se mide mediante Gemini API con
+búsqueda habilitada, con informes persistentes, fuentes y acciones vinculadas a
+respuestas reales. La infraestructura y su operación se describen en la guía de
+la plataforma.
 
 Todo el trabajo se mantiene en la rama `master`.

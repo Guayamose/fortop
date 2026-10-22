@@ -49,6 +49,7 @@ ensure_resource(gcloud, [ "storage", "buckets", "describe", bucket ],
   [ "storage", "buckets", "create", bucket, "--location=#{config['region']}", "--uniform-bucket-level-access", "--public-access-prevention" ])
 run!(*gcloud, "storage", "buckets", "update", bucket, "--lifecycle-file=#{directory}/backup-lifecycle.json", "--soft-delete-duration=0")
 run!(*gcloud, "storage", "buckets", "add-iam-policy-binding", bucket, "--member=serviceAccount:#{service_account}", "--role=roles/storage.objectCreator", "--format=none")
+run!(*gcloud, "storage", "buckets", "add-iam-policy-binding", bucket, "--member=serviceAccount:#{service_account}", "--role=roles/storage.objectViewer", "--format=none")
 ensure_resource(gcloud, [ "compute", "addresses", "describe", config["address"], "--region=#{config['region']}" ],
   [ "compute", "addresses", "create", config["address"], "--region=#{config['region']}", "--network-tier=PREMIUM" ])
 ip, error, status = Open3.capture3(*gcloud, "compute", "addresses", "describe", config["address"], "--region=#{config['region']}", "--format=value(address)")

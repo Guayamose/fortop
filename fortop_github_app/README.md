@@ -1,57 +1,71 @@
-# Fortop GitHub App
+# GitHub App de Fortop
 
-Esta carpeta contiene el registro y la configuración de la GitHub App de Fortop. El código que atiende el acceso, las instalaciones y los tokens se ejecuta dentro del monolito hermano `../fortop_platform/app/services/github` y sus controladores `app/controllers/github`.
+**Identidad para entrar; permisos de instalación para trabajar sobre el código.** Esta carpeta contiene el manifiesto, las utilidades de registro y el avatar. Los callbacks y la API se ejecutan en [Rails](../fortop_platform/README.md).
 
-## Registrar la aplicación
+[Volver al proyecto](../README.md) · [Desarrollo](../docs/desarrollo.md) · [Operación](../docs/operacion.md)
 
-1. Arranca Rails desde `../fortop_platform` con `bin/dev` o ejecuta `./bin/setup` desde esta carpeta.
-2. Abre `http://localhost:3000/setup/github` en tu navegador local.
-3. Pulsa **Registrar GitHub App** y confirma su creación en GitHub. El nombre propuesto es único y se puede cambiar.
-4. GitHub devuelve el navegador a Rails. El servidor canjea el código, guarda las credenciales automáticamente en `../fortop_platform/.env` con permisos `0600` y las carga en el proceso actual. Las credenciales nunca aparecen en la página.
-5. Inicia sesión con GitHub en Fortop e instala la app en los repositorios que elijas desde **Conectar un repositorio**.
-
-La confirmación en GitHub pertenece a la cuenta que será dueña de la app. La sesión de `gh` de la máquina no sustituye la identidad de los usuarios de Fortop.
-
-Los workers de desarrollo cargan las nuevas credenciales de GitHub desde el archivo local antes de usarlas, así que el registro permite ejecutar análisis sin reiniciar `bin/dev`. Esa lectura se limita a las variables de GitHub; las claves de IA mantienen su configuración propia.
-
-El registro automático solo está habilitado en desarrollo y desde una conexión local. Una vez configurada la app, la ruta no permite reemplazar sus credenciales. Para registrar otra instancia, configura un entorno independiente.
-
-## Permisos y acceso
-
-- Metadatos: lectura.
-- Contenido, issues y pull requests: escritura.
-- Instalación: el usuario elige todos sus repositorios o un subconjunto.
-- Webhooks: desactivados, con URL vacía en el manifiesto; no hace falta un túnel público. GitHub rechaza una URL de webhook que apunte a `localhost` incluso cuando está desactivado.
-
-La identidad utiliza autorización de GitHub App con `state`, PKCE y tokens de usuario renovables. Los trabajos comprueban que el usuario sigue teniendo acceso a la instalación y al repositorio. Publican con tokens de instalación efímeros restringidos a ese repositorio, en ramas `fortop/*`, y dejan los PRs para revisión.
-
-## Logo en GitHub
-
-[`avatar.png`](avatar.png) contiene el avatar oficial del brandkit (1024 × 1024,
-PNG de 33 kB). En la [configuración de Fortop App](https://github.com/settings/apps/fortop-app),
-busca **Display information → Upload a logo**, selecciona ese archivo y pulsa
-**Set new avatar**. Si solicita color de fondo, utiliza `#FFFFF3`.
-El autor de los PRs es `fortop-app[bot]`; su avatar se configura en GitHub,
-independientemente del logo de la web de Rails.
-[Instrucciones oficiales](https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/creating-a-custom-badge-for-your-github-app).
-
-## Configuración
-
-El registro completa estas variables en el entorno de Rails:
-
-```dotenv
-GITHUB_APP_ID=
-GITHUB_APP_SLUG=
-GITHUB_CLIENT_ID=
-GITHUB_CLIENT_SECRET=
-GITHUB_APP_PRIVATE_KEY=
-GITHUB_WEBHOOK_SECRET=
+```mermaid
+flowchart LR
+    U[Usuario] -->|Inicia sesión| O[OAuth de GitHub]
+    O --> F[Fortop / Rails]
+    U -->|Elige repositorios| I[Instalación de la App]
+    I -->|Token limitado al repositorio| F
+    F -->|Rama fortop/*| P[Issues y pull request]
 ```
 
-La clave privada se guarda como base64 para que la carga del archivo `.env` conserve exactamente el PEM tras reiniciar. También se acepta un PEM normal al configurar variables directamente.
+## Registrar una instalación propia de Fortop
 
-`APP_URL` define el origen de la plataforma, por ejemplo `http://localhost:3000`. Usa un origen HTTPS real para producción y registra sus URLs en una app de producción independiente. El alta mediante `/setup/github` está deshabilitada en producción.
+1. Arranca la plataforma con `bin/dev` desde `fortop_platform/`.
+2. Abre **http://localhost:3000/setup/github** en el navegador local.
+3. Pulsa **Registrar GitHub App** y confirma el registro con la cuenta de GitHub que será su propietaria.
+4. El callback canjea el código y guarda las credenciales en `fortop_platform/.env`, con permisos `0600`. No se muestran en la página.
+5. Inicia sesión con una cuenta autorizada en Fortop, instala la App y selecciona los repositorios desde **Conectar un repositorio**.
 
-`./bin/manifest` muestra el manifiesto público con las URLs actuales, sin credenciales. El manifiesto no activa webhooks; si se incorporan después habrá que implementar la validación de firma antes de habilitarlos.
+El registro está habilitado solo en desarrollo desde una conexión local y no reemplaza credenciales ya configuradas. La cuenta autenticada en la CLI `gh` no sustituye la identidad de los usuarios de la plataforma.
 
-Referencias oficiales: [registro por manifiesto](https://docs.github.com/en/apps/sharing-github-apps/registering-a-github-app-from-a-manifest), [tokens de usuario](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/generating-a-user-access-token-for-a-github-app), [renovación](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/refreshing-user-access-tokens).
+**Registrar la App no concede acceso a Fortop.** La whitelist y el administrador se configuran por separado; consulta [Desarrollo](../docs/desarrollo.md).
+
+Los workers locales recargan las credenciales de GitHub guardadas por el registro. Al cambiar claves de Google u otras variables de agentes, reinicia `bin/dev`.
+
+## Permisos
+
+| Permiso | Nivel | Uso |
+| :--- | :--- | :--- |
+| Metadatos | Lectura | Identificar repositorios e instalaciones |
+| Contenido | Escritura | Leer código y proponer cambios en ramas `fortop/*` |
+| Issues | Escritura | Publicar hallazgos |
+| Pull requests | Escritura | Abrir propuestas para revisión |
+| Webhooks | Desactivados | La autorización se comprueba antes de operar |
+
+El manifiesto deja vacía la URL del webhook; una URL `localhost` provoca errores de registro incluso con el hook desactivado. Los usuarios eligen todos sus repositorios o un subconjunto al instalar la App.
+
+OAuth usa `state`, PKCE y tokens de usuario renovables. Cada trabajo verifica el acceso vigente y obtiene un token de instalación efímero limitado al repositorio. Fortop no fusiona los PRs.
+
+## URLs y credenciales
+
+`APP_URL` define el origen de la plataforma. Configura estas rutas con el mismo origen en GitHub:
+
+| Campo | Ruta |
+| :--- | :--- |
+| Homepage URL | El origen de `APP_URL` |
+| Callback OAuth | `/auth/github/callback` |
+| Setup URL de instalación | `/github/installations/callback` |
+| Callback del registro por manifiesto | `/github/app/manifest/callback`, solo durante el registro local |
+
+Para la instancia actual, el origen de producción es **https://fortop.34-76-10-0.sslip.io**. Puede conservarse también el callback de localhost. El registro `/setup/github` permanece deshabilitado en producción.
+
+El registro completa `GITHUB_APP_ID`, `GITHUB_APP_SLUG`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `GITHUB_APP_PRIVATE_KEY` y `GITHUB_WEBHOOK_SECRET`. La clave privada se guarda en base64 para conservar el PEM; el servidor también acepta el PEM al configurar variables directamente.
+
+Desde esta carpeta, `./bin/manifest` muestra el manifiesto público con las URLs actuales, sin credenciales. `./bin/setup` arranca solo Rails en loopback; para trabajar con los agentes usa `bin/dev` en la plataforma.
+
+## Avatar e identidad de publicación
+
+<img src="avatar.png" alt="Avatar oficial de Fortop para GitHub" width="96">
+
+El autor de los PRs es el bot de la GitHub App. En la [configuración de fortop-app](https://github.com/settings/apps/fortop-app), selecciona **Display information → Upload a logo**, usa [`avatar.png`](avatar.png) y guarda el nuevo avatar. El fondo de marca es `#FFFFF3`.
+
+El avatar se configura en GitHub, independientemente del logo mostrado por Rails.
+
+## Código relacionado
+
+[Servicios de GitHub](../fortop_platform/app/services/github/) · [Controladores de registro e instalación](../fortop_platform/app/controllers/github/) · [Sesiones](../fortop_platform/app/controllers/sessions_controller.rb)

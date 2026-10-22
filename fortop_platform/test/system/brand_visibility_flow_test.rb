@@ -259,7 +259,9 @@ class BrandVisibilityFlowTest < ApplicationSystemTestCase
     client=Object.new
     client.define_singleton_method(:user) { { "id"=>93001, "login"=>"brand-builder", "name"=>"Brand Builder" } }
     Visibility::GoogleClient.stub(:new, FakeVisibilityClient.new) do
-      Github::OAuth.stub(:new, oauth) { Github::Client.stub(:new, client) { yield } }
+      Github::App.stub(:configured?, true) do
+        Github::OAuth.stub(:new, oauth) { Github::Client.stub(:new, client) { yield } }
+      end
     end
   end
 end

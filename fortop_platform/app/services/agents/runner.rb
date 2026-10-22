@@ -40,7 +40,7 @@ module Agents
             @tools.call(name, arguments)
           rescue ToolError => error
             # Feed a rejected operation back to the agent so it can choose another action.
-            { "error" => error.message }
+            { "error" => error.message }.merge(error.details)
           end
           response = { "name" => name, "response" => { "result" => result } }
           response["id"] = function["id"] if function["id"]
@@ -60,6 +60,11 @@ module Agents
         if calls.empty?
           summary = content.fetch("parts", []).reject { |part| part["thought"] }.filter_map { |part| part["text"] }.join("\n")
           raise Error, "El agente terminó sin un resumen." if summary.blank?
+          feedback = @tools.completion_feedback if @tools.respond_to?(:completion_feedback)
+          if feedback.present?
+            state["history"] << { "role" => "user", "parts" => [ { "text" => feedback } ] }
+            next
+          end
           state["result"] = { "summary" => summary.truncate(12_000), "steps" => state["turn"], "tool_calls" => state["tool_count"] }
         else
           state["pending"] = calls

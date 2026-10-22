@@ -24,7 +24,7 @@ module Scans
       /\b[a-z0-9_]*(?:api[_-]?key|token|credential|secret)[a-z0-9_]*["']?\s*[:=]\s*["']AQ[0-9A-Za-z_.-]{30,}/i
     ].freeze
 
-    attr_reader :directory, :read_paths, :changes, :total_files
+    attr_reader :directory, :read_paths, :changes, :total_files, :inspected_paths
 
     def initialize(github:, full_name:, sha:, tree:)
       @github, @full_name, @sha = github, full_name, sha
@@ -36,6 +36,8 @@ module Scans
       @blocked_paths = Set.new
       @diff_cache = {}
       @total_bytes = 0
+      @inspected_paths, @searched_paths = Set.new, Set.new
+      @inspection_ranges, @inspection_totals, @deferred_paths = {}, {}, {}
     end
 
     def list_files(prefix: "", offset: 0)
@@ -93,6 +95,11 @@ module Scans
         selected << numbered
       end
       next_line = first + selected.size
+      @inspected_paths << path if selected.any? || lines.empty?
+      @inspection_totals[path] = lines.size
+      last_complete = next_line - 1
+      last_complete -= 1 if selected.size == 1 && selected.first != "#{first}: #{lines[first - 1]}"
+      record_inspection(path, first, last_complete) if last_complete >= first
       { "path" => path, "total_lines" => lines.length, "content" => selected.join, "next_line" => next_line <= lines.length ? next_line : nil, "truncated" => truncated, "trust" => "untrusted_repository_data" }
     rescue ArgumentError, TypeError
       raise Agents::ToolError, "El rango de líneas no es válido."
@@ -118,6 +125,7 @@ module Scans
           next
         end
         inspected += 1
+        @searched_paths << path
         lines = content.lines
         lines.each_with_index do |line, index|
           next if index + 1 < line_start
@@ -192,6 +200,9 @@ module Scans
 
     def coverage
       { "total_files" => @total_files, "eligible_files" => @entries.size, "read_files" => @read_paths.size, "read_bytes" => @total_bytes,
+        "inspected_files" => @inspected_paths.size, "reviewed_files" => @inspected_paths.count { |path| next_unread_line(path).nil? },
+        "searched_files" => @searched_paths.size, "audit_targets" => audit_targets.size, "pending_files" => pending_review.size,
+        "deferred_files" => @deferred_paths.dup,
         "limits" => "Análisis estático sin cupos de archivos, datos totales, hallazgos ni correcciones. Lecturas y búsquedas paginadas; texto UTF-8 de hasta 1 MB por archivo. Se excluyen secretos, dependencias, binarios y enlaces simbólicos. El presupuesto de tokens configurado se comparte entre los agentes." }
     end
 
@@ -202,6 +213,8 @@ module Scans
     # Stored only in the encrypted pause checkpoint, never in public metadata.
     def snapshot
       { "read_paths" => @read_paths.to_a, "read_bytes" => @total_bytes,
+        "inspected_paths" => @inspected_paths.to_a, "searched_paths" => @searched_paths.to_a,
+        "inspection_ranges" => @inspection_ranges, "inspection_totals" => @inspection_totals, "deferred_paths" => @deferred_paths,
         "changes" => @changes, "finding_ids" => @finding_ids, "blocked_paths" => @blocked_paths.to_a }
     end
 
@@ -212,6 +225,11 @@ module Scans
         @read_paths << path
       end
       @total_bytes = snapshot.fetch("read_bytes")
+      @inspected_paths.merge(snapshot.fetch("inspected_paths", []) & @read_paths.to_a)
+      @searched_paths.merge(snapshot.fetch("searched_paths", []) & @read_paths.to_a)
+      @inspection_ranges = snapshot.fetch("inspection_ranges", {}).slice(*@inspected_paths.to_a)
+      @inspection_totals = snapshot.fetch("inspection_totals", {}).slice(*@inspected_paths.to_a)
+      @deferred_paths = snapshot.fetch("deferred_paths", {})
       snapshot.fetch("changes").each do |path, content|
         check_writable_path!(path)
         raise Agents::ToolError, "El cambio guardado no procede de un archivo inspeccionado." if @entries.key?(path) && !@read_paths.include?(path)
@@ -224,6 +242,54 @@ module Scans
       @blocked_paths.merge(snapshot.fetch("blocked_paths", []))
       self
     end
+
+    def audit_targets
+      @audit_targets ||= @entries.keys.select do |path|
+        next false if path.match?(%r{(?:\A|/)(?:test|tests|spec|specs|fixtures|stories)/|\.(?:test|spec|stories)\.}i)
+        extension = File.extname(path).downcase
+        %w[.html .htm .erb .jsx .tsx .vue .svelte .astro .haml .slim .ejs .liquid .mdx .php].include?(extension) ||
+          File.basename(path).match?(/(?:seo|sitemap|robots|metadata|routes)/i) ||
+          path.match?(%r{(?:\A|/)(?:app/controllers|pages|routes)/.*\.(?:rb|js|ts|mjs)$}) ||
+          path.match?(%r{(?:\A|/)(?:src|app|components|layouts|views)/.*\.(?:js|ts|mjs)$})
+      end.sort
+    end
+
+    def pending_review
+      audit_targets.filter_map do |path|
+        next if @blocked_paths.include?(path) || @deferred_paths.key?(path)
+        line = next_unread_line(path)
+        { "path" => path, "start_line" => line } if line
+      end
+    end
+
+    def defer_review(path, reason)
+      raise Agents::ToolError, "La ruta no pertenece al alcance web pendiente." unless pending_review.any? { |item| item["path"] == path }
+      raise Agents::ToolError, "Justifica de forma concreta por qué no se puede revisar este archivo (al menos 40 caracteres)." unless reason.is_a?(String) && reason.strip.length.between?(40, 2000)
+      @deferred_paths[path] = reason.strip
+      { "deferred" => true, "path" => path, "reason" => reason.strip }
+    end
+
+    def next_unread_line(path)
+      return 1 unless @inspection_totals.key?(path)
+      cursor = 1
+      @inspection_ranges.fetch(path, []).each do |first, last|
+        break if first > cursor
+        cursor = [ cursor, last + 1 ].max
+      end
+      cursor <= @inspection_totals[path] ? cursor : nil
+    end
+
+    def record_inspection(path, first, last)
+      ranges = @inspection_ranges.fetch(path, []) + [ [ first, last ] ]
+      @inspection_ranges[path] = ranges.sort.each_with_object([]) do |range, merged|
+        if merged.any? && range.first <= merged.last.last + 1
+          merged.last[1] = [ merged.last.last, range.last ].max
+        else
+          merged << range.dup
+        end
+      end
+    end
+    private :record_inspection
 
     def check_writable_path!(path)
       check_path!(path)

@@ -456,7 +456,7 @@ class Scans::PipelineTest < ActiveSupport::TestCase
   test "does not mark an audit complete if the agent never inspects source" do
     Scans::Pipeline.new(@scan, github: @github, provider: Provider.new([ final("All done") ])).call
     assert @scan.reload.failed?
-    assert_includes @scan.error_message, "sin inspeccionar"
+    assert @scan.scan_events.where(kind: "validation").any? { |event| event.message.include?("Cierre pendiente") }
     assert_empty @github.pulls
   end
 
@@ -464,7 +464,7 @@ class Scans::PipelineTest < ActiveSupport::TestCase
     paths = Array.new(21) { |index| format("pages/%02d.html", index) }
     originals = @github.instance_variable_get(:@files_by_sha).fetch("a" * 40)
     paths.each { |path| originals[path] = Github::SOURCE }
-    analysis = paths.flat_map do |path|
+    analysis = [ tool("read_file", path: "index.html") ] + paths.flat_map do |path|
       [ tool("read_file", path: path), tool("report_finding", finding_arguments.merge("file_path" => path)) ]
     end
     remediation = paths.each_slice(20).flat_map do |batch|
@@ -500,6 +500,54 @@ class Scans::PipelineTest < ActiveSupport::TestCase
     assert_equal 21, @github.issues.size
     assert_equal 21, @github.commits.first[:files].size
     assert_equal 1, @github.pulls.size
+  end
+
+  test "a final model response cannot skip another web page in the same application" do
+    @github.instance_variable_get(:@files_by_sha).fetch("a" * 40)["pages/contact.html"] = Github::SOURCE
+    provider = Provider.new([ tool("read_file", path: "index.html"), final("Todo revisado."), tool("read_file", path: "pages/contact.html"), final("Ambas páginas revisadas, sin defectos contrastados.") ])
+    run_pipeline(provider: provider)
+    assert @scan.reload.completed?, @scan.error_message
+    assert_equal 4, provider.usage["requests"]
+    assert_equal 2, @scan.metadata.dig("coverage", "reviewed_files")
+    assert_equal 0, @scan.metadata.dig("coverage", "pending_files")
+    assert_empty @github.pulls
+  end
+
+  test "rejected findings must be corrected before an empty summary can finish the audit" do
+    arguments = finding_arguments.merge("automatable" => false)
+    provider = Provider.new([ tool("read_file", path: "index.html"), tool("report_finding", arguments.merge("line_number" => 99)), final("No hay hallazgos."), tool("report_finding", arguments), final("Hay un hallazgo que requiere revisión manual.") ])
+    run_pipeline(provider: provider)
+    assert @scan.reload.completed?, @scan.error_message
+    assert_equal 1, @scan.findings.count
+    assert_equal "manual", @scan.findings.first.status
+    assert_equal "corrected", @scan.metadata.fetch("analysis_rejections").values.first["status"]
+    assert @scan.scan_events.where(kind: "warning").any? { |event| event.message.include?("La línea no corresponde") }
+    assert_equal 1, @github.issues.size
+    assert_empty @github.pulls
+  end
+
+  test "an unsupported hypothesis can be explicitly discarded with its reason preserved" do
+    dismissal = -> { tool("dismiss_finding", rejection_id: @scan.reload.metadata.fetch("analysis_rejections").keys.first, reason: "La cita propuesta no aparece en el archivo y no demuestra el supuesto defecto de esta página.") }
+    provider = Provider.new([ tool("read_file", path: "index.html"), tool("report_finding", finding_arguments.merge("evidence" => "Prueba inventada")), final("No hay nada."), dismissal, final("La hipótesis se descartó por falta de evidencia; no hay hallazgos contrastados.") ])
+    run_pipeline(provider: provider)
+    assert @scan.reload.completed?, @scan.error_message
+    rejection = @scan.metadata.fetch("analysis_rejections").values.first
+    assert_equal "dismissed", rejection["status"]
+    assert_includes rejection["dismissal_reason"], "no demuestra"
+    assert_empty @scan.findings
+    assert_empty @github.issues
+  end
+
+  test "a repeated exact quote is accepted at its actual later occurrence" do
+    @github.instance_variable_get(:@files_by_sha).fetch("a" * 40)["index.html"] = "<title>Fortop</title>\n<title>Fortop</title>\n"
+    workspace = Scans::Workspace.new(github: @github, full_name: "test/repo", sha: "a" * 40, tree: @github.tree("test/repo", "a" * 40))
+    tools = Agents::AnalysisTools.new(workspace: workspace, scan: @scan)
+    tools.call("read_file", { "path" => "index.html" })
+    result = tools.call("report_finding", finding_arguments.merge("evidence" => "<title>Fortop</title>", "line_number" => 2))
+    assert result["accepted"]
+    assert_equal 2, @scan.findings.first.line_number
+  ensure
+    workspace&.close
   end
 
   test "pause and resume at every model response preserves all work without repeating AI requests" do

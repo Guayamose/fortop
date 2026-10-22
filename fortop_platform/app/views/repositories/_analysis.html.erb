@@ -40,6 +40,7 @@
     <% elsif scan.completed? %>
       <p class="repository-no-changes"><%= app_icon(:code) %> No se ha creado un pull request.</p>
     <% end %>
+    <%= render "scans/coverage", scan: scan %>
   <% end %>
 </div>
 

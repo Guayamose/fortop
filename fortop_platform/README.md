@@ -159,7 +159,7 @@ AGENT_MAX_TURNS=0
 AGENT_MAX_TOOL_CALLS=0
 AGENT_TIMEOUT_SECONDS=0
 AGENT_MAX_OUTPUT_TOKENS=16384
-AGENT_MAX_TOTAL_TOKENS=1000000
+AGENT_MAX_TOTAL_TOKENS=0
 AGENT_CONTEXT_MAX_BYTES=120000
 ```
 
@@ -170,8 +170,8 @@ cuando Google lo informa. El cliente comprueba el presupuesto antes de cada
 solicitud y registra el consumo real devuelto por Google. Los reintentos de
 errores transitorios están limitados. Los workers procesan una ejecución a la
 vez por proceso. Solo se llama al modelo al iniciar un análisis.
-`AGENT_MAX_TOTAL_TOKENS=0` desactiva también el presupuesto de tokens; el valor
-por defecto conserva un control de gasto. No es una garantía monetaria: las cuotas,
+`AGENT_MAX_TOTAL_TOKENS=0` desactiva el presupuesto acumulado de tokens y es
+el valor predeterminado. Un valor positivo permite fijar un presupuesto explícito. No es una garantía monetaria: las cuotas,
 precios y límites del modelo siguen dependiendo de Google.
 
 Para evitar reenviar indefinidamente todo el historial, el agente resume los turnos
@@ -234,6 +234,19 @@ el repositorio.
 El **agente de análisis** decide cómo explorar con `list_files`, `read_file`
 y `search`, contrasta sus hipótesis y registra hallazgos con `report_finding`.
 La evidencia debe aparecer en una fuente original leída, en la línea indicada.
+
+El cierre del análisis se valida contra el inventario de páginas, plantillas,
+componentes web, rutas y archivos de SEO. Un resumen del modelo no termina la
+ejecución mientras haya fuentes web pendientes: el agente recibe las rutas y
+líneas desde las que debe continuar. Una exclusión con `defer_review` requiere
+una justificación que queda visible y no se cuenta como archivo revisado.
+Las búsquedas, las lecturas directas y los archivos leídos por completo se
+contabilizan por separado, también después de pausar y continuar.
+
+Los rechazos de `report_finding` quedan registrados con su motivo e identificador.
+El agente debe corregirlos o descartar expresamente la hipótesis con una razón
+documentada antes de terminar. Un defecto no automatizable se registra como
+manual; no debe desaparecer por no poder generar una corrección segura.
 
 El **agente de remediación** recibe esos hallazgos y usa lectura, búsqueda,
 `replace_text`, `write_file`, `validate_changes`, `discard_changes` y

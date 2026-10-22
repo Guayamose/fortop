@@ -1,0 +1,9 @@
+<% if (coverage = scan.metadata['coverage']) %>
+  <p class="coverage-note"><% if coverage.key?('inspected_files') %>Lectura directa: <%= coverage['inspected_files'] %> archivos · <%= coverage['reviewed_files'] %> leídos por completo · Búsquedas: <%= coverage['searched_files'] %> archivos. <%= coverage['pending_files'] %> archivos web pendientes.<% else %><%= coverage['read_files'] %> archivos cargados, incluyendo búsquedas; esta medición no distingue lectura directa.<% end %> El diagnóstico se limita al código examinado.</p>
+  <% if coverage.fetch('deferred_files', {}).any? %>
+    <details class="repository-scan-details">
+      <summary>Exclusiones de la revisión · <%= coverage['deferred_files'].size %> <%= app_icon(:chevron_down) %></summary>
+      <div class="repository-checks"><% coverage['deferred_files'].each do |path, reason| %><p><strong><%= path %></strong>: <%= reason %></p><% end %></div>
+    </details>
+  <% end %>
+<% end %>

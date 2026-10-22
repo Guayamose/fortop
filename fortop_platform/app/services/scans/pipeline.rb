@@ -125,7 +125,7 @@ module Scans
       tools = Agents::AnalysisTools.new(workspace: @workspace, scan: @scan)
       result = run_agent("analysis", tools, Agents::Prompts::ANALYSIS,
         "Analiza el repositorio #{@repository.full_name}, rama #{@repository.default_branch}, commit #{@scan.base_sha}. Empieza por listar sus archivos e inspeccionar los puntos de entrada web. Registra únicamente hallazgos contrastados con evidencia. El inventario tiene #{@workspace.total_files} archivos totales; solo los formatos de texto permitidos son accesibles.")
-      raise Agents::Error, "El agente de análisis ha terminado sin inspeccionar ningún archivo de código." if @workspace.read_paths.empty?
+      raise Agents::Error, "El agente de análisis ha terminado sin inspeccionar ningún archivo de código." if @workspace.inspected_paths.empty?
       merge_metadata!("analysis_summary" => result.summary, "coverage" => @workspace.coverage)
       @scan.record_event!("Análisis terminado: #{@scan.findings.count} hallazgos respaldados por código.")
     end
@@ -176,8 +176,8 @@ module Scans
       observer = lambda do |tool, arguments, turn|
         @scan.increment!(:agent_steps)
         # Persist the selected action, not private model reasoning or raw arguments.
-        path = arguments["path"].to_s.truncate(200).presence
-        label = { "list_files" => "explorando archivos", "read_file" => "leyendo código", "search" => "contrastando referencias", "report_finding" => "documentando un hallazgo", "replace_text" => "preparando una corrección", "write_file" => "preparando un archivo", "validate_changes" => "verificando cambios", "explain_remediation" => "documentando el motivo de la corrección", "mark_manual" => "registrando una intervención manual", "discard_changes" => "descartando un cambio" }.fetch(tool, "usando una herramienta")
+        path = (arguments["path"] || arguments["file_path"]).to_s.truncate(200).presence
+        label = { "list_files" => "explorando archivos", "read_file" => "leyendo código", "search" => "contrastando referencias", "report_finding" => "documentando un hallazgo", "dismiss_finding" => "resolviendo una hipótesis rechazada", "defer_review" => "justificando una exclusión", "replace_text" => "preparando una corrección", "write_file" => "preparando un archivo", "validate_changes" => "verificando cambios", "explain_remediation" => "documentando el motivo de la corrección", "mark_manual" => "registrando una intervención manual", "discard_changes" => "descartando un cambio" }.fetch(tool, "usando una herramienta")
         @scan.record_event!("#{name == "analysis" ? "Análisis" : "Remediación"}: #{label}#{path ? " (#{path})" : ""}.", kind: "tool", metadata: { agent: name, tool: tool, turn: turn, path: path }.compact)
       end
       checkpoint = lambda do |state|

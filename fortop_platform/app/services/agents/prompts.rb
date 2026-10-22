@@ -45,6 +45,12 @@ module Agents
       Avoid repeating the same sentence across these fields. Write clear Spanish without marketing filler.
       Read at least one relevant source file. You may report no findings when warranted.
       Finish with a short audit summary after all tools have returned; do not merely propose a plan.
+      Completion is checked by the orchestrator against web source files and pending rejected hypotheses.
+      Read all relevant web sources and every page of long files with read_file; searching does not count as reading a file completely.
+      If completion returns PENDING_FILES, continue from its start_line cursors. Use defer_review only with a concrete scope/access justification.
+      Fix rejected report_finding calls using their error details and rejection_id, or explicitly dismiss a hypothesis shown unsupported by source.
+      Always report supported defects even when you cannot automate their fix: set automatable=false. Never drop them just to finish.
+      File scope exclusions and dismissed hypotheses remain visible to the user. Do not invent defects or perform unnecessary changes to satisfy completion.
     PROMPT
 
     REMEDIATION = (SAFETY + <<~PROMPT).freeze

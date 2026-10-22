@@ -22,6 +22,18 @@ class RepositoriesControllerTest < ActionDispatch::IntegrationTest
     refute_includes response.body, @user.github_token
   end
 
+  test "repository results distinguish searched source from full inspection and expose review exclusions" do
+    repository = connected_repository(@user)
+    scan = repository.scans.create!(status: "completed", progress: 100,
+      metadata: { "coverage" => { "read_files" => 47, "inspected_files" => 7, "reviewed_files" => 6, "searched_files" => 45, "pending_files" => 0,
+        "deferred_files" => { "docs/example.html" => "Ejemplo de documentación que no se publica como página del sitio." } } })
+    get repository_path(repository, scan_id: scan.id)
+    assert_response :success
+    assert_select ".coverage-note", text: /Lectura directa: 7 archivos.*6 leídos por completo.*Búsquedas: 45 archivos/
+    assert_select "details summary", text: /Exclusiones de la revisión · 1/
+    assert_includes response.body, "Ejemplo de documentación que no se publica"
+  end
+
   test "repository index and detail only expose the signed in users repositories" do
     ours = connected_repository(@user)
     another = User.create!(github_id: 90002, login: "someone", github_token: "private-token")

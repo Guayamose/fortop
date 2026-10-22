@@ -221,6 +221,42 @@ class Scans::WorkspaceTest < ActiveSupport::TestCase
     restored&.close
   end
 
+  test "searching source does not count as direct or complete inspection" do
+    @workspace.search("Fortop")
+    assert_equal 3, @workspace.coverage["read_files"]
+    assert_equal 3, @workspace.coverage["searched_files"]
+    assert_equal 0, @workspace.coverage["inspected_files"]
+    assert_equal [ { "path" => "index.html", "start_line" => 1 } ], @workspace.pending_review
+    @workspace.read_lines("index.html")
+    assert_equal 1, @workspace.coverage["inspected_files"]
+    assert_equal 1, @workspace.coverage["reviewed_files"]
+    assert_empty @workspace.pending_review
+  end
+
+  test "long web files remain pending until all source pages are inspected including after a pause" do
+    @files["index.html"] = "<p>Contenido</p>\n" * 450
+    @workspace.read_lines("index.html")
+    assert_equal [ { "path" => "index.html", "start_line" => 201 } ], @workspace.pending_review
+    @workspace.read_lines("index.html", start_line: 401)
+    assert_equal 201, @workspace.pending_review.first["start_line"]
+    restored = fresh_workspace.restore!(JSON.parse(JSON.generate(@workspace.snapshot)))
+    assert_equal 201, restored.pending_review.first["start_line"]
+    restored.read_lines("index.html", start_line: 201)
+    assert_empty restored.pending_review
+    assert_equal 1, restored.coverage["reviewed_files"]
+  ensure
+    restored&.close
+  end
+
+  test "deferred web files retain a visible reason and are not counted as reviewed" do
+    reason = "Esta plantilla es un ejemplo interno de documentación y no se sirve como página del sitio web."
+    assert_raises(Agents::ToolError) { @workspace.defer_review("index.html", "No aplica") }
+    @workspace.defer_review("index.html", reason)
+    assert_empty @workspace.pending_review
+    assert_equal 0, @workspace.coverage["reviewed_files"]
+    assert_equal({ "index.html" => reason }, @workspace.coverage["deferred_files"])
+  end
+
   private
 
   def fresh_workspace

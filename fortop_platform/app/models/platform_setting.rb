@@ -4,7 +4,7 @@ class PlatformSetting < ApplicationRecord
   DEFINITIONS = {
     "NEW_WORK_ENABLED" => { label: "Permitir nuevas ejecuciones", default: "true", choices: %w[true false], group: :access },
     "GEMINI_MODEL" => { label: "Modelo de repositorios", default: "gemini-3.5-flash-lite", model: true, group: :repositories },
-    "AGENT_MAX_TOTAL_TOKENS" => { label: "Tokens por análisis · 0 sin límite", default: "1000000", range: 0..100_000_000, group: :repositories },
+    "AGENT_MAX_TOTAL_TOKENS" => { label: "Tokens por análisis · 0 sin límite", default: "0", range: 0..100_000_000, group: :repositories },
     "AGENT_MAX_OUTPUT_TOKENS" => { label: "Tokens de salida por petición", default: "16384", range: 256..65_536, group: :repositories },
     "AGENT_MAX_TURNS" => { label: "Turnos · 0 sin límite", default: "0", range: 0..100_000, group: :repositories },
     "AGENT_MAX_TOOL_CALLS" => { label: "Herramientas · 0 sin límite", default: "0", range: 0..1_000_000, group: :repositories },

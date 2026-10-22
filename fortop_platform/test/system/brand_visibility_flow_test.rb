@@ -12,6 +12,26 @@ class BrandVisibilityFlowTest < ApplicationSystemTestCase
 
   teardown { ApplicationController.allow_forgery_protection=@previous_forgery_protection }
 
+  test "brand deletion asks for confirmation and works on mobile" do
+    with_browser_github do
+      sign_in
+      brand = visibility_brand(user: User.find_by!(github_id: 93001))
+      visit brand_path(brand)
+      assert_button "Eliminar marca"
+      dismiss_confirm(/¿Eliminar Nébula\?/) { click_button "Eliminar marca" }
+      assert_current_path brand_path(brand)
+      assert Brand.exists?(brand.id)
+      screenshot("visibility-delete-desktop")
+      page.current_window.resize_to(390, 844)
+      assert_no_horizontal_overflow
+      screenshot("visibility-delete-mobile")
+      accept_confirm(/todos sus estudios e informes/) { click_button "Eliminar marca" }
+      assert_current_path brands_path
+      assert_text "Marca y estudios eliminados."
+      assert_not Brand.exists?(brand.id)
+    end
+  end
+
   test "brand logos preview persist and can return to the automatic website icon" do
     with_browser_github do
       sign_in

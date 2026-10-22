@@ -62,10 +62,11 @@ class BrandsController < ApplicationController
   end
 
   def destroy
-    if @brand.destroy
-      redirect_to brands_path, notice: "Marca eliminada."
+    deleted = @brand.with_lock { @brand.destroy }
+    if deleted
+      redirect_to brands_path, notice: "Marca y estudios eliminados.", status: :see_other
     else
-      redirect_to brand_path(@brand), alert: @brand.errors.full_messages.to_sentence
+      redirect_to brand_path(@brand), alert: @brand.errors.full_messages.to_sentence, status: :see_other
     end
   end
 

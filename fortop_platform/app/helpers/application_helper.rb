@@ -1,5 +1,6 @@
 module ApplicationHelper
   ICON_PATHS = {
+    trash: '<path d="M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6M14 10v6"/>',
     chevron_down: '<path d="m6 9 6 6 6-6"/>',
     pause: '<path d="M9 5v14M15 5v14"/>',
     restart: '<path d="M3 10a9 9 0 1 1 2 8M3 4v6h6"/>',

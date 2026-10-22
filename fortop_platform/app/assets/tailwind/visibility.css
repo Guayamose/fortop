@@ -29,6 +29,13 @@
 .brand-row-copy h2 { font-size:20px; font-weight:480; letter-spacing:-.02em; }.brand-row-copy>span { display:flex; flex-wrap:wrap; gap:10px; color:var(--muted); font-size:12px; }.brand-row-copy i { font-style:normal; }
 .brand-row-study { margin-left:auto; display:flex; align-items:flex-end; flex-direction:column; gap:6px; }.brand-row-study small { font-size:10px; color:var(--muted); }.brand-row>.icon { width:16px; margin-left:12px; color:var(--muted); }
 .brand-profile-heading { display:flex; align-items:center; justify-content:space-between; gap:24px; padding:5px 0 35px; }
+.brand-profile-actions { display:flex; align-items:center; justify-content:flex-end; flex-wrap:wrap; flex-shrink:0; gap:8px; }
+.brand-delete-button { color:var(--muted); }
+.brand-delete-button:hover,.brand-delete-button:focus-visible { color:var(--risk); background:#fff5f5; }
+@media (max-width:760px) {
+  .brand-profile-heading { flex-direction:column; align-items:flex-start; }
+  .brand-profile-actions { justify-content:flex-start; }
+}
 .brand-profile-identity { display:flex; align-items:center; gap:20px; min-width:0; }.brand-profile-heading h1 { margin:4px 0; font-size:40px; font-weight:450; line-height:1.15; letter-spacing:-.04em; overflow-wrap:anywhere; }
 .visibility-inline-meta { display:flex; flex-wrap:wrap; gap:9px; color:var(--muted); font-size:12px; }.visibility-inline-meta a { color:#666174; }.visibility-inline-meta a:hover { color:var(--vis-accent); }
 .brand-form-section { display:grid; grid-template-columns:1fr 1.4fr; gap:80px; padding:36px 0 42px; border-top:1px solid var(--line); }.brand-form-section h2 { margin:12px 0; font-size:26px; font-weight:430; letter-spacing:-.025em; }.brand-form-section p { color:var(--text-secondary); line-height:1.8; max-width:340px; }

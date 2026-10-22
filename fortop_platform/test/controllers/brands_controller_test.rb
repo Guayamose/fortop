@@ -9,6 +9,66 @@ class BrandsControllerTest < ActionDispatch::IntegrationTest
 
   setup { @user=sign_in_github; @brand=visibility_brand(user: @user) }
 
+  test "deleting an owned brand removes its reports and brief versions" do
+    study = complete_visibility(visibility_study(brand: @brand))
+    @brand.update!(brief: "Software de facturación para nuevas empresas de España con soporte especializado.")
+    get brand_path(@brand)
+    assert_select "form[action='#{brand_path(@brand)}'][data-turbo-confirm]" do
+      assert_select "input[name='_method'][value='delete']"
+      assert_select "button", text: "Eliminar marca"
+    end
+
+    assert_difference("Brand.count", -1) { delete brand_path(@brand) }
+    assert_response :see_other
+    assert_redirected_to brands_path
+    assert_not BrandBrief.exists?(brand_id: @brand.id)
+    assert_not VisibilityStudy.exists?(id: study.id)
+    [ VisibilityObservation, VisibilityEvent, VisibilityAction, VisibilityCall ].each do |model|
+      assert_not model.exists?(visibility_study_id: study.id)
+    end
+    follow_redirect!
+    assert_includes response.body, "Marca y estudios eliminados."
+  end
+
+  test "active and paused studies prevent deletion without removing any data" do
+    study = visibility_study(brand: @brand)
+    VisibilityStudy::ACTIVE_STATUSES.each do |status|
+      study.update!(status: status)
+      assert_no_difference([ "Brand.count", "BrandBrief.count", "VisibilityStudy.count", "VisibilityEvent.count" ]) do
+        delete brand_path(@brand)
+      end
+      assert_redirected_to brand_path(@brand)
+      assert_equal "Cancela el estudio en curso antes de eliminar la marca.", flash[:alert]
+    end
+    study.update!(status: "cancelled")
+    assert_difference("Brand.count", -1) { delete brand_path(@brand) }
+    assert_redirected_to brands_path
+  end
+
+  test "deleting brands requires authentication and ownership" do
+    foreign = visibility_brand
+    assert_no_difference("Brand.count") { delete brand_path(foreign) }
+    assert_response :not_found
+    delete logout_path
+    assert_no_difference("Brand.count") { delete brand_path(@brand) }
+    assert_redirected_to new_session_path
+  end
+
+  test "deleting a brand preserves source documents shared with another brand" do
+    import = @user.brand_imports.create!
+    document = import.documents.create!(extracted_text: "Contexto compartido de las marcas.")
+    document.file.attach(io: StringIO.new("Contexto compartido de las marcas."), filename: "brief.txt", content_type: "text/plain")
+    import.update!(status: "completed")
+    @brand.update!(document_ids: [ document.id ])
+    other = visibility_brand(user: @user)
+    other.update!(document_ids: [ document.id ])
+    assert_no_difference([ "BrandDocument.count", "ActiveStorage::Attachment.count" ]) { delete brand_path(@brand) }
+    assert_redirected_to brands_path
+    assert_equal [ other.id ], document.reload.brands.ids
+    assert_equal [ other.current_brief.id ], document.brand_briefs.ids
+    assert document.file.attached?
+  end
+
   test "existing brands use their website icon without a monogram" do
     get brands_path
     assert_response :success

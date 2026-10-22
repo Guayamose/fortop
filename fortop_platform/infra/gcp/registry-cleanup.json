@@ -1,0 +1,4 @@
+[
+  {"name":"remove-old-images","action":{"type":"Delete"},"condition":{"tagState":"any","olderThan":"2592000s"}},
+  {"name":"keep-three-releases","action":{"type":"Keep"},"mostRecentVersions":{"keepCount":3}}
+]

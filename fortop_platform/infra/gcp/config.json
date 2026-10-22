@@ -1,0 +1,14 @@
+{
+  "project": "fortop-ai-gkecke",
+  "region": "europe-west1",
+  "zone": "europe-west1-b",
+  "instance": "fortop-production",
+  "machine_type": "e2-medium",
+  "network": "fortop-production",
+  "subnet": "fortop-production",
+  "address": "fortop-production",
+  "repository": "fortop",
+  "service_account": "fortop-runtime",
+  "secret": "fortop-production-runtime",
+  "backup_bucket": "fortop-ai-gkecke-backups"
+}

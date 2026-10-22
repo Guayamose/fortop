@@ -1,0 +1,22 @@
+#!/usr/bin/env ruby
+require "json"
+require "open3"
+
+root = File.expand_path("..", __dir__)
+Dir.chdir(root)
+config = JSON.parse(File.read("infra/gcp/production.json"))
+project = config.fetch("project")
+abort "Unexpected deployment project" unless project == "fortop-ai-gkecke"
+arguments = ARGV.empty? ? [ "deploy" ] : ARGV
+
+def capture!(*command)
+  output, error, status = Open3.capture3(*command)
+  abort "Deployment prerequisite failed: #{error}" unless status.success?
+  output.strip
+end
+
+runtime = JSON.parse(capture!("gcloud", "secrets", "versions", "access", "latest", "--secret=#{config.fetch('secret')}", "--project=#{project}", "--quiet"))
+allowed = %w[RAILS_MASTER_KEY SECRET_KEY_BASE ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT FORTOP_DATABASE_PASSWORD POSTGRES_ADMIN_PASSWORD DATABASE_URL QUEUE_DATABASE_URL CACHE_DATABASE_URL CABLE_DATABASE_URL GOOGLE_AI_STUDIO_API_KEY GITHUB_APP_ID GITHUB_APP_SLUG GITHUB_CLIENT_ID GITHUB_CLIENT_SECRET GITHUB_APP_PRIVATE_KEY GITHUB_WEBHOOK_SECRET]
+abort "Invalid production secret" unless runtime.is_a?(Hash) && runtime.keys.sort == allowed.sort && runtime.values.all? { |value| value.is_a?(String) && !value.include?("\n") }
+runtime["KAMAL_REGISTRY_PASSWORD"] = capture!("gcloud", "auth", "print-access-token", "--project=#{project}")
+exec runtime, File.join(root, "bin/kamal"), *arguments

@@ -19,6 +19,69 @@ bin/dev
 Abre http://localhost:3000. `bin/dev` arranca Rails, Tailwind y los workers.
 Las colas usan su propia base PostgreSQL; no hace falta Redis.
 
+## Despliegue en Google Cloud
+
+El entorno está definido en `infra/gcp/config.json` y su dirección real en
+`infra/gcp/production.json`. Todas las operaciones fijan explícitamente el
+proyecto **fortop-ai-gkecke**. La VM `fortop-production` está en
+`europe-west1-b`, con web y worker separados, PostgreSQL privado y disco
+persistente. La dirección temporal es https://fortop.34-76-10-0.sslip.io.
+Esta dirección depende del DNS público de sslip.io y de la IP reservada;
+se puede sustituir por un dominio propio actualizando también GitHub.
+
+Preparación inicial, con tu sesión de `gcloud`:
+
+```sh
+ruby infra/gcp/provision.rb
+bin/rails runner infra/gcp/prepare_secrets.rb
+bin/rails runner infra/gcp/production_key.rb
+bin/rails runner infra/gcp/verify_credentials.rb
+```
+
+El script de infraestructura conserva recursos existentes y genera únicamente
+configuración pública. `prepare_secrets` crea los secretos iniciales una sola
+vez; nunca regenera claves de cifrado ni contraseñas de una producción existente.
+La clave de Gemini de producción está asociada al propio proyecto Fortop y
+limitada a Generative Language API. No se reutiliza una clave de otro proyecto.
+La verificación consulta metadatos y GitHub, sin generar respuestas de IA.
+
+Las credenciales se leen de Secret Manager en memoria al ejecutar `bin/deploy`.
+El registro usa un token temporal de tu sesión, sin generar claves JSON de
+servicio. `.kamal/secrets` contiene únicamente referencias a variables.
+No ejecutes comandos que vuelquen el contenido de los secretos a la terminal.
+
+Después de preparar el servidor y su acceso SSH por IAP:
+
+```sh
+bin/deploy setup
+```
+
+Para siguientes versiones, guarda los cambios en Git y ejecuta `bin/deploy`.
+Antes de actualizar, pausa desde Administración los análisis o estudios activos
+y deja que terminen las lecturas de documentos. Después puedes continuarlos;
+una parada forzada del worker puede interrumpir trabajo aún sin checkpoint.
+El worker permite una ejecución simultánea y se separa del proceso web.
+
+El validador JavaScript usa un daemon Docker **rootless** de otro usuario,
+con contenedores sin red, de solo lectura y con límites de recursos. El
+socket del Docker administrador no se entrega a la aplicación; la web tampoco
+recibe el socket del validador.
+
+PostgreSQL crea cuatro bases con un usuario de aplicación sin permisos de
+superusuario ni de creación de roles o bases. Los datos y los documentos se
+guardan en `/srv/fortop`, en un disco que no se borra al eliminar la VM.
+Un timer del servidor copia diariamente las cuatro bases y los documentos a
+`gs://fortop-ai-gkecke-backups`, con acceso público bloqueado y retención por
+ciclo de vida de 14 días. Las claves de descifrado permanecen en Secret Manager;
+se necesitan para restaurar los datos cifrados. Una única VM implica que una
+caída del servidor afecta temporalmente a web, workers y base de datos.
+
+En la [configuración de la GitHub App](https://github.com/settings/apps/fortop-app)
+registra el callback OAuth `/auth/github/callback` y el Setup URL
+`/github/installations/callback` con el origen público. Se puede conservar
+el callback de localhost para desarrollo. `/setup/github` sigue cerrado en
+producción. El acceso de usuarios permanece sujeto a la whitelist de Fortop.
+
 ## Administración y acceso privado
 
 El panel está en `/admin`, también disponible desde el menú de cuenta.

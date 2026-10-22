@@ -84,7 +84,7 @@ jobs:
           bundler-cache: true
 
       - name: Cache RuboCop results
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ${{ env.RUBOCOP_CACHE_ROOT }}
           key: rubocop-${{ runner.os }}-${{ hashFiles('fortop_platform/.ruby-version', 'fortop_platform/**/.rubocop.yml', 'fortop_platform/**/.rubocop_todo.yml', 'fortop_platform/Gemfile.lock') }}

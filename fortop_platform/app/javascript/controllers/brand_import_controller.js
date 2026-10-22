@@ -169,7 +169,10 @@ export default class extends Controller {
   undo() {
     for (const [name, values] of Object.entries(this.undoFields || {})) {
       const input = this.element.elements.namedItem(`brand[${name}]`)
-      if (input.value === values.after) input.value = values.before
+      if (input.value === values.after) {
+        input.value = values.before
+        input.dispatchEvent(new Event("input", { bubbles: true }))
+      }
     }
     this.undoTarget.hidden = true
     this.message("Autocompletado deshecho. Los documentos siguen añadidos al contexto.")

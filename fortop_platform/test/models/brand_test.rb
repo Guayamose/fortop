@@ -4,6 +4,19 @@ require_relative "../support/visibility_fixtures"
 class BrandTest < ActiveSupport::TestCase
   include VisibilityFixtures
 
+  test "logos reject oversized empty and disguised non-image uploads" do
+    brand = visibility_brand
+    brand.logo = { io: StringIO.new(File.binread(Rails.root.join("public/icon.png")) + "x" * Brand::MAX_LOGO_SIZE), filename: "large.png" }
+    assert_not brand.save
+    assert_match(/2 MB/, brand.errors[:logo].join)
+    brand.logo = { io: StringIO.new(""), filename: "empty.png" }
+    assert_not brand.save
+    brand.logo = { io: StringIO.new('<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>'), filename: "logo.png", content_type: "image/png" }
+    assert_not brand.save
+    assert_match(/PNG, JPG o WebP/, brand.errors[:logo].join)
+    assert_not brand.reload.logo.attached?
+  end
+
   test "context versions are immutable and studies keep their original brief" do
     brand=visibility_brand
     original=brand.current_brief

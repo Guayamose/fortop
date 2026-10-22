@@ -12,6 +12,45 @@ class BrandVisibilityFlowTest < ApplicationSystemTestCase
 
   teardown { ApplicationController.allow_forgery_protection=@previous_forgery_protection }
 
+  test "brand logos preview persist and can return to the automatic website icon" do
+    with_browser_github do
+      sign_in
+      visit new_brand_path
+      fill_in "Nombre de la marca", with: "Marca con logo"
+      fill_in "Brief de la marca", with: "Software de facturación sencillo para pequeñas empresas de España, con soporte cercano y gestión de presupuestos."
+      attach_file "brand_logo", Rails.root.join("public/icon.png"), make_visible: true
+      assert_selector ".brand-logo img[src^='blob:']", visible: true
+      assert_text "icon.png · Se guardará con la marca."
+      screenshot("visibility-logo-form")
+      click_button "Crear marca", exact: true
+      assert_text "Descubre dónde estás hoy."
+      brand = User.find_by!(github_id: 93001).brands.last
+      assert_selector ".brand-profile-identity .brand-logo img[src^='/brands/#{brand.id}/logo']", visible: true
+      visit brands_path
+      assert_selector ".brand-row .brand-logo img[src^='/brands/#{brand.id}/logo']", visible: true
+      screenshot("visibility-logo-list")
+
+      click_link "Marca con logo"
+      click_link "Editar brief"
+      click_button "Quitar logo"
+      assert_no_selector ".brand-logo img", visible: true
+      fill_in "Sitio web", with: "nebula.com"
+      assert_selector ".brand-logo img[src*='domain=nebula.com']", visible: :all
+      page.current_window.resize_to(390, 844)
+      assert_no_horizontal_overflow
+      page.execute_script("document.querySelector('.brand-logo-editor').scrollIntoView({behavior: 'instant', block: 'center'})")
+      screenshot("visibility-logo-form-mobile", scroll: false)
+      click_button "Guardar nueva versión"
+      assert_text "Descubre dónde estás hoy."
+      assert_not brand.reload.logo.attached?
+      assert_selector ".brand-profile-identity .brand-logo img[src*='domain=nebula.com']", visible: :all
+      # A failed network image uses the unboxed fallback rather than a broken image.
+      page.execute_script("document.querySelector('.brand-logo img').src = 'data:image/png;base64,broken'")
+      assert_selector ".brand-logo-fallback .icon", visible: true
+      assert_no_selector ".brand-logo img", visible: true
+    end
+  end
+
   test "create a brand run a study and explore persistent evidence with filters on desktop and mobile" do
     with_browser_github do
       sign_in

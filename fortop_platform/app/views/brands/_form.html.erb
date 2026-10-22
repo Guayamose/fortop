@@ -1,7 +1,29 @@
-<%= form_with model: @brand, class: "brand-form", data: { controller: "brand-import", brand_import_url_value: brand_imports_path, brand_import_storage_key_value: "fortop-brand-import:#{current_user.id}:#{@brand.id || 'new'}" } do |form| %>
+<%= form_with model: @brand, class: "brand-form", data: { controller: "brand-import brand-logo", brand_import_url_value: brand_imports_path, brand_import_storage_key_value: "fortop-brand-import:#{current_user.id}:#{@brand.id || 'new'}", brand_logo_uploaded_source_value: uploaded_brand_logo_source(@brand) } do |form| %>
   <% if @brand.errors.any? %><div class="visibility-notice is-warning" role="alert"><%= @brand.errors.full_messages.to_sentence %></div><% end %>
   <%= render "document_upload" %>
-  <section class="brand-form-section"><div><span class="visibility-eyebrow">01 / IDENTIDAD</span><h2>¿Qué marca vamos a investigar?</h2><p>La web nos ayuda a distinguir tu negocio de otras marcas con un nombre parecido.</p></div><div class="brand-fields"><div><%= form.label :name, "Nombre de la marca" %><%= form.text_field :name, required: true, maxlength: 120, placeholder: "Tu marca" %></div><div><%= form.label :website, "Sitio web" %><%= form.text_field :website, placeholder: "https://tumarca.com · opcional" %></div><div><%= form.label :aliases_text, "Otros nombres o abreviaturas" %><%= form.text_field :aliases_text, placeholder: "Separados por comas · opcional" %></div></div></section>
+  <section class="brand-form-section">
+    <div><span class="visibility-eyebrow">01 / IDENTIDAD</span><h2>¿Qué marca vamos a investigar?</h2><p>La web nos ayuda a distinguir tu negocio de otras marcas con un nombre parecido.</p></div>
+    <div class="brand-fields">
+      <div class="brand-logo-editor">
+        <%= render "brands/logo", brand: @brand, large: true, editable: true %>
+        <div class="brand-logo-editor-copy">
+          <span class="brand-field-label">Logo de la marca</span>
+          <div class="brand-logo-actions">
+            <span class="brand-logo-picker">
+              <%= form.file_field :logo, accept: Brand::LOGO_CONTENT_TYPES.join(','), class: "brand-logo-input", data: { brand_logo_target: "file", action: "change->brand-logo#choose" }, aria: { describedby: "brand-logo-help" } %>
+              <%= form.label :logo, class: "button button-secondary" do %><%= app_icon(:plus) %> Subir logo<% end %>
+            </span>
+            <button type="button" class="brand-logo-reset" data-brand-logo-target="reset" data-action="brand-logo#reset" <%= 'hidden' unless @brand.logo.attached? %>>Quitar logo</button>
+          </div>
+          <small id="brand-logo-help" data-brand-logo-target="message" role="status">PNG, JPG o WebP · máximo 2 MB. Si no subes un logo, usamos el icono de tu web.</small>
+          <%= form.hidden_field :remove_logo, value: "0", data: { brand_logo_target: "remove" } %>
+        </div>
+      </div>
+      <div><%= form.label :name, "Nombre de la marca" %><%= form.text_field :name, required: true, maxlength: 120, placeholder: "Tu marca" %></div>
+      <div><%= form.label :website, "Sitio web" %><%= form.text_field :website, placeholder: "https://tumarca.com · opcional", data: { brand_logo_target: "website", action: "input->brand-logo#websiteChanged" } %></div>
+      <div><%= form.label :aliases_text, "Otros nombres o abreviaturas" %><%= form.text_field :aliases_text, placeholder: "Separados por comas · opcional" %></div>
+    </div>
+  </section>
   <section class="brand-form-section"><div><span class="visibility-eyebrow">02 / CONTEXTO</span><h2>Cuéntanos tu negocio.</h2><p>Qué ofreces, a quién ayudas, qué problema resuelves y por qué te eligen. Cuanto más concreto, mejores preguntas podremos investigar.</p></div><div class="brand-fields"><div><%= form.label :brief, "Brief de la marca" %><%= form.text_area :brief, rows: 9, required: true, minlength: 30, maxlength: 20000, placeholder: "Somos… Ayudamos a… Nuestros productos o servicios son… Nos diferenciamos por…" %><small>Si la interpretación no encaja, puedes corregir este brief. Cada edición crea una versión; los estudios anteriores conservan la suya.</small></div></div></section>
   <section class="brand-form-section"><div><span class="visibility-eyebrow">03 / MERCADO</span><h2>Dónde y frente a quién.</h2><p>Usaremos el mercado y el idioma como contexto de las preguntas. No simula la ubicación real de un usuario.</p></div><div class="brand-fields"><div><%= form.label :markets_text, "Mercados e idiomas" %><%= form.text_area :markets_text, rows: 3, required: true, placeholder: "España | es\nMéxico | es\nReino Unido | en" %><small>Un mercado por línea: nombre | código de idioma. Hasta 8 mercados.</small></div><div><%= form.label :known_competitors, "Competidores que ya conoces" %><%= form.text_area :known_competitors, rows: 3, placeholder: "Nombres, webs y cualquier matiz que nos ayude · opcional" %></div></div></section>
   <div class="brand-form-footer"><%= link_to "Volver", @brand.persisted? ? brand_path(@brand) : brands_path, class: "button button-secondary" %><%= form.submit @brand.persisted? ? "Guardar nueva versión" : "Crear marca", class: "button button-primary" %></div>

@@ -1,0 +1,5 @@
+<span class="brand-logo<%= ' large' if local_assigns[:large] %>" aria-hidden="true" <%= tag.attributes(data: { controller: "brand-logo" }) unless local_assigns[:editable] %>>
+  <%= tag.img src: brand_logo_source(brand), alt: "", width: 128, height: 128, hidden: true,
+    referrerpolicy: "no-referrer", decoding: "async", data: { brand_logo_target: "image", action: "load->brand-logo#loaded error->brand-logo#failed" } %>
+  <span class="brand-logo-fallback" data-brand-logo-target="fallback"><%= app_icon(:globe) %></span>
+</span>

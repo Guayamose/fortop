@@ -1,10 +1,16 @@
 class Brand < ApplicationRecord
+  LOGO_CONTENT_TYPES = %w[image/png image/jpeg image/webp].freeze
+  MAX_LOGO_SIZE = 2.megabytes
+
   encrypts :brief
   belongs_to :user
+  has_one_attached :logo
+  attr_accessor :remove_logo
   has_many :visibility_studies, dependent: :destroy
   has_many :brand_briefs, dependent: :destroy
   has_and_belongs_to_many :documents, class_name: "BrandDocument", join_table: :brand_document_links, association_foreign_key: :brand_document_id
   validate :valid_documents
+  validate :valid_logo
   validates :name, length: { in: 2..120 }
   validates :brief, length: { in: 30..20_000 }
   validates :known_competitors, length: { maximum: 4000 }
@@ -14,6 +20,7 @@ class Brand < ApplicationRecord
   validate :valid_markets
   before_validation :normalize_fields
   after_save :snapshot_brief!, if: :saved_context_changed?
+  after_save :purge_removed_logo
   before_destroy :prevent_active_study, prepend: true
 
   def document_ids=(ids)
@@ -50,6 +57,32 @@ class Brand < ApplicationRecord
 
   private
 
+  def valid_logo
+    return unless (change = attachment_changes["logo"]) && logo.attached?
+
+    if logo.blob.byte_size.zero? || logo.blob.byte_size > MAX_LOGO_SIZE
+      errors.add(:logo, "debe ocupar entre 1 byte y 2 MB")
+      return
+    end
+
+    # Inspect the bytes, independently of the filename or browser's MIME type.
+    upload = change.attachable
+    io = upload.is_a?(Hash) ? upload.fetch(:io) : upload.open
+    content_type = Marcel::MimeType.for(io)
+    io.rewind
+    if LOGO_CONTENT_TYPES.include?(content_type)
+      logo.blob.content_type = content_type
+    else
+      errors.add(:logo, "debe ser una imagen PNG, JPG o WebP")
+    end
+  end
+
+  def purge_removed_logo
+    if ActiveModel::Type::Boolean.new.cast(remove_logo) && !attachment_changes.key?("logo")
+      logo.purge_later
+    end
+  end
+
   def normalize_fields
     self.name = name.to_s.strip
     self.website = website.to_s.strip
@@ -76,7 +109,9 @@ class Brand < ApplicationRecord
   end
 
   def snapshot_brief!
-    with_lock do
+    self.class.transaction do
+      # Lock without reloading this record: reload discards pending logo uploads.
+      self.class.lock.find(id)
       brand_briefs.create!(documents: documents.to_a, version: (brand_briefs.maximum(:version) || 0) + 1, content: brief,
         context: attributes.slice("name", "website", "markets", "aliases", "known_competitors", "context_overrides"))
     end

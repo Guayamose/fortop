@@ -1,8 +1,8 @@
 class BrandsController < ApplicationController
-  before_action :set_brand, only: %i[show edit update destroy]
+  before_action :set_brand, only: %i[show edit update destroy logo]
 
   def index
-    @brands = current_user.brands.includes(:visibility_studies).order(updated_at: :desc)
+    @brands = current_user.brands.with_attached_logo.includes(:visibility_studies).order(updated_at: :desc)
   end
 
   def new
@@ -19,6 +19,14 @@ class BrandsController < ApplicationController
   end
 
   def edit
+  end
+
+  def logo
+    return head :not_found unless @brand.logo.attached?
+
+    response.headers["Cache-Control"] = "private, no-store"
+    send_data @brand.logo.download, filename: @brand.logo.filename.to_s,
+      type: @brand.logo.content_type, disposition: "inline"
   end
 
   def update
@@ -68,7 +76,11 @@ class BrandsController < ApplicationController
   end
 
   def brand_params
-    attributes = params.require(:brand).permit(:name, :website, :brief, :markets_text, :aliases_text, :known_competitors, document_ids: [])
+    attributes = params.require(:brand).permit(:name, :website, :brief, :markets_text, :aliases_text, :known_competitors, :logo, :remove_logo, document_ids: [])
+    attributes.delete(:logo) if attributes[:logo].blank?
+    if attributes.key?(:logo) && !attributes[:logo].is_a?(ActionDispatch::Http::UploadedFile)
+      raise ActionController::BadRequest, "Sube el logo como archivo."
+    end
     if attributes.key?(:document_ids)
       ids = attributes[:document_ids].reject(&:blank?).map { |id| Integer(id.to_s, 10) }.uniq
       selected = current_user.brand_documents.joins(:brand_import).where(id: ids, brand_imports: { status: "completed" })

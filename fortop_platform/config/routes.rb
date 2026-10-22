@@ -37,6 +37,7 @@ Rails.application.routes.draw do
   end
   resources :brand_documents, only: :show
   resources :brands do
+    get :logo, on: :member
     resources :visibility_studies, only: :create do
       member do
         post :pause

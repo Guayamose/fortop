@@ -9,6 +9,68 @@ class BrandsControllerTest < ActionDispatch::IntegrationTest
 
   setup { @user=sign_in_github; @brand=visibility_brand(user: @user) }
 
+  test "existing brands use their website icon without a monogram" do
+    get brands_path
+    assert_response :success
+    assert_select ".brand-row .brand-logo img[src='https://www.google.com/s2/favicons?domain=nebula.com&sz=128']"
+    assert_select ".brand-monogram", count: 0
+    get brand_path(@brand)
+    assert_select ".brand-profile-identity .brand-logo img[src*='domain=nebula.com']"
+    @brand.update!(website: "")
+    get brand_path(@brand)
+    assert_select ".brand-logo img[src]", count: 0
+    assert_select ".brand-logo-fallback .icon"
+  end
+
+  test "logos can be uploaded replaced and removed without changing the brief" do
+    post brands_path, params: { brand: { name: "Marca con logo", brief: @brand.brief, markets_text: "España | es", logo: logo_upload } }
+    brand = @user.brands.order(:id).last
+    assert_redirected_to brand_path(brand)
+    assert brand.logo.attached?
+    get brands_path
+    assert_select ".brand-row .brand-logo img[src='#{logo_brand_path(brand, v: brand.logo.blob.id)}']"
+    get logo_brand_path(brand)
+    assert_response :success
+    assert_equal "image/png", response.media_type
+    assert_equal File.binread(Rails.root.join("public/icon.png")), response.body
+    assert_match(/inline/, response.headers["Content-Disposition"])
+    assert_match(/private.*no-store/, response.headers["Cache-Control"])
+    assert_equal "nosniff", response.headers["X-Content-Type-Options"]
+
+    old_blob = brand.logo.blob.id
+    brief = brand.current_brief
+    assert_no_difference("BrandBrief.count") { patch brand_path(brand), params: { brand: { logo: logo_upload } } }
+    assert_redirected_to brand_path(brand)
+    assert_not_equal old_blob, brand.reload.logo.blob.id
+    assert_equal brief.id, brand.current_brief.id
+
+    # A validation error must not remove the saved logo.
+    patch brand_path(brand), params: { brand: { name: "", remove_logo: "1" } }
+    assert_response :unprocessable_entity
+    assert brand.reload.logo.attached?
+    assert_no_difference("BrandBrief.count") { patch brand_path(brand), params: { brand: { remove_logo: "1", logo: "" } } }
+    assert_redirected_to brand_path(brand)
+    assert_not brand.reload.logo.attached?
+    get logo_brand_path(brand)
+    assert_response :not_found
+  end
+
+  test "private logos cannot be read or attached by another owner" do
+    foreign = visibility_brand
+    File.open(Rails.root.join("public/icon.png")) do |file|
+      foreign.logo.attach(io: file, filename: "logo.png", content_type: "image/png")
+    end
+    get logo_brand_path(foreign)
+    assert_response :not_found
+    assert_no_difference("ActiveStorage::Attachment.count") do
+      patch brand_path(@brand), params: { brand: { logo: foreign.logo.blob.signed_id } }
+    end
+    assert_response :bad_request
+    delete logout_path
+    get logo_brand_path(foreign)
+    assert_redirected_to new_session_path
+  end
+
   test "brand creation editing and full persistent report render without new AI calls" do
     get brands_path
     assert_response :success
@@ -114,5 +176,11 @@ class BrandsControllerTest < ActionDispatch::IntegrationTest
     get brand_visibility_study_observation_path(@brand, study, observation)
     assert_select ".visibility-answer-text img", count: 0
     assert_includes response.body, "&lt;img"
+  end
+
+  private
+
+  def logo_upload
+    Rack::Test::UploadedFile.new(Rails.root.join("public/icon.png"), "image/png")
   end
 end

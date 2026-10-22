@@ -237,6 +237,7 @@ class BrandVisibilityFlowTest < ApplicationSystemTestCase
   def sign_in
     visit new_session_path
     click_button "Continuar con GitHub"
+    assert_current_path root_path
     assert_selector "h1", text: "Te damos la bienvenida"
   end
 

@@ -20,7 +20,7 @@ gem "tailwindcss-rails"
 gem "jbuilder"
 
 # Retain reviewable, deterministic code patches.
-gem "diff-lcs", "~> 1.6", require: "diff/lcs"
+gem "diff-lcs", "~> 2.0", require: "diff/lcs"
 gem "rubyzip", "~> 3.7", require: "zip"
 # Parse presentation markup before checking quotes against observed answers.
 gem "redcarpet", "~> 3.6"

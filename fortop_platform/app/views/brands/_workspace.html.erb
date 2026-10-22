@@ -12,7 +12,7 @@
     <% if @study.error_message.present? || @study.pause_reason.present? %><div class="visibility-notice is-warning" role="status"><%= app_icon(:alert) %><span><%= @study.error_message.presence || @study.pause_reason %></span></div><% end %>
     <% if @study.active? || @study.failed? %><div class="visibility-active-console"><%= render "console" %></div><% end %>
     <% if @study.panel.any? %><%= render "report" %><% elsif @study.profile.present? %><%= render "profile" %><% end %>
-    <% if !@study.active? && !@study.failed? %><details class="visibility-activity" id="visibility-activity"><summary><%= app_icon(:terminal) %> Actividad de los agentes <%= app_icon(:chevron_down) %></summary><%= render "console" %></details><% end %>
+    <% if !@study.active? && !@study.failed? %><details class="visibility-activity" id="visibility-activity"><summary><%= app_icon(:terminal) %> Actividad del agente <%= app_icon(:chevron_down) %></summary><%= render "console" %></details><% end %>
   <% end %>
   <% unless @active_study %><%= render "new_study" %><% end %>
   <% if @studies.any? %><section class="visibility-history"><div><span class="visibility-eyebrow">HISTORIAL</span><h2>Cada estudio, guardado.</h2></div><div><% @studies.each do |study| %><%= link_to brand_path(@brand,study_id: study.id), class: "visibility-history-row #{'is-selected' if @study&.id == study.id}" do %><span>#<%= study.id %></span><strong><%= human_timestamp(study.created_at) %></strong><span>Brief v<%= study.brand_brief.version %></span><%= status_badge(study) %><%= app_icon(:arrow) %><% end %><% end %></div></section><% end %>

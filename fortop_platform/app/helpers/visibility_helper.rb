@@ -62,6 +62,7 @@ module VisibilityHelper
     return { title: "Terminando la tarea en curso", description: "Tu solicitud está guardada. La respuesta en curso se conservará antes de detenernos.", icon: :clock, tone: "neutral", state: "stopping", actor: "Control de ejecución" } if study.control_action
     icon = { "researching" => :globe, "planning" => :lightbulb, "measuring" => :search, "diagnosing" => :sparkles, "paused" => :pause, "failed" => :alert, "completed" => :check, "cancelled" => :stop }.fetch(study.status, :agent)
     state = { "queued" => "waiting", "paused" => "paused", "failed" => "failed", "completed" => "completed", "cancelled" => "cancelled" }.fetch(study.status, "live")
-    { title: study.status_label, description: study.pause_reason.presence || study.error_message.presence || "Investigación, respuestas y evidencia. Cada paso queda guardado.", icon: icon, tone: study.failed? ? "amber" : study.completed? ? "green" : "violet", state: state, actor: "Equipo de visibilidad" }
+    tone = { "failed" => "amber", "completed" => "green", "waiting" => "blue", "paused" => "neutral", "cancelled" => "neutral" }.fetch(state, "violet")
+    { title: study.status_label, description: study.pause_reason.presence || study.error_message.presence || "Investigación, respuestas y evidencia. Cada paso queda guardado.", icon: icon, tone: tone, state: state, actor: "Equipo de visibilidad" }
   end
 end

@@ -123,11 +123,33 @@ class BrandVisibilityFlowTest < ApplicationSystemTestCase
       sign_in
       brand=visibility_brand(user: User.find_by!(github_id: 93001))
       study=visibility_study(brand: brand)
+      study.update!(status: "researching", stage: "researching")
+      45.times { |index| study.record_event!("Contrastando la fuente #{index} del mercado.", kind: "research") }
       visit brand_path(brand)
+      within ".agent-activity" do
+        assert_text "Actividad del agente"
+        assert_text "En directo"
+        assert_no_selector ".console-toolbar, .console-current, .console-footer"
+        assert_no_button "Copiar actividad"
+        assert_no_button "Ampliar consola"
+        assert_selector ".agent-action", count: 46
+      end
+      assert page.evaluate_script("document.querySelector('.activity-output').scrollTop > 0")
+      page.execute_script("const output = document.querySelector('.activity-output'); output.scrollTop = 0; output.dispatchEvent(new Event('scroll'))")
+      study.record_event!("Competidor contrastado con una fuente independiente.", kind: "research")
+      assert_selector ".agent-action", text: "Competidor contrastado con una fuente independiente.", visible: :all, wait: 10
+      assert_equal 0, page.evaluate_script("document.querySelector('.activity-output').scrollTop")
+      find("button[aria-label='Ir a las últimas acciones']").click
+      assert page.evaluate_script("document.querySelector('.activity-output').scrollTop > 0")
+      screenshot("visibility-agent-desktop")
       click_button "Pausar", exact: true
       assert_text "Terminando la tarea en curso…"
       VisibilityStudyJob.perform_now(study.id)
       assert_text "Estudio en pausa.", wait: 10
+      assert_selector ".agent-activity[data-console-state='paused']"
+      page.current_window.resize_to(390, 844)
+      assert_no_horizontal_overflow
+      screenshot("visibility-agent-mobile")
       assert_button "Continuar"
       fill_in "Presupuesto total USD", with: "4"
       click_button "Continuar"

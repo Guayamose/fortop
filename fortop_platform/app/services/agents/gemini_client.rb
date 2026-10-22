@@ -7,7 +7,7 @@ module Agents
 
     attr_reader :model, :usage
 
-    def initialize(api_key: ENV["GOOGLE_AI_STUDIO_API_KEY"].presence || ENV["GEMINI_API_KEY"], model: ENV.fetch("GEMINI_MODEL", "gemini-3.1-flash-lite"), transport: nil, sleeper: ->(seconds) { sleep(seconds) }, max_output_tokens: ENV.fetch("AGENT_MAX_OUTPUT_TOKENS", 16_384), max_total_tokens: ENV.fetch("AGENT_MAX_TOTAL_TOKENS", 1_000_000))
+    def initialize(api_key: ENV["GOOGLE_AI_STUDIO_API_KEY"].presence || ENV["GEMINI_API_KEY"], model: PlatformSetting.fetch("GEMINI_MODEL", "gemini-3.1-flash-lite"), transport: nil, sleeper: ->(seconds) { sleep(seconds) }, max_output_tokens: PlatformSetting.fetch("AGENT_MAX_OUTPUT_TOKENS", 16_384), max_total_tokens: PlatformSetting.fetch("AGENT_MAX_TOTAL_TOKENS", 1_000_000))
       raise ConfigurationError, "Falta configurar GOOGLE_AI_STUDIO_API_KEY o GEMINI_API_KEY." if api_key.blank?
       raise ConfigurationError, "GEMINI_MODEL no es válido." unless model.match?(/\Agemini-[a-zA-Z0-9.\-]+\z/)
 

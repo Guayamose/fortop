@@ -1,0 +1,7 @@
+<div class="admin-page">
+  <%= render "admin/shared/header", title: @brand.name, description: @brand.website.presence || "Sin sitio web indicado" %>
+  <div class="admin-access-summary"><%= app_icon(:globe) %><%= link_to "@#{@brand.user.login}", admin_user_path(@brand.user), class: "text-link" %><span><%= @brand.markets.map { |market| market['name'] }.join(" · ") %></span></div>
+  <section class="admin-section"><div class="admin-section-heading"><h2>Brief actual</h2></div><div class="admin-prose"><%= simple_format(@brand.brief) %></div></section>
+  <section class="admin-section"><div class="admin-section-heading"><h2>Estudios</h2></div><%= render "admin/shared/executions", executions: @executions %><%= render "admin/shared/pagination" %></section>
+  <section class="admin-section admin-danger-zone"><h2>Eliminar marca</h2><p>Elimina la marca y sus estudios de Fortop. Primero deben terminar o cancelarse sus estudios activos o en pausa.</p><%= button_to "Eliminar marca y estudios", admin_brand_path(@brand), method: :delete, class: "button button-secondary admin-danger-link", form: { data: { turbo_confirm: "¿Eliminar definitivamente #{@brand.name} y todos sus estudios?" } } %></section>
+</div>

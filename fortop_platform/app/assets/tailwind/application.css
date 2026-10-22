@@ -3,6 +3,7 @@
 @import "./brand_import.css";
 @import "./welcome.css";
 @import "./findings.css";
+@import "./admin.css";
 
 @font-face { font-family: "Inter"; src: url("inter.woff2") format("woff2"); font-style: normal; font-weight: 300 700; font-display: swap; }
 @font-face { font-family: "Inter Tight"; src: url("inter-tight.woff2") format("woff2"); font-style: normal; font-weight: 300 700; font-display: swap; }

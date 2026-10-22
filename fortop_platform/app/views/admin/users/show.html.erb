@@ -1,0 +1,17 @@
+<div class="admin-page">
+  <%= render "admin/shared/header", title: "@#{@user.login}", description: "#{@user.display_name} · ID de GitHub #{@user.github_id}" %>
+  <%= render "admin/shared/metrics", overview: @overview %>
+  <section class="admin-section"><div class="admin-section-heading"><h2>Acceso a la plataforma</h2><span><%= @user.admin? ? "Administrador · acceso permanente" : @grant ? "Autorizado" : "Bloqueado" %></span></div>
+    <% if @grant %><%= button_to "Retirar acceso", admin_access_grant_path(@grant), method: :delete, class: "button button-secondary", form: { data: { turbo_confirm: "¿Bloquear los accesos de @#{@user.login}?" } } %>
+    <% elsif !@user.admin? %><p class="admin-note">Para permitir su acceso, autoriza su cuenta desde <%= link_to "Accesos", admin_access_grants_path, class: "text-link" %>. Verificaremos de nuevo su identidad en GitHub.</p><% end %>
+  </section>
+  <%= render "admin/shared/usage", overview: @overview %>
+  <div class="admin-columns">
+    <section class="admin-section"><div class="admin-section-heading"><h2>Repositorios</h2></div><% @repositories.each do |repository| %><%= link_to repository.full_name, admin_repository_path(repository), class: "admin-project-link" %><% end %><% if @repositories.empty? %><p class="admin-empty">Sin repositorios conectados.</p><% end %></section>
+    <section class="admin-section"><div class="admin-section-heading"><h2>Marcas</h2></div><% @brands.each do |brand| %><%= link_to brand.name, admin_brand_path(brand), class: "admin-project-link" %><% end %><% if @brands.empty? %><p class="admin-empty">Sin marcas creadas.</p><% end %></section>
+  </div>
+  <section class="admin-section"><div class="admin-section-heading"><h2>Últimas ejecuciones</h2></div><%= render "admin/shared/executions", executions: @recent %></section>
+  <% unless @user.admin? %><section class="admin-section admin-danger-zone"><h2>Eliminar cuenta</h2><p>Elimina su acceso y todos sus datos locales: repositorios, marcas, documentos y resultados. Primero deben terminar o cancelarse sus ejecuciones. Los issues y PR ya publicados en GitHub se conservan.</p>
+    <%= button_to "Eliminar cuenta y datos", admin_user_path(@user), method: :delete, class: "button button-secondary admin-danger-link", form: { data: { turbo_confirm: "¿Eliminar definitivamente la cuenta @#{@user.login} y todos sus datos en Fortop? Esta acción no se puede deshacer." } } %>
+  </section><% end %>
+</div>

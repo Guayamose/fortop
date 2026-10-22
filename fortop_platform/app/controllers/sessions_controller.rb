@@ -32,6 +32,10 @@ class SessionsController < ApplicationController
 
     credentials = Github::OAuth.new.exchange(code: params[:code].to_s, code_verifier: handshake["verifier"])
     profile = Github::Client.new(token: credentials.fetch(:token)).user
+    unless User.github_allowed?(profile.fetch("id"))
+      reset_session
+      return redirect_to new_session_path, alert: "Tu cuenta de GitHub no tiene acceso a Fortop. Solicita acceso al administrador."
+    end
     user = User.from_github(profile, **credentials)
     reset_session
     session[:user_id] = user.id

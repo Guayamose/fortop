@@ -2,6 +2,7 @@ require "test_helper"
 
 class Github::InstallationsControllerTest < ActionDispatch::IntegrationTest
   setup do
+    GithubAccessGrant.create!(github_id: 100_001, login: "installer")
     oauth = Object.new
     oauth.define_singleton_method(:authorize_url) { |**_args| "https://github.com/login/oauth/authorize" }
     oauth.define_singleton_method(:exchange) { |**_args| { token: "ghu_installer", refresh_token: nil, expires_at: nil } }

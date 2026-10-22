@@ -153,6 +153,7 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   def with_fake_github
+    GithubAccessGrant.find_or_create_by!(github_id: 555) { |grant| grant.login = "test-visitor" }
     oauth = Object.new
     test = self
     oauth.define_singleton_method(:authorize_url) do |state:, code_verifier:|

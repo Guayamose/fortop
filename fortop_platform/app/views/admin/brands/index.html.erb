@@ -1,0 +1,7 @@
+<div class="admin-page">
+  <%= render "admin/shared/header", title: "Marcas.", description: "Marcas y estudios de visibilidad de todos los usuarios." %>
+  <%= render "admin/shared/search", label: "marcas" %>
+  <div class="admin-table-scroll"><table class="admin-table"><thead><tr><th>Marca</th><th>Usuario</th><th>Mercados</th><th>Creada</th><th></th></tr></thead><tbody>
+    <% @brands.each do |brand| %><tr><td><%= link_to brand.name, admin_brand_path(brand), class: "admin-record-link" %><small><%= brand.website.presence || "Sin sitio web" %></small></td><td><%= link_to "@#{brand.user.login}", admin_user_path(brand.user), class: "text-link" %></td><td><%= brand.markets.map { |market| market['name'] }.join(", ") %></td><td><%= human_timestamp(brand.created_at) %></td><td><%= link_to "Gestionar", admin_brand_path(brand), class: "text-link" %></td></tr><% end %>
+  </tbody></table></div><%= render "admin/shared/pagination" %>
+</div>

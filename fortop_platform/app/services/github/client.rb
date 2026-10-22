@@ -23,6 +23,17 @@ module Github
       request("/user")
     end
 
+    def account(login)
+      unless login.to_s.match?(/\A[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,37}[a-zA-Z0-9])?\z/)
+        raise Error, "Indica un nombre de usuario válido de GitHub."
+      end
+      profile = request("/users/#{login}")
+      unless profile["type"] == "User" && profile["id"].is_a?(Integer) && profile["id"].positive?
+        raise Error, "Autoriza una cuenta personal de GitHub, no una organización."
+      end
+      profile
+    end
+
     def installations(page: 1, per_page: 100)
       request("/user/installations", query: {
         page: bounded_integer(page, 1..10_000), per_page: bounded_integer(per_page, 1..100)

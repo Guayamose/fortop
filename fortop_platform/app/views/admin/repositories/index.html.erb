@@ -1,0 +1,7 @@
+<div class="admin-page">
+  <%= render "admin/shared/header", title: "Repositorios.", description: "Todos los repositorios conectados a Fortop." %>
+  <%= render "admin/shared/search", label: "repositorios" %>
+  <div class="admin-table-scroll"><table class="admin-table"><thead><tr><th>Repositorio</th><th>Usuario</th><th>Lenguaje</th><th>Conectado</th><th></th></tr></thead><tbody>
+    <% @repositories.each do |repository| %><tr><td><%= link_to repository.full_name, admin_repository_path(repository), class: "admin-record-link" %><small><%= repository.private? ? "Privado" : "Público" %> · <%= repository.default_branch %></small></td><td><%= link_to "@#{repository.user.login}", admin_user_path(repository.user), class: "text-link" %></td><td><%= repository.language.presence || "—" %></td><td><%= human_timestamp(repository.created_at) %></td><td><%= link_to "Gestionar", admin_repository_path(repository), class: "text-link" %></td></tr><% end %>
+  </tbody></table></div><%= render "admin/shared/pagination" %>
+</div>

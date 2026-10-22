@@ -1,0 +1,6 @@
+<div class="admin-page">
+  <%= render "admin/shared/header", title: @repository.full_name, description: "#{@repository.language.presence || 'Repositorio'} · #{@repository.default_branch}" %>
+  <div class="admin-access-summary"><%= app_icon(:github) %><%= link_to "@#{@repository.user.login}", admin_user_path(@repository.user), class: "text-link" %><%= external_link("Ver en GitHub", @repository.html_url) %></div>
+  <section class="admin-section"><div class="admin-section-heading"><h2>Análisis</h2></div><%= render "admin/shared/executions", executions: @executions %><%= render "admin/shared/pagination" %></section>
+  <section class="admin-section admin-danger-zone"><h2>Desconectar repositorio</h2><p>Elimina la conexión y los resultados locales. Los issues, PR y archivos publicados en GitHub se conservan. No se puede desconectar durante un análisis activo o en pausa.</p><%= button_to "Desconectar y eliminar resultados", admin_repository_path(@repository), method: :delete, class: "button button-secondary admin-danger-link", form: { data: { turbo_confirm: "¿Desconectar #{@repository.full_name} y eliminar sus análisis en Fortop?" } } %></section>
+</div>

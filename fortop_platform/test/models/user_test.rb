@@ -1,6 +1,20 @@
 require "test_helper"
 
 class UserTest < ActiveSupport::TestCase
+  test "only the verified GitHub ID grants administration and login access is closed by default" do
+    owner = User.new(github_id: User::OWNER_GITHUB_ID, login: "a-new-handle")
+    assert owner.admin?
+    assert owner.login_allowed?
+    visitor = User.new(github_id: 42, login: "Guayamose", email: "owner@example.com")
+    refute visitor.admin?
+    refute visitor.login_allowed?
+    GithubAccessGrant.create!(github_id: 42, login: "previous-handle")
+    assert visitor.login_allowed?
+    refute visitor.admin?
+    refute User.github_allowed?("63518682x")
+    refute User.github_allowed?(nil)
+  end
+
   test "GitHub tokens are encrypted in storage and identity survives a login rename" do
     user = User.from_github({ "id" => 42, "login" => "original" }, token: "test-private-token",
       refresh_token: "test-refresh-token", expires_at: 1.hour.from_now)

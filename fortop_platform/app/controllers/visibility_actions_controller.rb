@@ -1,5 +1,6 @@
 class VisibilityActionsController < ApplicationController
   before_action :set_action
+  before_action :require_new_work_enabled, only: :handoff
 
   def update
     @action.update!(status: params.require(:visibility_action).fetch(:status))

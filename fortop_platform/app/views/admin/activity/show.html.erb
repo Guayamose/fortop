@@ -1,0 +1,54 @@
+<div class="admin-page">
+  <%= render "admin/shared/header", title: "#{admin_execution_type(@execution)} ##{@execution.id}", description: admin_execution_title(@execution) %>
+  <div class="admin-access-summary"><%= admin_status(@execution) %><%= link_to "@#{admin_execution_owner(@execution).login}", admin_user_path(admin_execution_owner(@execution)), class: "text-link" %><span>Creada <%= human_timestamp(@execution.created_at) %></span></div>
+  <section class="admin-section">
+    <div class="admin-section-heading"><h2>Control de la ejecución</h2><% if @execution.respond_to?(:progress) %><span><%= @execution.progress %>% completado</span><% end %></div>
+    <% if @execution.respond_to?(:control_action) && @execution.control_action.present? %><p class="admin-notice"><%= app_icon(:clock) %> Acción pendiente: <%= AdminHelper::ADMIN_OPERATIONS.fetch(@execution.control_action) %>. Se aplicará al terminar la tarea en curso.</p><% end %>
+    <div class="admin-controls">
+      <% Admin::ExecutionControl.actions(@execution).each do |operation| %>
+        <% costs = %w[restart resume retry retry_publication].include?(operation) %>
+        <% confirmation = if costs
+             "¿#{AdminHelper::ADMIN_OPERATIONS.fetch(operation)} esta ejecución? Puede generar nuevas solicitudes y consumo en Google o publicaciones en GitHub."
+           elsif operation == "cancel"
+             "¿Cancelar esta ejecución? Se conservará el trabajo ya realizado."
+           elsif operation == "expire"
+             "¿Marcar la ejecución como interrumpida por inactividad prolongada? Después podrás recuperarla. No se harán solicitudes a la IA."
+           end %>
+        <%= button_to AdminHelper::ADMIN_OPERATIONS.fetch(operation), admin_control_activity_entry_path(kind: @kind, id: @execution.id), params: { operation: operation }, class: "button button-secondary button-small #{'admin-danger-link' if operation == 'cancel'}", form: { data: { turbo_confirm: confirmation } } %>
+      <% end %>
+    </div>
+    <% if @execution.is_a?(VisibilityStudy) && (@execution.failed? || @execution.paused?) && @execution.control_action.nil? %>
+      <%= form_with url: admin_control_activity_entry_path(kind: @kind, id: @execution.id), class: "admin-filters", data: { turbo_confirm: "¿Continuar el estudio con este presupuesto? Puede generar nuevo consumo en Google." } do |form| %>
+        <%= form.hidden_field :operation, value: @execution.paused? ? "resume" : "retry" %>
+        <div class="admin-field"><%= form.label :budget_usd, "Presupuesto total del estudio · USD" %><%= form.number_field :budget_usd, value: @execution.budget_usd, min: "0.01", max: 50, step: "0.01", required: true %></div>
+        <%= form.submit "Ajustar y continuar", class: "button button-secondary button-small" %>
+      <% end %>
+    <% end %>
+    <p class="admin-note">Pausar y cancelar esperan a que termine la petición en curso. Reiniciar empieza una nueva ejecución. Las respuestas guardadas se recuperan al continuar; las publicaciones hechas en GitHub se conservan.</p>
+    <% if Admin::ExecutionControl.stale?(@execution) %><p class="admin-note">Esta ejecución lleva sin actividad más de <%= @execution.is_a?(BrandImport) ? 10 : 30 %> minutos. Puedes marcarla como interrumpida para recuperarla después; primero se comprobará que el ejecutor sigue sin actividad.</p><% end %>
+  </section>
+  <% if @execution.error_message.present? %><section class="admin-section"><div class="admin-section-heading"><h2>Último error</h2></div><p class="admin-error"><%= admin_safe_message(@execution.error_message) %></p></section><% end %>
+  <section class="admin-section"><div class="admin-section-heading"><h2>Datos de ejecución</h2></div><dl class="admin-facts">
+    <div><dt>Última actualización</dt><dd><%= human_timestamp(@execution.updated_at) %></dd></div>
+    <% if @execution.is_a?(Scan) %>
+      <div><dt>Repositorio</dt><dd><%= link_to @execution.repository.full_name, admin_repository_path(@execution.repository), class: "text-link" %></dd></div>
+      <div><dt>Hallazgos</dt><dd><%= @execution.findings.count %></dd></div>
+      <div><dt>Tokens registrados</dt><dd><%= admin_number(@execution.metadata.dig("usage", "total_tokens").to_i) %></dd></div>
+      <div><dt>Inicio / fin</dt><dd><%= human_timestamp(@execution.started_at) %> / <%= human_timestamp(@execution.finished_at) %></dd></div>
+    <% elsif @execution.is_a?(VisibilityStudy) %>
+      <div><dt>Marca</dt><dd><%= link_to @execution.brand.name, admin_brand_path(@execution.brand), class: "text-link" %></dd></div>
+      <div><dt>Modelo</dt><dd><%= @execution.settings["model"] %></dd></div>
+      <div><dt>Presupuesto total</dt><dd><%= admin_usd(@execution.budget_usd) %></dd></div>
+      <div><dt>Coste estimado / reservado</dt><dd><%= admin_usd(@execution.spent_usd) %></dd></div>
+      <div><dt>Peticiones / tokens</dt><dd><%= admin_number(@execution.request_count) %> / <%= admin_number(@execution.token_count) %></dd></div>
+      <div><dt>Observaciones / búsquedas</dt><dd><%= admin_number(@execution.visibility_observations.count) %> / <%= admin_number(@execution.search_count) %></dd></div>
+    <% else %>
+      <div><dt>Documentos</dt><dd><%= @execution.documents.count %></dd></div>
+      <div><dt>Modelo</dt><dd><%= @execution.model.presence || "Pendiente" %></dd></div>
+      <div><dt>Coste estimado / reservado</dt><dd><%= admin_usd(@execution.spent_usd) %></dd></div>
+      <div><dt>Peticiones</dt><dd><%= @execution.request_count %> de 3 intentos</dd></div>
+    <% end %>
+  </dl></section>
+  <% if @execution.respond_to?(:summary) && @execution.summary.present? %><section class="admin-section"><div class="admin-section-heading"><h2>Resumen</h2></div><div class="admin-prose"><%= simple_format(admin_safe_message(@execution.summary)) %></div></section><% end %>
+  <% if @events.any? %><section class="admin-section"><div class="admin-section-heading"><h2>Últimas acciones del agente</h2><span>Hasta 100 eventos · más recientes primero</span></div><ol class="admin-event-log"><% @events.each do |event| %><li><time><%= human_timestamp(event.created_at) %></time><p><%= admin_safe_message(event.message) %></p></li><% end %></ol></section><% end %>
+</div>

@@ -1,4 +1,8 @@
 class User < ApplicationRecord
+  # Verified against GitHub's authenticated /user endpoint. A handle or email
+  # must never grant administration, and the production database ID may differ.
+  OWNER_GITHUB_ID = 63_518_682
+
   encrypts :github_token
   encrypts :github_refresh_token
 
@@ -20,5 +24,20 @@ class User < ApplicationRecord
 
   def display_name
     name.presence || login
+  end
+
+  def admin?
+    github_id == OWNER_GITHUB_ID
+  end
+
+  def self.github_allowed?(github_id)
+    id = Integer(github_id.to_s, 10)
+    id == OWNER_GITHUB_ID || GithubAccessGrant.exists?(github_id: id)
+  rescue ArgumentError, TypeError
+    false
+  end
+
+  def login_allowed?
+    self.class.github_allowed?(github_id)
   end
 end

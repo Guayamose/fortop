@@ -1,0 +1,7 @@
+<dl class="admin-metrics">
+  <% if local_assigns[:show_users] %><div><dt>Usuarios registrados</dt><dd><%= admin_number(overview.users.count) %></dd></div><% end %>
+  <div><dt>Repositorios</dt><dd><%= admin_number(overview.repositories.count) %></dd></div>
+  <div><dt>Marcas</dt><dd><%= admin_number(overview.brands.count) %></dd></div>
+  <div><dt>En curso o en pausa</dt><dd><%= admin_number(overview.active_count) %></dd></div>
+  <div><dt>Ejecuciones interrumpidas</dt><dd><%= admin_number(overview.failed_count) %></dd></div>
+</dl>

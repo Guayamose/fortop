@@ -1,0 +1,10 @@
+<% content_for :title, "#{title} · Administración · Fortop" %>
+<div class="admin-heading">
+  <div><span class="eyebrow">FORTOP / ADMINISTRACIÓN</span><h1><%= title %></h1><% if local_assigns[:description] %><p><%= description %></p><% end %></div>
+  <span class="admin-private"><%= app_icon(:shield_check) %> Acceso exclusivo · @<%= current_user.login %></span>
+</div>
+<nav class="admin-nav" aria-label="Administración">
+  <% AdminHelper::ADMIN_SECTIONS.each do |label, path, controller| %>
+    <%= link_to label, public_send(path), class: ("is-active" if controller_name == controller), aria: { current: ("page" if controller_name == controller) } %>
+  <% end %>
+</nav>

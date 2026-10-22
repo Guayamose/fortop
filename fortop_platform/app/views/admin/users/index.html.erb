@@ -1,0 +1,7 @@
+<div class="admin-page">
+  <%= render "admin/shared/header", title: "Usuarios.", description: "Cuentas que han iniciado sesión y sus espacios de trabajo." %>
+  <%= render "admin/shared/search", label: "usuarios" %>
+  <div class="admin-table-scroll"><table class="admin-table"><thead><tr><th>Usuario</th><th>ID de GitHub</th><th>Acceso</th><th>Registro</th><th></th></tr></thead><tbody>
+    <% @users.each do |user| %><tr><td><%= link_to "@#{user.login}", admin_user_path(user), class: "admin-record-link" %><small><%= user.name %></small></td><td><%= user.github_id %></td><td><%= user.admin? ? "Administrador" : @allowed_ids.include?(user.github_id) ? "Autorizado" : "Bloqueado" %></td><td><%= human_timestamp(user.created_at) %></td><td><%= link_to "Gestionar", admin_user_path(user), class: "text-link" %></td></tr><% end %>
+  </tbody></table></div><%= render "admin/shared/pagination" %>
+</div>

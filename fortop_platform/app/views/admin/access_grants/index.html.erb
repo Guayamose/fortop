@@ -1,0 +1,22 @@
+<div class="admin-page">
+  <%= render "admin/shared/header", title: "Tú decides quién entra.", description: "Solo las cuentas autorizadas pueden iniciar sesión en Fortop." %>
+  <div class="admin-owner"><%= app_icon(:shield_check) %><div><strong>@<%= current_user.login %> · Administrador</strong><p>Acceso permanente por ID de GitHub <%= User::OWNER_GITHUB_ID %>. Ninguna otra cuenta recibe permisos de administración.</p></div><span class="badge badge-success"><span class="status-dot"></span>Siempre autorizado</span></div>
+  <section class="admin-section">
+    <div class="admin-section-heading"><h2>Autorizar una cuenta</h2></div>
+    <%= form_with url: admin_access_grants_path, class: "admin-grant-form" do |form| %>
+      <div class="admin-field"><%= form.label :login, "Nombre de usuario en GitHub" %><div class="admin-handle-input"><span>@</span><%= form.text_field :login, required: true, maxlength: 40, placeholder: "usuario", autocomplete: "off", spellcheck: false %></div></div>
+      <%= form.button class: "button button-primary" do %><%= app_icon(:plus) %> Autorizar cuenta<% end %>
+    <% end %>
+    <p class="admin-note">Verificamos la cuenta en GitHub y guardamos su ID. Los cambios de nombre no alteran sus permisos. Las organizaciones no pueden iniciar sesión.</p>
+  </section>
+  <section class="admin-section"><div class="admin-section-heading"><h2>Cuentas autorizadas</h2></div>
+    <%= render "admin/shared/search", label: "cuentas" %>
+    <% if @grants.empty? %><p class="admin-empty">Todavía no hay otras cuentas autorizadas.</p><% else %>
+    <div class="admin-table-scroll"><table class="admin-table"><thead><tr><th>Cuenta de GitHub</th><th>ID de GitHub</th><th>Uso de Fortop</th><th>Autorizada</th><th></th></tr></thead><tbody>
+      <% @grants.each do |grant| %><tr><td><strong>@<%= grant.login %></strong></td><td><%= grant.github_id %></td><td><%= @signed_up_ids.include?(grant.github_id) ? "Ya ha iniciado sesión" : "Pendiente de primer acceso" %></td><td><%= human_timestamp(grant.created_at) %></td>
+        <td><%= button_to "Retirar acceso", admin_access_grant_path(grant), method: :delete, class: "text-link admin-danger-link", form: { data: { turbo_confirm: "¿Retirar el acceso a @#{grant.login}? Sus sesiones quedarán bloqueadas. Sus datos se conservarán." } } %></td></tr><% end %>
+    </tbody></table></div><% end %>
+    <%= render "admin/shared/pagination" %>
+    <p class="admin-note">Retirar acceso bloquea las sesiones en su siguiente petición. Conserva los datos y las ejecuciones ya iniciadas; puedes pausar o cancelar estas últimas en Actividad.</p>
+  </section>
+</div>

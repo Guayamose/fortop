@@ -1,5 +1,6 @@
 class ScansController < ApplicationController
   before_action :set_repository
+  before_action :require_new_work_enabled, only: %i[create restart resume retry_publication]
 
   def create
     @repository.scans.active.first&.expire_if_stale!

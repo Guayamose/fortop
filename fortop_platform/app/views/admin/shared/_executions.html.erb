@@ -1,0 +1,10 @@
+<% if executions.empty? %><p class="admin-empty">No hay ejecuciones que mostrar.</p><% else %>
+<div class="admin-table-scroll"><table class="admin-table"><thead><tr><th>Ejecución</th><th>Usuario</th><th>Estado</th><th>Creada</th><th></th></tr></thead>
+  <tbody><% executions.each do |entry| %>
+    <tr><td><%= link_to admin_execution_title(entry), admin_activity_entry_path(kind: Admin::ExecutionCatalog.kind(entry), id: entry.id), class: "admin-record-link" %><small><%= admin_execution_type(entry) %> · #<%= entry.id %></small></td>
+      <td><%= link_to "@#{admin_execution_owner(entry).login}", admin_user_path(admin_execution_owner(entry)), class: "text-link" %></td>
+      <td><%= admin_status(entry) %></td><td><%= human_timestamp(entry.created_at) %></td>
+      <td><%= link_to "Gestionar", admin_activity_entry_path(kind: Admin::ExecutionCatalog.kind(entry), id: entry.id), class: "text-link" %></td></tr>
+  <% end %></tbody>
+</table></div>
+<% end %>

@@ -439,6 +439,7 @@ class RepositoryFlowTest < ApplicationSystemTestCase
   end
 
   def with_browser_github
+    GithubAccessGrant.find_or_create_by!(github_id: 92001) { |grant| grant.login = "browser-builder" }
     oauth = Object.new
     oauth.define_singleton_method(:authorize_url) do |state:, code_verifier:|
       "/auth/github/callback?#{URI.encode_www_form(code: 'system-test-code', state: state)}"

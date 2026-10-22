@@ -1,5 +1,6 @@
 module GithubSignIn
-  def sign_in_github(id: 90001, login: "fortop-builder")
+  def sign_in_github(id: 90001, login: "fortop-builder", authorized: true)
+    GithubAccessGrant.find_or_create_by!(github_id: id) { |grant| grant.login = login } if authorized && id != User::OWNER_GITHUB_ID
     oauth = Object.new
     state_value = nil
     oauth.define_singleton_method(:authorize_url) do |state:, code_verifier:|
@@ -15,7 +16,7 @@ module GithubSignIn
         get callback_session_path, params: { code: "test-code", state: state_value }
       end
     end
-    User.find_by!(github_id: id)
+    User.find_by(github_id: id)
   end
 
   def connected_repository(user, github_id: 101, name: "fortop-builder/site")

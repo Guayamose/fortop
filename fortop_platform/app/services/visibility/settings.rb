@@ -11,11 +11,11 @@ module Visibility
     def build(question_count: 12, repetitions: 2)
       count, repeats = Integer(question_count), Integer(repetitions)
       raise Error, "Elige entre 6 y 50 preguntas y entre 1 y 5 repeticiones." unless count.between?(6, 50) && repeats.between?(1, 5)
-      model = ENV["VISIBILITY_GEMINI_MODEL"].presence || ENV.fetch("GEMINI_MODEL", "gemini-3.1-flash-lite")
+      model = PlatformSetting.fetch("VISIBILITY_GEMINI_MODEL")
       rates = PRICING[model]
       raise Error, "El modelo de visibilidad no tiene una tarifa configurada. Selecciona un modelo compatible en VISIBILITY_GEMINI_MODEL." unless rates
-      limits = [ Integer(ENV.fetch("VISIBILITY_MAX_REQUESTS", 1500)), Integer(ENV.fetch("VISIBILITY_MAX_TOKENS", 2_000_000)) ]
-      daily_budget = BigDecimal(ENV.fetch("VISIBILITY_DAILY_BUDGET_USD", "10"))
+      limits = [ Integer(PlatformSetting.fetch("VISIBILITY_MAX_REQUESTS", 1500)), Integer(PlatformSetting.fetch("VISIBILITY_MAX_TOKENS", 2_000_000)) ]
+      daily_budget = BigDecimal(PlatformSetting.fetch("VISIBILITY_DAILY_BUDGET_USD", "10"))
       raise Error, "Los límites de solicitudes, tokens y presupuesto diario deben ser positivos." unless limits.all?(&:positive?) && daily_budget.positive?
       { "question_count" => count, "repetitions" => repeats, "model" => model, "engine" => "Gemini API · búsqueda habilitada",
         "method_version" => METHOD_VERSION, "temperature" => 0.7, "max_output_tokens" => 4096,

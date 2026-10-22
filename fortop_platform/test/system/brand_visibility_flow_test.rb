@@ -184,6 +184,7 @@ class BrandVisibilityFlowTest < ApplicationSystemTestCase
   end
 
   def with_browser_github
+    GithubAccessGrant.find_or_create_by!(github_id: 93001) { |grant| grant.login = "brand-builder" }
     oauth=Object.new
     oauth.define_singleton_method(:authorize_url) { |state:, code_verifier:| "/auth/github/callback?#{URI.encode_www_form(code: 'visibility-test', state: state)}" }
     oauth.define_singleton_method(:exchange) { |**| { token: "ghu_test_only", refresh_token: "ghr_test_only", expires_at: 8.hours.from_now } }

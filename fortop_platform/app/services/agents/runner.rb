@@ -4,7 +4,7 @@ module Agents
   class Runner
     Result = Data.define(:summary, :steps, :tool_calls)
 
-    def initialize(provider:, tools:, system:, observer: ->(*) { }, checkpoint: ->(*) { }, max_turns: ENV.fetch("AGENT_MAX_TURNS", 0), max_tool_calls: ENV.fetch("AGENT_MAX_TOOL_CALLS", 0), timeout: ENV.fetch("AGENT_TIMEOUT_SECONDS", 0), context_max_bytes: ENV.fetch("AGENT_CONTEXT_MAX_BYTES", 120_000))
+    def initialize(provider:, tools:, system:, observer: ->(*) { }, checkpoint: ->(*) { }, max_turns: PlatformSetting.fetch("AGENT_MAX_TURNS", 0), max_tool_calls: PlatformSetting.fetch("AGENT_MAX_TOOL_CALLS", 0), timeout: PlatformSetting.fetch("AGENT_TIMEOUT_SECONDS", 0), context_max_bytes: PlatformSetting.fetch("AGENT_CONTEXT_MAX_BYTES", 120_000))
       @provider, @tools, @system, @observer = provider, tools, system, observer
       @checkpoint = checkpoint
       @max_turns, @max_tool_calls, @timeout, @context_max_bytes = [ max_turns, max_tool_calls, timeout, context_max_bytes ].map { |value| Integer(value) }

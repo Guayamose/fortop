@@ -19,6 +19,48 @@ bin/dev
 Abre http://localhost:3000. `bin/dev` arranca Rails, Tailwind y los workers.
 Las colas usan su propia base PostgreSQL; no hace falta Redis.
 
+## Administración y acceso privado
+
+El panel está en `/admin`, también disponible desde el menú de cuenta.
+Solo la cuenta de GitHub con ID **63518682** (verificada como `@Guayamose`)
+es administradora. Se usa el ID devuelto por GitHub durante OAuth, nunca el
+nombre, correo, ID local de la base de datos ni un parámetro del navegador.
+La cuenta conserva administración y acceso aunque cambie de nombre y no necesita
+una fila de autorización, semillas ni variables especiales en producción.
+
+Fortop es de acceso cerrado en todos los entornos. En **Administración → Accesos**
+añade cuentas personales por su nombre de GitHub: el servidor consulta GitHub
+con tu sesión, verifica la cuenta y guarda su ID estable en PostgreSQL.
+Las organizaciones y las cuentas sin autorización no pueden iniciar sesión.
+Los visitantes rechazados no se guardan con sus tokens. Retirar una autorización
+bloquea también las sesiones existentes en su siguiente petición, conservando
+sus datos. Las ejecuciones ya iniciadas continúan hasta que terminen o se
+gestionen desde **Actividad**.
+
+El panel incluye usuarios y su consumo, repositorios, marcas, ejecuciones,
+recuperación y controles de agentes, configuración operativa y un registro de
+las acciones administrativas. No hay delegación de administración. Las rutas
+de trabajo normales siguen limitadas al propietario, incluso para el admin.
+Para eliminar cuentas o proyectos primero deben terminar o cancelarse todos
+sus trabajos, incluidos los que están en pausa. Las eliminaciones afectan a
+los datos de Fortop; no borran issues ni PR ya publicados en GitHub.
+
+Los ajustes de **Configuración** se guardan en PostgreSQL y tienen prioridad
+sobre las variables de entorno. Cambiar límites de repositorios afecta a los
+agentes al iniciarse o recuperarse; los estudios de visibilidad conservan sus
+límites, modelo y tarifas guardados. El presupuesto diario compartido entre
+visibilidad y documentos se comprueba antes de cada petición. **Pausar nuevas
+ejecuciones** bloquea inicios, continuaciones y reintentos para todos, incluido
+el administrador; no interrumpe peticiones en curso. Restablecer configuración
+recupera el entorno y los valores predeterminados.
+
+Las credenciales permanecen en los secretos del despliegue, fuera del panel.
+Las páginas autenticadas no se almacenan en caché HTTP ni en la caché de Turbo.
+El panel requiere las migraciones habituales (`bin/rails db:prepare`) y una base
+PostgreSQL persistente en producción, que conserva autorizaciones, ajustes y
+registro entre despliegues. Los costes de visibilidad y documentos son estimaciones
+y reservas, no la factura del proveedor; los repositorios solo registran tokens.
+
 ## Google AI Studio y consumo
 
 Crea `.env` a partir de `.env.example` si todavía no existe. Pon tu clave en

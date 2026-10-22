@@ -1,0 +1,6 @@
+<%= form_with url: request.path, method: :get, class: "admin-search", role: "search" do |form| %>
+  <%= form.label :q, "Buscar #{label}", class: "sr-only" %>
+  <%= app_icon(:search) %><%= form.search_field :q, value: @query, placeholder: "Buscar #{label}", maxlength: 100 %>
+  <%= form.submit "Buscar", class: "button button-secondary button-small" %>
+  <% if @query.present? %><%= link_to "Limpiar", request.path, class: "text-link" %><% end %>
+<% end %>

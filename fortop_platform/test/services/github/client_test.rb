@@ -4,6 +4,18 @@ require_relative "fake_http"
 class Github::ClientTest < ActiveSupport::TestCase
   SHA = "a" * 40
 
+  test "access grants resolve only personal accounts and reject malformed usernames before HTTP" do
+    http = GithubTestHttp.new({ "id" => 123, "login" => "Some-User", "type" => "User" }, { "id" => 456, "login" => "organization", "type" => "Organization" })
+    client = Github::Client.new("token", http: http)
+    assert_equal 123, client.account("some-user").fetch("id")
+    assert_equal "/users/some-user", http.requests.first[:uri].path
+    assert_raises(Github::Error) { client.account("organization") }
+    [ "", "../user", "someone?admin=true", "https://github.com/user", "-user" ].each do |login|
+      assert_raises(Github::Error) { client.account(login) }
+    end
+    assert_equal 2, http.requests.size
+  end
+
   test "installation write capability only matches its explicitly authorized repository" do
     client = Github::Client.new(token: "installation", authorized_repository_id: 19)
     assert client.write_authorized_for?(19)

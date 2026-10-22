@@ -1,0 +1,7 @@
+<% if events.empty? %><p class="admin-empty">Las acciones que realices en este panel aparecerán aquí.</p><% else %>
+<ol class="admin-audit"><% events.each do |event| %><li>
+  <%= app_icon(:shield_check) %><div><strong><%= admin_audit_label(event) %></strong><span><%= event.subject %> · @<%= event.actor.login %></span>
+    <% if event.details.present? %><details><summary>Ver detalles</summary><dl><% event.details.each do |key, value| %><div><dt><%= key %></dt><dd><%= value %></dd></div><% end %></dl></details><% end %>
+  </div><time datetime="<%= event.created_at.iso8601 %>"><%= human_timestamp(event.created_at) %></time>
+</li><% end %></ol>
+<% end %>

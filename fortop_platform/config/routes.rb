@@ -20,6 +20,18 @@ Rails.application.routes.draw do
   get "/github/installations/callback", to: "github/installations#callback", as: :github_installation_callback
 
   root "home#index"
+  namespace :admin do
+    root "dashboard#show"
+    resources :access_grants, only: %i[index create destroy]
+    resources :users, only: %i[index show destroy]
+    resources :repositories, only: %i[index show destroy]
+    resources :brands, only: %i[index show destroy]
+    get "activity", to: "activity#index"
+    get "activity/:kind/:id", to: "activity#show", as: :activity_entry
+    post "activity/:kind/:id/control", to: "activity#control", as: :control_activity_entry
+    resource :settings, only: %i[show update destroy]
+    resources :audit_events, only: :index
+  end
   resources :brand_imports, only: %i[create show] do
     post :retry, on: :member
   end

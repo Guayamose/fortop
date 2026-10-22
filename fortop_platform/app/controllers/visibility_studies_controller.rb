@@ -1,5 +1,6 @@
 class VisibilityStudiesController < ApplicationController
   before_action :set_brand
+  before_action :require_new_work_enabled, only: %i[create restart resume retry]
 
   def create
     study = Visibility::Studies.create!(@brand, **params.permit(:question_count, :repetitions, :budget_usd, :reuse_id).to_h.symbolize_keys)

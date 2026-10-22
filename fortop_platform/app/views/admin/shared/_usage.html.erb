@@ -1,0 +1,7 @@
+<section class="admin-section">
+  <div class="admin-section-heading"><h2>Consumo de IA</h2><span>Estimado y reservado · <strong><%= admin_usd(overview.estimated_spend) %></strong></span></div>
+  <div class="admin-table-scroll"><table class="admin-table"><thead><tr><th>Área</th><th>Peticiones registradas</th><th>Tokens registrados</th><th>Coste estimado / reservado</th></tr></thead>
+    <tbody><% overview.usage.each do |row| %><tr><td><strong><%= row[:label] %></strong></td><td><%= admin_number(row[:requests]) %></td><td><%= admin_number(row[:tokens]) %></td><td><%= row[:cost] ? admin_usd(row[:cost]) : "Sin registro monetario" %></td></tr><% end %></tbody>
+  </table></div>
+  <p class="admin-note">Acumulado de los registros conservados en Fortop. Visibilidad y documentos incluyen reservas por respuestas inciertas; no es la factura de Google. Los tokens de documentos corresponden al último intento registrado. Los análisis de repositorios registran tokens, sin valoración monetaria.</p>
+</section>

@@ -1,0 +1,28 @@
+<div class="admin-page">
+  <%= render "admin/shared/header", title: "Configuración.", description: "Controla los agentes y el gasto desde la plataforma." %>
+  <section class="admin-section"><div class="admin-section-heading"><h2>Integraciones</h2></div><dl class="admin-facts">
+    <div><dt>GitHub App</dt><dd><%= Github::App.configured? ? "Credenciales configuradas" : "Pendiente de configurar" %></dd></div>
+    <div><dt>Google AI Studio</dt><dd><%= (ENV["GOOGLE_AI_STUDIO_API_KEY"].presence || ENV["GEMINI_API_KEY"].presence) ? "Clave configurada" : "Pendiente de configurar" %></dd></div>
+  </dl><p class="admin-note">Estado de configuración local, sin llamadas a los proveedores. Las claves y credenciales se administran en los secretos del despliegue y no se muestran en este panel.</p></section>
+  <%= form_with url: admin_settings_path, method: :patch, data: { turbo_confirm: "¿Guardar la configuración de los agentes? Cambiar límites y modelos afecta al consumo de las nuevas ejecuciones." } do |form| %>
+    <% { access: "Disponibilidad", repositories: "Agentes de repositorios", visibility: "Visibilidad y documentos" }.each do |group, title| %>
+      <section class="admin-section"><div class="admin-section-heading"><h2><%= title %></h2></div>
+        <div class="admin-settings-grid"><% PlatformSetting::DEFINITIONS.each do |key, definition| %><% next unless definition[:group] == group %>
+          <div class="admin-field"><%= label_tag "settings_#{key}", definition[:label] %>
+            <% value = PlatformSetting.fetch(key) %>
+            <% if key == "NEW_WORK_ENABLED" %><%= select_tag "settings[#{key}]", options_for_select([["Permitidas", "true"], ["Pausadas", "false"]], value), id: "settings_#{key}" %>
+            <% elsif definition[:choices] %><%= select_tag "settings[#{key}]", options_for_select(definition[:choices], value), id: "settings_#{key}" %>
+            <% elsif definition[:model] %><%= text_field_tag "settings[#{key}]", value, id: "settings_#{key}", required: true, maxlength: 97, spellcheck: false %>
+            <% else %><%= number_field_tag "settings[#{key}]", value, id: "settings_#{key}", required: true, min: definition[:range].min, max: definition[:range].max, step: definition[:decimal] ? "0.01" : "1" %><% end %>
+            <small><%= @overrides.key?(key) ? "Guardado en el panel" : "Valor del entorno" %></small>
+          </div>
+        <% end %></div>
+        <% if group == :access %><p class="admin-note">Pausar nuevas ejecuciones bloquea inicios, reintentos y continuaciones para todos, incluido el administrador. Los procesos ya iniciados continúan; páusalos o cancélalos desde Actividad.</p><% end %>
+        <% if group == :repositories %><p class="admin-note">Se aplican al iniciar o recuperar los agentes. Un valor 0 elimina el límite indicado. El modelo debe estar disponible en tu cuenta de Google.</p><% end %>
+        <% if group == :visibility %><p class="admin-note">Los estudios nuevos guardan sus límites y tarifas; los ya creados conservan su configuración. El presupuesto diario se comprueba antes de cada petición y se comparte entre visibilidad y documentos. Los análisis de repositorios tienen su propio límite de tokens.</p><% end %>
+      </section>
+    <% end %>
+    <%= form.submit "Guardar configuración", class: "button button-primary" %>
+  <% end %>
+  <section class="admin-section"><div class="admin-section-heading"><h2>Recuperar valores del despliegue</h2></div><p class="admin-note">Elimina los ajustes guardados en el panel. Se usarán las variables de entorno y los valores predeterminados.</p><%= button_to "Restablecer configuración", admin_settings_path, method: :delete, class: "button button-secondary button-small", form: { data: { turbo_confirm: "¿Eliminar todos los ajustes del panel y recuperar los valores del entorno?" } } %></section>
+</div>

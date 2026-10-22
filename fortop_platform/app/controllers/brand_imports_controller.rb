@@ -1,5 +1,6 @@
 class BrandImportsController < ApplicationController
   before_action :set_import, only: %i[show retry]
+  before_action :check_new_work, only: %i[create retry]
 
   def create
     files = Array(params[:files]).reject(&:blank?)
@@ -40,6 +41,10 @@ class BrandImportsController < ApplicationController
   end
 
   private
+
+  def check_new_work
+    render json: { error: "Las nuevas ejecuciones están pausadas por el administrador." }, status: :service_unavailable unless PlatformSetting.new_work_enabled?
+  end
 
   def set_import
     @import = current_user.brand_imports.find(params[:id])

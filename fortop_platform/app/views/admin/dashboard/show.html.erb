@@ -1,0 +1,10 @@
+<div class="admin-page">
+  <%= render "admin/shared/header", title: "Tu centro de control.", description: "Accesos, actividad y consumo de toda la plataforma." %>
+  <% unless PlatformSetting.new_work_enabled? %><div class="admin-notice"><%= app_icon(:pause) %><div><strong>Las nuevas ejecuciones están pausadas.</strong><p>Los trabajos que ya estaban en curso siguen su proceso. Puedes gestionarlos desde Actividad.</p></div><%= link_to "Configuración", admin_settings_path, class: "text-link" %></div><% end %>
+  <%= render "admin/shared/metrics", overview: @overview, show_users: true %>
+  <div class="admin-access-summary"><%= app_icon(:lock) %><span>Acceso cerrado: tú y <strong><%= GithubAccessGrant.count %></strong> cuentas autorizadas.</span><%= link_to "Gestionar accesos", admin_access_grants_path, class: "text-link" %></div>
+  <%= render "admin/shared/usage", overview: @overview %>
+  <section class="admin-section"><div class="admin-section-heading"><h2>Requieren atención</h2><%= link_to "Ver errores", admin_activity_path(state: "failed"), class: "text-link" %></div><%= render "admin/shared/executions", executions: @failures %></section>
+  <section class="admin-section"><div class="admin-section-heading"><h2>Últimas ejecuciones</h2><%= link_to "Toda la actividad", admin_activity_path, class: "text-link" %></div><%= render "admin/shared/executions", executions: @recent %></section>
+  <section class="admin-section"><div class="admin-section-heading"><h2>Registro de administración</h2><%= link_to "Ver registro", admin_audit_events_path, class: "text-link" %></div><%= render "admin/shared/audit", events: @events %></section>
+</div>

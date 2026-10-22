@@ -70,7 +70,7 @@ module BrandImports
         since = Time.current.in_time_zone("Europe/Madrid").beginning_of_day
         daily = @import.user.brand_imports.where(updated_at: since..).sum(:spent_usd)
         daily += VisibilityCall.joins(visibility_study: :brand).where(brands: { user_id: @import.user_id }).where(created_at: since..).sum(:cost_usd)
-        if daily + @reservation > BigDecimal(ENV.fetch("VISIBILITY_DAILY_BUDGET_USD", "10"))
+        if daily + @reservation > BigDecimal(PlatformSetting.fetch("VISIBILITY_DAILY_BUDGET_USD", "10"))
           raise RetryableError, "Se ha alcanzado el presupuesto diario de IA. Tus archivos están guardados; podrás reintentar la lectura mañana."
         end
         raise Visibility::Error, "Esta lectura ha agotado sus tres intentos." if @import.request_count >= 3

@@ -1,0 +1,9 @@
+<div class="admin-page">
+  <%= render "admin/shared/header", title: "Actividad de los agentes.", description: "Supervisa y gestiona las ejecuciones de toda la plataforma." %>
+  <%= form_with url: admin_activity_path, method: :get, class: "admin-filters" do |form| %>
+    <div class="admin-field"><%= form.label :kind, "Área" %><%= form.select :kind, [["Repositorios", "scans"], ["Visibilidad de marca", "studies"], ["Documentos", "imports"]], selected: @kind %></div>
+    <div class="admin-field"><%= form.label :state, "Estado" %><%= form.select :state, [["Todos", ""], ["En curso o en pausa", "active"], ["Interrumpidos", "failed"], ["Completados", "completed"], ["En pausa", "paused"], ["Cancelados", "cancelled"]], selected: @state %></div>
+    <%= form.submit "Filtrar", class: "button button-secondary button-small" %>
+  <% end %>
+  <%= render "admin/shared/executions", executions: @executions %><%= render "admin/shared/pagination" %>
+</div>

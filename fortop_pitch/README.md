@@ -4,7 +4,9 @@
 
 **3 minutos de presentación + 1 minuto de demo. Español · 16:9 · 8 diapositivas.**
 
-[Abrir PDF](Fortop-Pitch.pdf) · [Descargar PowerPoint editable](Fortop-Pitch.pptx) · [Abrir demo](https://fortop.34-76-10-0.sslip.io) · [Volver al proyecto](../README.md)
+[Abrir PDF](Fortop-Pitch.pdf) · [Descargar PowerPoint editable](Fortop-Pitch.pptx) · [Ver capturas](../docs/producto.md) · [Volver al proyecto](../README.md)
+
+**Demo cerrada el 22 de octubre de 2026.** La presentación conserva la versión del hackathon; el enlace de demo que aparece en sus archivos ya no está activo.
 
 ## Recorrido
 
@@ -23,7 +25,7 @@
 
 ## Antes de presentar
 
-Abre Fortop con una cuenta autorizada y deja preparada una marca y un repositorio con resultados. El botón **Abrir demo** de la diapositiva 6 enlaza a la aplicación en PPTX y PDF. La demo de un minuto se cuenta aparte del pitch.
+Para volver a presentar con una demo, prepara una instancia propia con una marca y un repositorio con resultados y actualiza el enlace de la diapositiva 6 antes de exportar. La demo de un minuto se cuenta aparte del pitch.
 
 ## Editar y exportar
 

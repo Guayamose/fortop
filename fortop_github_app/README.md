@@ -52,7 +52,7 @@ OAuth usa `state`, PKCE y tokens de usuario renovables. Cada trabajo verifica el
 | Setup URL de instalación | `/github/installations/callback` |
 | Callback del registro por manifiesto | `/github/app/manifest/callback`, solo durante el registro local |
 
-Para la instancia actual, el origen de producción es **https://fortop.34-76-10-0.sslip.io**. Puede conservarse también el callback de localhost. El registro `/setup/github` permanece deshabilitado en producción.
+La demo de producción se retiró el **22 de octubre de 2026** y sus instalaciones de GitHub quedaron suspendidas. Para una nueva instancia, configura su propio origen; no reutilices la antigua URL de `sslip.io`. Puede conservarse también el callback de localhost. El registro `/setup/github` permanece deshabilitado en producción.
 
 El registro completa `GITHUB_APP_ID`, `GITHUB_APP_SLUG`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `GITHUB_APP_PRIVATE_KEY` y `GITHUB_WEBHOOK_SECRET`. La clave privada se guarda en base64 para conservar el PEM; el servidor también acepta el PEM al configurar variables directamente.
 

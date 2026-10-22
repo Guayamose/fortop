@@ -2,11 +2,19 @@
 
 [← Documentación](README.md) · [Arquitectura](arquitectura.md)
 
-## Entorno desplegado
+## Estado: despliegue retirado
+
+La demo del hackathon se cerró el **22 de octubre de 2026**. Se detuvieron web y worker, se verificó una última copia de las cuatro bases y los documentos, y se guardó fuera del repositorio junto con las claves necesarias para recuperar los datos. La facturación del proyecto se desactivó y se solicitó su eliminación. La clave Gemini de producción se revocó y las dos instalaciones de la GitHub App quedaron suspendidas.
+
+La clave de desarrollo pertenecía a otro proyecto de Google Cloud: se retiró de la configuración local de Fortop sin revocarla en ese proyecto. El registro de la GitHub App se conserva; sus instalaciones actuales están suspendidas.
+
+Las secciones siguientes documentan **el entorno que se utilizó**, para poder reproducirlo. Antes de desplegar de nuevo, crea un proyecto, credenciales y URLs propios y actualiza la configuración de infraestructura.
+
+## Entorno del hackathon
 
 | Recurso | Configuración |
 | :--- | :--- |
-| Aplicación | https://fortop.34-76-10-0.sslip.io |
+| Aplicación | Demo cerrada; sin URL pública activa |
 | Proyecto Google Cloud | `fortop-ai-gkecke` |
 | VM / zona | `fortop-production` / `europe-west1-b` |
 | Cómputo | `e2-medium`; web y worker en contenedores separados |
@@ -14,7 +22,7 @@
 | Copias | `gs://fortop-ai-gkecke-backups`, ciclo de vida de 14 días |
 | Despliegue | Kamal, imagen en Artifact Registry, secretos en Secret Manager |
 
-La fuente de configuración es [config.json](../fortop_platform/infra/gcp/config.json); [production.json](../fortop_platform/infra/gcp/production.json) conserva los identificadores públicos del entorno. La IP está reservada. El dominio temporal depende de `sslip.io`.
+La configuración utilizada está en [config.json](../fortop_platform/infra/gcp/config.json); [production.json](../fortop_platform/infra/gcp/production.json) conserva los identificadores públicos del entorno retirado. La IP y el dominio temporal de `sslip.io` ya no deben usarse como destino de Fortop.
 
 ## Administración y acceso
 

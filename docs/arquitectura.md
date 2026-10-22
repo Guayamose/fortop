@@ -85,7 +85,9 @@ flowchart TB
 
 Los límites, cancelaciones y recuperaciones se comprueban alrededor de las tareas y llamadas. Los jobs usan persistencia y locks para coordinar trabajo; la configuración de producción procesa una ejecución simultánea por worker.
 
-## Despliegue actual
+## Despliegue del hackathon
+
+Entorno retirado el **22 de octubre de 2026**. El diagrama conserva la distribución utilizada en producción; consulta el [estado de cierre](operacion.md#estado-despliegue-retirado).
 
 ```mermaid
 flowchart TB
@@ -111,7 +113,7 @@ flowchart TB
     end
 ```
 
-Una sola VM aloja web, worker y base de datos. Es una configuración para el hackathon con persistencia y copias, sin alta disponibilidad. El DNS temporal depende de `sslip.io` y de la IP reservada.
+Una sola VM alojaba web, worker y base de datos. Era una configuración para el hackathon con persistencia y copias, sin alta disponibilidad. El DNS temporal dependía de `sslip.io` y de la IP reservada.
 
 ## Datos y límites de confianza
 

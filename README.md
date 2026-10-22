@@ -3,13 +3,15 @@
 </p>
 
 <p align="center">
-  <a href="https://fortop.34-76-10-0.sslip.io"><strong>Abrir Fortop ↗</strong></a> ·
+  <a href="docs/producto.md"><strong>Ver el producto ↗</strong></a> ·
   <a href="docs/README.md">Documentación</a> ·
   <a href="fortop_pitch/Fortop-Pitch.pdf">Pitch</a> ·
   <a href="docs/desarrollo.md">Ejecutar en local</a>
 </p>
 
 Fortop ayuda a entender **cuándo se recomienda una marca** y a **corregir problemas técnicos de su web**. Une estudios de visibilidad con evidencia y agentes que proponen cambios revisables en GitHub.
+
+> **Demo cerrada · 22 de octubre de 2026.** El despliegue del hackathon se ha retirado. El código, las capturas y el pitch siguen disponibles; puedes [ejecutarlo en local](docs/desarrollo.md) con tus propias credenciales.
 
 ## Dos formas de mejorar tu presencia
 

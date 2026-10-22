@@ -2,7 +2,9 @@
 
 **De la visibilidad de una marca a mejoras verificables en su web.**
 
-[Abrir aplicación](https://fortop.34-76-10-0.sslip.io) · [Volver al proyecto](../README.md) · [Ver pitch](../fortop_pitch/README.md)
+[Ver el producto](producto.md) · [Volver al proyecto](../README.md) · [Ver pitch](../fortop_pitch/README.md)
+
+La demo pública se cerró el **22 de octubre de 2026**. Las guías conservan el funcionamiento del producto y la infraestructura utilizada; para probarlo, sigue [Desarrollo](desarrollo.md).
 
 ## Empieza por tu pregunta
 
@@ -13,7 +15,7 @@
 | ¿Cómo exploran y corrigen código los agentes? | [Agentes](agentes.md) |
 | ¿Cómo se conectan las piezas? | [Arquitectura y C4](arquitectura.md) |
 | ¿Cómo lo ejecuto y pruebo? | [Desarrollo](desarrollo.md) |
-| ¿Cómo gestiono la instancia desplegada? | [Operación](operacion.md) |
+| ¿Cómo se operaba el despliegue del hackathon? | [Operación](operacion.md) |
 | ¿Dónde están el canvas, el pitch y los diseños? | [Entregables](entregables.md) |
 
 ## Referencias directas

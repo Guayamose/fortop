@@ -66,4 +66,4 @@ La consola muestra acciones y resultados de herramientas. Los informes guardan e
 
 Puedes **eliminar una marca** desde su página, junto a Editar brief. Tras confirmar, se borran la marca y sus estudios e informes. Los estudios activos o pausados deben cancelarse primero; los documentos compartidos con otras marcas se conservan.
 
-La instancia del hackathon está desplegada en [Fortop](https://fortop.34-76-10-0.sslip.io). El administrador autoriza cuentas de GitHub desde el panel privado. Cada usuario consulta sus propios repositorios, marcas y documentos.
+La demo pública del hackathon se cerró el **22 de octubre de 2026**. Para probar el producto, sigue la [guía de desarrollo](desarrollo.md). En una instancia activa, el administrador autoriza cuentas de GitHub desde el panel privado. Cada usuario consulta sus propios repositorios, marcas y documentos.

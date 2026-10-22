@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080" role="img"><title>Dos capas de visibilidad: contenido relevante y base técnica</title>
+      <g fill="none" stroke="#E0EFDA" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke-opacity=".55">
+        <path d="M604 448 H738 M725 438 L738 448 725 458 M1182 448 H1316 M1303 438 L1316 448 1303 458"/>
+        <path d="M604 772 H738 M725 762 L738 772 725 782 M1182 772 H1316 M1303 762 L1316 772 1303 782"/>
+        <path d="M132 664 H1788" stroke-opacity=".17" stroke-width="1.5"/>
+      </g>
+      <g fill="none" stroke="#FFFFF3" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+        <!-- Content, the customer's question, and relevance. -->
+        <path d="M346 397 H394 L418 421 V495 H346 Z" fill="#E0EFDA" fill-opacity=".06"/>
+        <path d="M394 397 V421 H418 M363 442 H401 M363 460 H401 M363 478 H388" stroke-opacity=".7"/>
+        <path d="M918 406 H1002 Q1013 406 1013 417 V466 Q1013 477 1002 477 H962 L939 495 V477 H918 Q907 477 907 466 V417 Q907 406 918 406 Z" fill="#E0EFDA" fill-opacity=".06"/>
+        <path d="M930 431 H990 M930 450 H971" stroke-opacity=".7"/>
+        <circle cx="1538" cy="448" r="43"/>
+        <circle cx="1538" cy="448" r="26" stroke-opacity=".65"/>
+        <circle cx="1538" cy="448" r="8" fill="#E0EFDA" stroke="none"/>
+        <!-- The technical layer is a property of the web, not a product action. -->
+        <path d="M352 738 L328 761 352 784 M412 738 L436 761 412 784 M393 724 L371 799"/>
+        <!-- Engines can read a web page. -->
+        <rect x="908" y="725" width="104" height="83" rx="7" fill="#E0EFDA" fill-opacity=".06"/>
+        <path d="M908 746 H1012 M924 763 H980 M924 779 H966 M924 795 H952" stroke-opacity=".7"/>
+        <!-- Purpose: engines can discover the website. -->
+        <circle cx="1529" cy="760" r="36"/>
+        <path d="M1555 786 L1588 819" stroke-width="5"/>
+        <path d="M1510 753 H1548 M1510 768 H1536" stroke-opacity=".7"/>
+      </g>
+    </svg>

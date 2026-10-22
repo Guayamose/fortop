@@ -48,7 +48,8 @@ module Visibility
       if @study.research.blank?
         record = gateway.call("research", system: SYSTEM, grounded: true, prompt: <<~PROMPT)
           Search the public web NOW to research this business and its competitors. Cite sources for factual claims.
-          Start with the official website, then search independent sources and competing offers in the target markets.
+          Start with the official website if provided, then search independent sources and competing offers in the target markets.
+          If no website is provided, identify the business from its name, brief and documents; do not assume or invent its domain.
           Distinguish direct competitors, alternatives and sector references. Explain audience/use-case overlap, geography and positioning.
           Do not assume that a well-known global company competes in every local market. Investigate the named competitors where provided.
           Report factual business information, supported competitors and information gaps. Around 1,000 words maximum.

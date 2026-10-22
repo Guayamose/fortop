@@ -200,7 +200,7 @@ La plantilla `.env.example` debe permanecer sin credenciales reales.
 
 ## Visibilidad de marca
 
-En `/brands`, crea una marca con nombre, web pública, brief, mercados e idiomas,
+En `/brands`, crea una marca con nombre, web pública opcional, brief, mercados e idiomas,
 aliases y competidores conocidos. No necesita conectar un repositorio. Las ediciones
 del contexto generan versiones inmutables: cada estudio conserva la suya.
 

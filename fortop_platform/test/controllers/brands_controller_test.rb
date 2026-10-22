@@ -40,6 +40,28 @@ class BrandsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "done", action.reload.status
   end
 
+  test "brands can be created studied and edited without a website" do
+    get new_brand_path
+    assert_select "input[name='brand[website]'][required]", count: 0
+    post brands_path, params: { brand: { name: "Marca sin web", brief: "Software de facturación para pequeños negocios de España, con soporte cercano y gestión de presupuestos.", markets_text: "España | es" } }
+    brand = @user.brands.order(:id).last
+    assert_redirected_to brand_path(brand)
+    assert_equal "", brand.website
+    study = complete_visibility(visibility_study(brand: brand))
+    assert_nil Visibility::Metrics.new(study).summary["citation"]
+    get brand_path(brand)
+    assert_response :success
+    assert_select ".brand-profile-heading h1", text: "Marca sin web"
+    assert_select ".visibility-kpi small", text: "Sin sitio web indicado."
+    get brands_path
+    assert_response :success
+    get edit_brand_path(brand)
+    assert_select "input[name='brand[website]'][required]", count: 0
+    patch brand_path(brand), params: { brand: { website: " " } }
+    assert_redirected_to brand_path(brand)
+    assert_equal "", brand.reload.website
+  end
+
   test "start queues work and pause cancel recovery controls are owner scoped" do
     assert_enqueued_with(job: VisibilityStudyJob) { post brand_visibility_studies_path(@brand), params: { question_count: 6, repetitions: 2, budget_usd: 2 } }
     study=@brand.visibility_studies.first

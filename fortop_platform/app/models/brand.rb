@@ -10,7 +10,7 @@ class Brand < ApplicationRecord
   validates :known_competitors, length: { maximum: 4000 }
   validate :valid_aliases
   validates :website, length: { maximum: 500 }
-  validate :public_website
+  validate :public_website, if: -> { website.present? }
   validate :valid_markets
   before_validation :normalize_fields
   after_save :snapshot_brief!, if: :saved_context_changed?

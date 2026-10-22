@@ -1,6 +1,6 @@
 module Visibility
   module Settings
-    METHOD_VERSION = "fortop-visibility-v2".freeze
+    METHOD_VERSION = "fortop-visibility-v3".freeze
     PRICING = {
       "gemini-3.1-flash-lite" => { "input" => 0.25, "output" => 1.50, "search" => 0.014, "search_unit" => "query" },
       "gemini-3.5-flash-lite" => { "input" => 0.30, "output" => 2.50, "search" => 0.014, "search_unit" => "query" },

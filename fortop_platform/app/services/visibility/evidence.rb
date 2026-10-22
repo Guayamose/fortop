@@ -2,6 +2,7 @@ require "digest"
 
 module Visibility
   module Evidence
+    VERSION = "semantic-visible-text-v3".freeze
     module_function
 
     def prompt(answer:, question:, entities:, facts:, sources:, business:)
@@ -10,9 +11,14 @@ module Visibility
         Return ALL actual business/product providers named in ANSWER, including small companies not in ENTITIES.
         Use a known entity_key only when context establishes the same business. For a newly discovered provider use entity_key="".
         Homonyms, ordinary words, directories and sector references are not evidence of the target brand's identity.
-        name_quote must be verbatim text identifying the provider; quote must be a verbatim contiguous context containing name_quote.
+        ANSWER is the visible text of the original response, with presentation markup removed. Copy quotes from it, preserving wording.
+        name_quote is the actual surface form in ANSWER, NOT the canonical name in ENTITIES. quote is a contiguous passage containing it.
         Explain identity_reason from category, location, domain, alias and surrounding wording. Never invent a website; use empty string if absent.
-        Match spelling variants and aliases semantically only when context supports identity; otherwise certainty=uncertain.
+        Resolve abbreviated/partial names, acronyms, trading names, accents, case, spelling variants and minor typos using business context.
+        The full name or a preconfigured alias is NOT required. For example, a short name with matching activity/location/domain can identify the entity.
+        Never expand or correct name_quote: copy the actual short or misspelled form, and explain its link to the canonical entity in identity_reason.
+        A shared word or similar spelling alone is insufficient. Distinguish homonyms, parent companies, subsidiaries and different products.
+        Do not merge a corporate group with a subsidiary unless this passage identifies the subsidiary's actual business. Otherwise certainty=uncertain.
         A citation to the brand's domain alone does not prove that the answer names or recommends it.
         role distinguishes recommended, compared, mentioned and discouraged. A numbered list alone is not an endorsement.
         recommendation_quote must be verbatim within quote and positively recommend this provider; leave empty for discouraged/incidental mentions.
@@ -30,7 +36,7 @@ module Visibility
         KNOWN FACTS: #{JSON.generate(facts)}
         SOURCES: #{JSON.generate(sources.each_with_index.map { |source, index| source.slice('title', 'canonical_url', 'url').merge('index' => index) })}
         QUESTION: #{question}
-        ANSWER: #{answer}
+        ANSWER: #{EvidenceText.new(answer).text}
       PROMPT
     end
 
@@ -48,24 +54,30 @@ module Visibility
     end
 
     def quote?(answer, quote)
-      quote.is_a?(String) && quote.length.between?(2, 6000) && answer.include?(quote)
+      EvidenceText.new(answer).find(quote).present?
     end
 
     def extract(data, answer:, entities:, sources:)
+      document = EvidenceText.new(answer)
+      issues = []
       mentions = Array(data["mentions"]).filter_map do |item|
         next unless item.is_a?(Hash)
         entity = entities.find { |entry| entry["key"] == item["entity_key"] }
-        next unless entity || item["entity_key"] == ""
-        context, name_quote = item.values_at("quote", "name_quote")
-        next unless quote?(answer, context) && quote?(context, name_quote) && item["identity_reason"].present? && item["name"].present?
+        context = document.find(item["quote"])
+        passage = EvidenceText.new(context, plain: true)
+        name_quote = passage.find(item["name_quote"], name: true)
+        unless (entity || item["entity_key"] == "") && context && name_quote && item["identity_reason"].present? && item["name"].present?
+          issues << { "entity_key" => item["entity_key"], "name" => item["name"], "reason" => !context ? "context_not_found" : !name_quote ? "name_outside_context" : "invalid_identity" }
+          next
+        end
         website = Urls.public_url(item["website"])
         certainty = item["certainty"] == "confirmed" ? "confirmed" : "uncertain"
         certainty = "uncertain" if entity && website && entity["website"].present? && !Urls.same_domain?(website, entity["website"])
-        recommendation = item["recommendation_quote"]
-        recommended = certainty == "confirmed" && item["role"] == "recommended" && item["sentiment"] != "negative" && quote?(context, recommendation)
+        recommendation = passage.find(item["recommendation_quote"])
+        recommended = certainty == "confirmed" && item["role"] == "recommended" && item["sentiment"] != "negative" && recommendation.present?
         attributes = Array(item["attributes"]).filter_map do |attribute|
-          next unless attribute.is_a?(Hash) && quote?(context, attribute["quote"])
-          { "label" => attribute["label"].to_s.truncate(80), "quote" => attribute["quote"] }
+          next unless attribute.is_a?(Hash) && (quote = passage.find(attribute["quote"]))
+          { "label" => attribute["label"].to_s.truncate(80), "quote" => quote }
         end
         key = entity ? entity["key"] : "observed-#{Digest::SHA256.hexdigest(website ? Urls.domain(website) : normalize(item['name']))[0, 16]}"
         { "entity_key" => key, "name" => entity ? entity["name"] : item["name"].to_s.truncate(120), "website" => website,
@@ -85,19 +97,20 @@ module Visibility
         brand_status = "ambiguous"
       end
       reviews = Array(data["claims_to_review"]).filter_map do |item|
-        next unless item.is_a?(Hash) && quote?(answer, item["quote"])
+        next unless item.is_a?(Hash) && (quote = document.find(item["quote"]))
         indexes = Array(item["source_indexes"]).select { |index| index.is_a?(Integer) && index >= 0 && index < sources.size }
         next if indexes.empty?
-        { "quote" => item["quote"], "explanation" => item["explanation"].to_s.truncate(1200), "source_indexes" => indexes }
+        { "quote" => quote, "explanation" => item["explanation"].to_s.truncate(1200), "source_indexes" => indexes }
       end
       recognition = data["brand_recognition"]
-      recognition_quote = data["recognition_quote"]
-      if recognition == "identified" && !(brand_status == "present" && brand_mentions.any? { |item| quote?(item["quote"], recognition_quote) })
+      recognition_quote = brand_mentions.filter_map { |item| EvidenceText.new(item["quote"], plain: true).find(data["recognition_quote"]) }.first
+      if recognition == "identified" && !(brand_status == "present" && recognition_quote)
         recognition = "unknown"
       end
       answer_kind = data["answer_kind"]
-      answer_kind = "insufficient_information" if answer_kind == "providers" && mentions.none? { |item| item["certainty"] == "confirmed" }
+      answer_kind = "unverified" if answer_kind == "providers" && mentions.none? { |item| item["certainty"] == "confirmed" }
       { "mentions" => mentions, "claims_to_review" => reviews, "brand_status" => brand_status, "uncertain_entities" => uncertain_entities,
+        "evidence_version" => VERSION, "evidence_issues" => issues,
         "brand_recognition" => recognition, "recognition_quote" => recognition == "identified" ? recognition_quote : nil,
         "brand_reason" => data["brand_reason"].to_s.truncate(1500), "answer_kind" => answer_kind }
     end

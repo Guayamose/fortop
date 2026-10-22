@@ -41,7 +41,7 @@ class VisibilityEvidenceTest < ActiveSupport::TestCase
     assert_empty result["mentions"]
     assert_equal "ambiguous", result["brand_status"]
     assert_equal [ "brand" ], result["uncertain_entities"]
-    assert_equal "insufficient_information", result["answer_kind"]
+    assert_equal "unverified", result["answer_kind"]
     item.merge!("quote" => "Brisa es una clínica.", "website" => "https://otra-brisa.com")
     result = Visibility::Evidence.extract(data, answer: item["quote"], entities: [ entity ], sources: [])
     assert_equal "uncertain", result["mentions"].first["certainty"]
@@ -56,6 +56,35 @@ class VisibilityEvidenceTest < ActiveSupport::TestCase
     assert_equal "absent", result["brand_status"]
     assert result["mentions"].first["discovered"]
     assert_equal "Taller Norte", result["mentions"].first["name"]
+  end
+
+  test "partial names acronyms and observed typos use semantic identity without requiring canonical spelling" do
+    [ [ "ACCIONA Energía", "Acciona" ], [ "International Business Machines", "IBM" ], [ "ACCIONA Energía", "Aciona Energía" ] ].each do |canonical, observed|
+      answer = "**#{observed}:** Ofrece energía renovable en España."
+      item = { "entity_key" => "brand", "name" => canonical, "name_quote" => observed, "quote" => "#{observed}: Ofrece energía renovable en España.",
+        "identity_reason" => "La entidad fue resuelta semánticamente por su actividad y contexto, con una variante del nombre.", "certainty" => "confirmed", "role" => "mentioned", "sentiment" => "neutral" }
+      data = { "brand_status" => "present", "brand_reason" => "Misma empresa identificada en contexto.", "brand_recognition" => "identified", "recognition_quote" => "Ofrece energía renovable en España.", "answer_kind" => "providers", "mentions" => [ item ] }
+      result = Visibility::Evidence.extract(data, answer: answer, entities: [ { "key" => "brand", "name" => canonical } ], sources: [])
+      assert_equal "present", result["brand_status"]
+      assert_equal "identified", result["brand_recognition"]
+      assert_equal observed, result["mentions"].first["name_quote"]
+      assert_empty result["evidence_issues"]
+      item["certainty"] = "uncertain"
+      assert_equal "ambiguous", Visibility::Evidence.extract(data, answer: answer, entities: [ { "key" => "brand", "name" => canonical } ], sources: [])["brand_status"]
+    end
+  end
+
+  test "the production Markdown failure retains the brand and its supporting context" do
+    answer = "* **Acciona Energía:** Líder global en energías renovables, ofrece opciones de PPA (físicos, virtuales, *on-site*) para la industria."
+    quote = "Acciona Energía: Líder global en energías renovables, ofrece opciones de PPA (físicos, virtuales, on-site) para la industria."
+    data = { "brand_status" => "present", "brand_reason" => "Identifica el negocio de renovables.", "brand_recognition" => "identified", "recognition_quote" => "Líder global en energías renovables",
+      "answer_kind" => "providers", "mentions" => [ { "entity_key" => "brand", "name" => "ACCIONA Energía", "name_quote" => "Acciona Energia", "quote" => quote, "identity_reason" => "Misma actividad e identidad.", "certainty" => "confirmed", "role" => "mentioned", "sentiment" => "positive" } ] }
+    result = Visibility::Evidence.extract(data, answer: answer, entities: [ { "key" => "brand", "name" => "ACCIONA Energía" } ], sources: [])
+    assert_equal "present", result["brand_status"]
+    assert_equal "identified", result["brand_recognition"]
+    assert_equal "Acciona Energía", result["mentions"].first["name_quote"]
+    assert_equal quote, result["mentions"].first["quote"]
+    assert_equal Visibility::Evidence::VERSION, result["evidence_version"]
   end
 
   test "repeating a prompted brand name is not recognition of the business" do

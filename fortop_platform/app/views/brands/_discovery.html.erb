@@ -16,6 +16,7 @@
       <% end %>
     </div>
     <p class="visibility-footnote"><%= @metrics.summary['provider_answers'] %> respuestas del filtro actual nombran proveedores concretos; <%= @metrics.summary['no_provider_answers'] %> dan consejos o no encuentran opciones. Estas últimas siguen contando en la muestra: no inflamos la presencia al quitarlas.</p>
+    <% if @metrics.summary['unverified_answers'].to_i.positive? %><p class="visibility-footnote"><%= @metrics.summary['unverified_answers'] %> respuestas contienen proveedores cuya evidencia sigue sin verificarse; no se clasifican como respuestas sin proveedores.</p><% end %>
     <% if @metrics.summary['valid'].positive? && @metrics.summary['present'].zero? %>
       <p class="visibility-notice">Tu marca no se ha identificado en estas respuestas. Revisa si aparecen alternativas de tu zona o especialidad y qué ocurre al preguntar por ti. Este resultado no demuestra que tu negocio no exista ni mide todo el mercado.</p>
     <% end %>

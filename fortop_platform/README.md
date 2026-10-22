@@ -359,7 +359,7 @@ literales y diagnóstico con acciones. Las preguntas sin marca se envían sin br
 competidores ni respuesta esperada. Las preguntas con marca se separan del indicador
 principal. Las preguntas propuestas no representan demanda de búsqueda observada.
 
-El método v2 distingue búsquedas de categoría, búsquedas ajustadas al cliente y
+El método v3 distingue búsquedas de categoría, búsquedas ajustadas al cliente y
 ámbito de servicio, y reconocimiento al preguntar por la marca. Interpreta si el
 negocio es local, regional o en línea; no inventa ubicaciones ni presupuestos.
 Las preguntas sin marca deben buscar proveedores concretos, pasar una auditoría
@@ -378,6 +378,27 @@ o contradictorias quedan como identidad ambigua, nunca como ausencia. Las
 opciones nuevas que aparezcan en respuestas se muestran aparte; las referencias
 sectoriales quedan fuera del ranking de competidores. La identidad pública
 investigada se distingue del reconocimiento en respuestas.
+
+La identidad se resuelve por contexto para cualquier marca, incluidas siglas,
+nombres parciales, nombres comerciales y errores ortográficos; no necesita una
+lista cerrada de alias. El nombre citado conserva la forma observada y no se
+sustituye por el nombre completo. Los homónimos y las relaciones entre matrices
+y filiales requieren evidencia, no solo similitud del nombre.
+
+Las citas se verifican contra el texto visible, interpretando Markdown/HTML y
+normalizando espacios, Unicode y tipografía. Se conservan palabras, negaciones,
+cifras y contexto; no se admiten paráfrasis como citas ni nombres presentes solo
+en destinos de enlaces o contenido oculto. Una extracción con citas inválidas
+recibe como máximo una revisión adicional con la misma respuesta, dentro del
+presupuesto existente. Los errores restantes quedan señalados y no se convierten
+en ausencias ni en supuestas respuestas sin proveedores.
+
+`Visibility::RevalidateEvidence.new(study).call` permite previsualizar la
+revalidación local de extracciones guardadas; `call(apply: true)` la guarda sin
+consultar Google, alterar el estado del estudio ni volver a encolar trabajos.
+Requiere un estudio detenido y sin diagnóstico final para no dejar conclusiones
+antiguas asociadas a métricas nuevas. La versión de la evidencia se conserva
+en cada observación y se comprueba al comparar informes históricos.
 
 Los nuevos trabajos utilizan `gemini-3.5-flash-lite` con pensamiento mínimo en
 repositorios, documentos y visibilidad. Las tarifas estándar de texto verificadas

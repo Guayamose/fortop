@@ -22,6 +22,8 @@ gem "jbuilder"
 # Retain reviewable, deterministic code patches.
 gem "diff-lcs", "~> 1.6", require: "diff/lcs"
 gem "rubyzip", "~> 3.7", require: "zip"
+# Parse presentation markup before checking quotes against observed answers.
+gem "redcarpet", "~> 3.6"
 
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 # gem "bcrypt", "~> 3.1.7"

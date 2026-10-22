@@ -58,6 +58,7 @@ module Visibility
           "recognized" => valid.count { |observation| observation.analysis["brand_recognition"] == "identified" },
           "recognition" => pct(valid.count { |observation| observation.analysis["brand_recognition"] == "identified" }, valid.size),
           "no_provider_answers" => valid.count { |observation| %w[guidance insufficient_information].include?(observation.analysis["answer_kind"]) },
+          "unverified_answers" => valid.count { |observation| observation.analysis["answer_kind"] == "unverified" },
           "searched_answers" => valid.count { |observation| observation.citations.any? { |source| source["cited"] } } }
       end
     end
@@ -162,6 +163,7 @@ module Visibility
       return [] if study.panel_fingerprint.blank? || filters.except("scope").values.any?(&:present?) || filters["scope"] != "unbranded"
       study.brand.visibility_studies.completed.where(panel_fingerprint: study.panel_fingerprint).order(:created_at).last(12).filter_map do |previous|
         next unless previous.report["model_versions"] == study.report["model_versions"]
+        next unless previous.report["evidence_version"] == study.report["evidence_version"]
         metrics = previous.report["metrics"]
         next unless metrics && metrics["coverage"] == 100.0
         { "id" => previous.id, "date" => previous.created_at, "presence" => metrics["presence"], "valid" => metrics["valid"] }

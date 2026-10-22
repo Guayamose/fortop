@@ -159,11 +159,7 @@ module Visibility
           citations: Urls.normalize_sources(record.citations, resolver: @resolver), observed_at: record.observed_at)
         @study.record_event!("Respuesta guardada · #{question['market']} · repetición #{observation.repetition}: #{question['text']}", kind: "observation", metadata: { observation_id: observation.id })
       else
-        data = gateway.json("extract:#{observation.id}", system: SYSTEM, schema: Schemas.extraction,
-          prompt: Evidence.prompt(answer: observation.answer, question: question.fetch("text"), entities: @study.entities,
-            facts: @study.profile.fetch("facts", []), sources: @study.research_sources,
-            business: @study.profile.slice("business", "audiences", "products", "service_scope", "service_areas")))
-        analysis = Evidence.extract(data, answer: observation.answer, entities: @study.entities, sources: @study.research_sources)
+        analysis = Extraction.new(@study, observation, gateway: gateway).call
         observation.update!(status: "completed", analysis: analysis)
         count = @study.visibility_observations.where(status: "completed").count
         @study.update!(progress: 38 + (52.0 * count / @study.expected_observations).floor)
@@ -218,7 +214,7 @@ module Visibility
       end
       @study.with_lock do
         raise Halted if @study.control_action.present?
-        @study.update!(report: { "summary" => data["summary"], "insights" => insights, "metrics" => metrics.summary, "diagnosis_sample_size" => evidence.size, "model_versions" => @study.visibility_observations.where(status: "completed").distinct.order(:model_version).pluck(:model_version) }, status: "completed", progress: 100, finished_at: Time.current)
+        @study.update!(report: { "summary" => data["summary"], "insights" => insights, "metrics" => metrics.summary, "evidence_version" => Evidence::VERSION, "diagnosis_sample_size" => evidence.size, "model_versions" => @study.visibility_observations.where(status: "completed").distinct.order(:model_version).pluck(:model_version) }, status: "completed", progress: 100, finished_at: Time.current)
         @study.record_event!("Informe completado y guardado. #{completed.size} respuestas analizadas y #{@study.visibility_actions.count} acciones documentadas.")
       end
     end

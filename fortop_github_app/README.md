@@ -25,6 +25,16 @@ El registro automático solo está habilitado en desarrollo y desde una conexió
 
 La identidad utiliza autorización de GitHub App con `state`, PKCE y tokens de usuario renovables. Los trabajos comprueban que el usuario sigue teniendo acceso a la instalación y al repositorio. Publican con tokens de instalación efímeros restringidos a ese repositorio, en ramas `fortop/*`, y dejan los PRs para revisión.
 
+## Logo en GitHub
+
+[`avatar.png`](avatar.png) contiene el avatar oficial del brandkit (1024 × 1024,
+PNG de 33 kB). En la [configuración de Fortop App](https://github.com/settings/apps/fortop-app),
+busca **Display information → Upload a logo**, selecciona ese archivo y pulsa
+**Set new avatar**. Si solicita color de fondo, utiliza `#FFFFF3`.
+El autor de los PRs es `fortop-app[bot]`; su avatar se configura en GitHub,
+independientemente del logo de la web de Rails.
+[Instrucciones oficiales](https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/creating-a-custom-badge-for-your-github-app).
+
 ## Configuración
 
 El registro completa estas variables en el entorno de Rails:

@@ -20,3 +20,6 @@
 
 # Packaged copies of versioned deliverables can be regenerated.
 /fortop-deliverables/fortop-entregables.zip
+
+# Referencias de otros proyectos: se conservan solo en el equipo local.
+/fortop_pitch/ejemplos-otros-pitches/
